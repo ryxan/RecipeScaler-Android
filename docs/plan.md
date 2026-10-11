@@ -449,6 +449,7 @@ Each phase has exit criteria. Don't start the next phase until they're met.
 - [ ] Recipe List → Editor → Scale View → Settings with type-safe navigation.
 - [ ] Accessory bar (fraction + unit chips), autosave draft, Paste-text import.
 - [ ] Editor model: split `lowConfidence` out of `IngredientItem` (`ParsedIngredient(ingredient, confidence)`). *(Carried from Phase 1.)*
+- [ ] Parse yield/servings and key-ingredient target inputs with `QuantityParser`, never `toDoubleOrNull()`, so `½` and `4-6` work. This completes B10; the parser supports it, the UI must use it. Add a ViewModel test.
 - [ ] Copy/Share (reuse `generateFormattedRecipe`).
 - [ ] ViewModel tests with fake repos + Turbine; one Compose UI test per screen's happy path.
 - **Exit:** you can enter a recipe, scale it all three ways, save it, and reopen it on a real device.
