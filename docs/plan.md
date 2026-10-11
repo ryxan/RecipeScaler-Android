@@ -13,7 +13,7 @@ How to pull the Recipe Scaler out of ToolStack-Android and turn it into its own 
 | 0. Project setup | ✅ Done 2026-10-11 | `0a87f1c` | Multi-module skeleton, CI, Hilt, M3 theme, placeholder nav |
 | 1. Core logic | ✅ Done 2026-10-11 | `9135fd2`, `69c1a73` | 248 `:core:domain` tests green; B1–B10 fixed |
 | 2. Data layer | ✅ Done 2026-10-11 | `5473ec9` | Room + DataStore settings; 15 `:core:data` tests green; schema v1 exported |
-| 3. MVP UI | 🟡 Code done 2026-10-11, device check pending | `a487219`, 3b | List/Editor/Scale/Settings; 258 domain + 17 data + 42 app tests green |
+| 3. MVP UI | 🟡 Code done 2026-10-11, device check pending | `a487219`, `d512808` | List/Editor/Scale/Settings; 258 domain + 17 data + 42 app tests green |
 | 4. Polish | Not started | | |
 | 5. Import, monetization, ads | Not started | | |
 | 6. Play Store readiness | Not started | | |
