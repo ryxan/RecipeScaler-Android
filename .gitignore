@@ -1,0 +1,25 @@
+# Gradle / build output
+.gradle/
+build/
+**/build/
+
+# Local configuration
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+!.idea/codeStyles/
+!.idea/copyright/
+*.iml
+.kotlin/
+
+# Profiling / captures
+captures/
+
+# Keystores — never commit
+*.jks
+*.keystore
+
+# OS junk
+.DS_Store
+Thumbs.db
