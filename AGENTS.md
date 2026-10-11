@@ -11,7 +11,7 @@ Rescale — a standalone Android recipe scaler. `applicationId`: `com.ryxan.reci
 - Debug APK: `.\gradlew.bat assembleDebug`
 - Lint: `.\gradlew.bat lint`
 - Full check: `.\gradlew.bat test assembleDebug lint`
-- `:core:domain` purity check: `.\gradlew.bat :core:domain:dependencies --configuration runtimeClasspath` must show only kotlin-stdlib/junit — no Android deps.
+- `:core:domain` purity check: `.\gradlew.bat :core:domain:dependencies --configuration runtimeClasspath` must show only kotlin-stdlib, kotlinx-coroutines-core, junit — no Android deps.
 
 ## Module layout
 

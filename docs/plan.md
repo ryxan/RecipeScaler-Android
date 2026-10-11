@@ -12,7 +12,7 @@ How to pull the Recipe Scaler out of ToolStack-Android and turn it into its own 
 | --- | --- | --- | --- |
 | 0. Project setup | ✅ Done 2026-10-11 | `0a87f1c` | Multi-module skeleton, CI, Hilt, M3 theme, placeholder nav |
 | 1. Core logic | ✅ Done 2026-10-11 | `9135fd2`, `69c1a73` | 248 `:core:domain` tests green; B1–B10 fixed |
-| 2. Data layer | ⏭ Next | | Room + DataStore settings |
+| 2. Data layer | ✅ Done 2026-10-11 | uncommitted | Room + DataStore settings; 15 `:core:data` tests green; schema v1 exported |
 | 3. MVP UI | Not started | | |
 | 4. Polish | Not started | | |
 | 5. Import, monetization, ads | Not started | | |
@@ -439,9 +439,9 @@ Each phase has exit criteria. Don't start the next phase until they're met.
 - **Exit:** `:core:domain` has zero Android imports; all ported tests plus the new spec tests pass; B1–B10 have tests asserting the *new* behavior.
 
 ### Phase 2: Data Layer
-- [ ] Room DB, entities, DAOs, `RecipeRepository` (interface in domain, impl in data).
-- [ ] DataStore `SettingsRepository`.
-- [ ] DAO tests (Robolectric or instrumented) and repository tests with fakes.
+- [x] Room DB, entities, DAOs, `RecipeRepository` (interface in domain, impl in data). *(`RoomRecipeRepository`, `Clock` fun interface in domain for fakeable time.)*
+- [x] DataStore `SettingsRepository`. *(`DataStoreSettingsRepository`; corrupt enum values fall back to defaults.)*
+- [x] DAO tests (Robolectric or instrumented) and repository tests with fakes. *(Robolectric + in-memory Room + Turbine; `MigrationTestHelper.createDatabase(name, 1)` verifies the exported v1 schema.)*
 - **Exit:** CRUD plus observe-by-id Flow tested; schema exported.
 
 ### Phase 3: MVP UI

@@ -1,0 +1,81 @@
+package com.ryxan.recipescaler.core.data.settings
+
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import com.ryxan.recipescaler.core.domain.formatting.DisplayMode
+import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
+import com.ryxan.recipescaler.core.domain.model.AppSettings
+import com.ryxan.recipescaler.core.domain.model.ThemeMode
+import java.io.File
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.TemporaryFolder
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34])
+class DataStoreSettingsRepositoryTest {
+
+    @get:Rule
+    val tempFolder = TemporaryFolder()
+
+    private lateinit var file: File
+
+    @Before
+    fun setUp() {
+        file = File(tempFolder.root, "settings.preferences_pb")
+    }
+
+    private fun newDataStore(scope: CoroutineScope): DataStore<Preferences> =
+        PreferenceDataStoreFactory.create(scope = scope) { file }
+
+    @Test
+    fun `defaults when nothing stored`() = runTest {
+        val repo = DataStoreSettingsRepository(newDataStore(backgroundScope))
+        assertEquals(AppSettings(), repo.settings.first())
+    }
+
+    @Test
+    fun `each setter round-trips`() = runTest {
+        val repo = DataStoreSettingsRepository(newDataStore(backgroundScope))
+        repo.setMeasurementSystem(MeasurementSystem.METRIC)
+        repo.setDisplayMode(DisplayMode.DECIMAL)
+        repo.setThemeMode(ThemeMode.DARK)
+        repo.setDynamicColor(false)
+
+        val s = repo.settings.first()
+        assertEquals(MeasurementSystem.METRIC, s.display.system)
+        assertEquals(DisplayMode.DECIMAL, s.display.mode)
+        assertEquals(ThemeMode.DARK, s.themeMode)
+        assertEquals(false, s.dynamicColor)
+    }
+
+    @Test
+    fun `values persist across a new repository instance on same file`() = runTest {
+        val dataStore = newDataStore(backgroundScope)
+        val repo = DataStoreSettingsRepository(dataStore)
+        repo.setThemeMode(ThemeMode.LIGHT)
+
+        val repo2 = DataStoreSettingsRepository(dataStore)
+        assertEquals(ThemeMode.LIGHT, repo2.settings.first().themeMode)
+    }
+
+    @Test
+    fun `garbage stored value falls back to default`() = runTest {
+        val dataStore = newDataStore(backgroundScope)
+        dataStore.edit { it[stringPreferencesKey("theme_mode")] = "PLAID" }
+
+        val repo = DataStoreSettingsRepository(dataStore)
+        assertEquals(ThemeMode.SYSTEM, repo.settings.first().themeMode)
+    }
+}
