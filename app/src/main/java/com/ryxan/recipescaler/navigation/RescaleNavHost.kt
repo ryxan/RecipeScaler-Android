@@ -38,7 +38,10 @@ fun RescaleNavHost() {
             )
         }
         composable<Editor> {
-            EditorScreen(onNavigateUp = { navController.navigateUp() })
+            EditorScreen(
+                onNavigateUp = { navController.navigateUp() },
+                onScale = { id -> navController.navigate(Scale(id)) },
+            )
         }
         composable<Scale> {
             ScaleScreen(onNavigateUp = { navController.navigateUp() })

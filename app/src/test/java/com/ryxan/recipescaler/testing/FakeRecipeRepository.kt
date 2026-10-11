@@ -43,7 +43,14 @@ class FakeRecipeRepository : RecipeRepository {
         return if (recipe.id == 0L) {
             val id = nextId++
             val t = tick()
-            current[id] = recipe.copy(id = id, createdAt = t, updatedAt = t)
+            current[id] = recipe.copy(
+                id = id,
+                createdAt = t,
+                updatedAt = t,
+                ingredients = recipe.ingredients.mapIndexed { i, ing ->
+                    if (ing.id == 0L) ing.copy(id = id * 1000 + i + 1) else ing
+                },
+            )
             recipes.value = current
             id
         } else {

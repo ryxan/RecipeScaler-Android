@@ -3,9 +3,74 @@
     <string name="app_name">Rescale</string>
     <string name="title_recipes">My Recipes</string>
     <string name="title_settings">Settings</string>
-    <string name="title_editor">Edit recipe</string>
-    <string name="title_scale">Scale recipe</string>
+    <string name="title_edit_recipe">Edit recipe</string>
+    <string name="title_new_recipe">New recipe</string>
     <string name="action_back">Back</string>
+
+    <!-- Editor -->
+    <string name="action_scale">Scale</string>
+    <string name="action_more">More options</string>
+    <string name="action_paste_text">Paste recipe text</string>
+    <string name="action_clear_ingredients">Clear ingredients</string>
+    <string name="action_delete_recipe">Delete recipe</string>
+    <string name="action_import">Import</string>
+    <string name="action_replace">Replace</string>
+    <string name="action_append">Append</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_add_ingredient">Add ingredient</string>
+    <string name="action_remove_ingredient">Remove ingredient</string>
+    <string name="action_next">Next</string>
+    <string name="hint_recipe_title">Recipe title</string>
+    <string name="hint_yield_label">servings</string>
+    <string name="hint_quantity">Qty</string>
+    <string name="hint_ingredient_name">Ingredient</string>
+    <string name="header_ingredients">Ingredients</string>
+    <string name="unit_picker_title">Unit</string>
+    <string name="unit_group_volume">Volume</string>
+    <string name="unit_group_weight">Weight</string>
+    <string name="unit_group_other">Other</string>
+    <string name="paste_dialog_title">Paste recipe text</string>
+    <string name="paste_dialog_hint">One ingredient per line, e.g.&#10;1 cup flour&#10;2 eggs</string>
+    <string name="msg_nothing_imported">No ingredients found</string>
+    <string name="ingredient_cap_reached">Only the first 50 ingredients were added</string>
+    <string name="confirm_import_title">Import ingredients</string>
+    <string name="confirm_import_message">Replace the current ingredients, or append to them?</string>
+    <string name="confirm_delete_title">Delete recipe?</string>
+    <string name="confirm_delete_message">This can\'t be undone.</string>
+    <string name="confirm_clear_title">Clear ingredients?</string>
+    <string name="confirm_clear_message">Remove all ingredient rows?</string>
+    <string name="msg_cant_read">Can\'t read \'%1$s\'</string>
+
+    <!-- Scale view -->
+    <string name="action_copy">Copy</string>
+    <string name="action_share">Share</string>
+    <string name="copy_format_plain">Plain</string>
+    <string name="copy_format_markdown">Markdown</string>
+    <string name="copy_format_shopping">Shopping list</string>
+    <string name="msg_copied">Copied</string>
+    <string name="scale_tab_servings">Servings</string>
+    <string name="scale_tab_ingredient">Ingredient</string>
+    <string name="scale_tab_factor">×Factor</string>
+    <string name="scale_original_yield">Original: %1$s %2$s</string>
+    <string name="scale_factor_prefix">×%1$s</string>
+    <string name="scale_makes">Makes %1$s %2$s</string>
+    <string name="scale_warning_big">Big batches don\'t always scale evenly — check pan sizes, baking times and leaveners.</string>
+    <string name="scale_warning_small">Very small batches can be hard to measure accurately.</string>
+    <string name="scale_show_original">Show original amounts</string>
+    <string name="scale_was">was %1$s</string>
+    <string name="scale_from_range">Scaled from the low end of a range</string>
+    <string name="scale_not_scaled">Not scaled</string>
+    <string name="scale_set_yield">Set the recipe\'s yield in the editor to scale by servings.</string>
+    <string name="err_amount_above_zero">Enter an amount above 0</string>
+    <string name="err_ingredient_no_qty">That ingredient has no amount</string>
+    <string name="err_incompatible_units">Can\'t convert %1$s to %2$s for this ingredient</string>
+    <string name="scale_label_target">Target</string>
+    <string name="scale_label_ingredient">Ingredient</string>
+    <string name="scale_label_amount">Amount</string>
+    <string name="scale_label_unit">Unit</string>
+    <string name="scale_label_custom_factor">Custom multiplier</string>
 
     <!-- Recipe list -->
     <string name="action_new_recipe">New recipe</string>

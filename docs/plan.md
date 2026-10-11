@@ -13,7 +13,7 @@ How to pull the Recipe Scaler out of ToolStack-Android and turn it into its own 
 | 0. Project setup | ✅ Done 2026-10-11 | `0a87f1c` | Multi-module skeleton, CI, Hilt, M3 theme, placeholder nav |
 | 1. Core logic | ✅ Done 2026-10-11 | `9135fd2`, `69c1a73` | 248 `:core:domain` tests green; B1–B10 fixed |
 | 2. Data layer | ✅ Done 2026-10-11 | `5473ec9` | Room + DataStore settings; 15 `:core:data` tests green; schema v1 exported |
-| 3. MVP UI | Not started | | |
+| 3. MVP UI | 🟡 Code done 2026-10-11, device check pending | `a487219`, 3b | List/Editor/Scale/Settings; 258 domain + 17 data + 42 app tests green |
 | 4. Polish | Not started | | |
 | 5. Import, monetization, ads | Not started | | |
 | 6. Play Store readiness | Not started | | |
@@ -24,6 +24,11 @@ How to pull the Recipe Scaler out of ToolStack-Android and turn it into its own 
 - US weights never show less than ¼ oz.
 - `QuantityParser` rejects `NaN`, `Infinity`, exponents, and negative numbers. They come back as unparseable and show unscaled.
 - Ranges (`2-3`) scale the low end, and the row is marked `RANGE_LOW_END` so the UI can flag it.
+- **Editor autosaves straight to Room** (500 ms debounce, on an app-scoped coroutine so it survives leaving the screen). There's no Save button and no draft table. A new recipe isn't inserted until it has a title or an ingredient. A recipe created in the current session and then emptied is deleted on exit; a pre-existing one is never auto-deleted.
+- Yield is stored as the parsed low end (`½` → 0.5, `4-6` → 4). The raw text isn't kept, so `4-6` reopens as `4`.
+- First-run measurement system follows the device locale (US/LR/MM → US, everywhere else → Metric).
+- Scale inputs that are blank or can't be read show an inline error, and the list falls back to 1× (never zero).
+- `:app` unit tests run on the debug variant only. Release unit tests are disabled so the Compose test manifest never ships in release.
 
 **Carried forward:**
 - Splitting `lowConfidence` out of `IngredientItem` moved from Phase 1 to Phase 3, where the editor model is designed.
@@ -445,14 +450,15 @@ Each phase has exit criteria. Don't start the next phase until they're met.
 - **Exit:** CRUD plus observe-by-id Flow tested; schema exported.
 
 ### Phase 3: MVP UI
-- [ ] Theme (dynamic color + fallback), typography, `QuantityText` component.
-- [ ] Recipe List → Editor → Scale View → Settings with type-safe navigation.
-- [ ] Accessory bar (fraction + unit chips), autosave draft, Paste-text import.
-- [ ] Editor model: split `lowConfidence` out of `IngredientItem` (`ParsedIngredient(ingredient, confidence)`). *(Carried from Phase 1.)*
-- [ ] Parse yield/servings and key-ingredient target inputs with `QuantityParser`, never `toDoubleOrNull()`, so `½` and `4-6` work. This completes B10; the parser supports it, the UI must use it. Add a ViewModel test.
-- [ ] Copy/Share (reuse `generateFormattedRecipe`).
-- [ ] ViewModel tests with fake repos + Turbine; one Compose UI test per screen's happy path.
-- **Exit:** you can enter a recipe, scale it all three ways, save it, and reopen it on a real device.
+- [x] Theme (dynamic color + fallback), typography, `QuantityText` component. *(Theme mode and dynamic color come from Settings through `MainViewModel`.)*
+- [x] Recipe List → Editor → Scale View → Settings with type-safe navigation. *(List has search and empty states. Delete lives in the editor overflow menu; swipe-to-delete with Undo stays in Phase 4.)*
+- [x] Accessory bar (fraction + unit chips), autosave draft, Paste-text import. *(Unit picker is a bottom sheet grouped by family. Paste opens Replace/Append when rows already exist. 50-ingredient cap.)*
+- [x] Editor model: split `lowConfidence` out of `IngredientItem` (`ParsedIngredient(item, lowConfidence)`). *(Carried from Phase 1.)*
+- [x] Parse yield/servings and key-ingredient target inputs with `QuantityParser`, never `toDoubleOrNull()`, so `½` and `4-6` work. This completes B10. *(Covered by tests in `EditorViewModelTest` and `ScaleViewModelTest`.)*
+- [x] Copy/Share (reuse `generateFormattedRecipe`). *(Copy as Plain/Markdown/Shopping list; Share sends Plain.)*
+- [x] ViewModel tests with fake repos + Turbine; one Compose UI test per screen's happy path. *(Robolectric, run against the stateless `*Content` composables.)*
+- [ ] Not done in Phase 3 (moved to Phase 4): drag-to-reorder ingredients, the "Quick scale" scratch recipe, and inferring units from the name field ("2 cups flour").
+- **Exit:** you can enter a recipe, scale it all three ways, save it, and reopen it on a real device. *(Still needs a check on a real device.)*
 
 ### Phase 4: Polish
 - [ ] Adaptive list-detail layout; landscape and foldable checks.
