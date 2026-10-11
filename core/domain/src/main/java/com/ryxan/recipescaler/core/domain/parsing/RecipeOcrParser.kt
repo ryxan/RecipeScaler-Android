@@ -1,11 +1,12 @@
 package com.ryxan.recipescaler.core.domain.parsing
 
 import com.ryxan.recipescaler.core.domain.model.IngredientItem
+import com.ryxan.recipescaler.core.domain.model.ParsedIngredient
 import com.ryxan.recipescaler.core.domain.scaling.RecipeScalerCalculator
 import java.util.UUID
 
 /**
- * Pure parser that converts raw OCR text (from ML Kit) into a list of [IngredientItem]s.
+ * Pure parser that converts raw OCR text (from ML Kit) into a list of [ParsedIngredient]s.
  *
  * ## Design constraints
  * - No Android, Room, or Compose dependencies — stays cheap to unit-test.
@@ -28,7 +29,7 @@ object RecipeOcrParser {
 
     /**
      * Lines whose ML Kit recognition confidence falls below this are surfaced
-     * as `lowConfidence` on the parsed [IngredientItem]. Starting point only —
+     * as `lowConfidence` on the parsed [ParsedIngredient]. Starting point only —
      * tune from real scans (see plan item 4 in ToolStack-Android
      * docs/recipe-scaler-ocr-accuracy-plan.md).
      */
@@ -369,7 +370,7 @@ object RecipeOcrParser {
 
     /**
      * Parse [rawText] (as returned by ML Kit's `Text.text`) into a list of
-     * [IngredientItem]s ready to load into the Recipe Scaler.
+     * [ParsedIngredient]s ready to load into the Recipe Scaler.
      *
      * Empty lines, section headers, and lines that contain no recognisable
      * ingredient information are silently dropped.
@@ -378,7 +379,7 @@ object RecipeOcrParser {
      * lines are found the excess is silently dropped — the user can add them
      * manually.
      */
-    fun parse(rawText: String, maxIngredients: Int = 50): List<IngredientItem> {
+    fun parse(rawText: String, maxIngredients: Int = 50): List<ParsedIngredient> {
         return parseRawLines(rawText.lines().asSequence().map { RawLine(it, null) }, maxIngredients)
     }
 
@@ -396,7 +397,7 @@ object RecipeOcrParser {
      * Lines with degenerate geometry should be filtered out by the caller; if
      * any line lacks a bounding box the caller should fall back to [parse].
      */
-    fun parseLines(lines: List<OcrLine>, maxIngredients: Int = 50): List<IngredientItem> {
+    fun parseLines(lines: List<OcrLine>, maxIngredients: Int = 50): List<ParsedIngredient> {
         if (lines.isEmpty()) return emptyList()
 
         // ── a. Column detection ──────────────────────────────────────────────
@@ -491,13 +492,13 @@ object RecipeOcrParser {
      * Shared pipeline for [parse] and [parseLines]: cleans each raw line, drops
      * blanks and section headers, parses what remains, and caps the result.
      */
-    private fun parseRawLines(rawLines: Sequence<RawLine>, maxIngredients: Int): List<IngredientItem> {
+    private fun parseRawLines(rawLines: Sequence<RawLine>, maxIngredients: Int): List<ParsedIngredient> {
         return rawLines
             .map   { it.copy(text = cleanLine(it.text)) }
             .filter { it.text.isNotBlank() }
             .filter { line -> SKIP_LINE_PATTERNS.none { it.containsMatchIn(line.text) } }
             .mapNotNull { parseLine(it.text, it.confidence) }
-            .filter { it.name.isNotBlank() || it.qtyString.isNotBlank() }
+            .filter { it.item.name.isNotBlank() || it.item.qtyString.isNotBlank() }
             .take(maxIngredients)
             .toList()
     }
@@ -517,14 +518,14 @@ object RecipeOcrParser {
     }
 
     /**
-     * Parse a single cleaned line into an [IngredientItem], or return `null`
+     * Parse a single cleaned line into a [ParsedIngredient], or return `null`
      * if the line cannot be interpreted as an ingredient at all.
      *
      * [confidence] is ML Kit's recognition confidence for the line (null when
      * unavailable, e.g. the plain-text [parse] path); below
      * [LOW_CONFIDENCE_THRESHOLD] the item is flagged `lowConfidence`.
      */
-    private fun parseLine(line: String, confidence: Float?): IngredientItem? {
+    private fun parseLine(line: String, confidence: Float?): ParsedIngredient? {
         var remaining = line
 
         // ── 0. Normalize OCR fraction mis-reads ───────────────────────────────
@@ -595,12 +596,14 @@ object RecipeOcrParser {
             return null
         }
 
-        return IngredientItem(
-            id        = UUID.randomUUID().toString(),
-            qtyString = qtyString,
-            unit      = unitKey,
-            name      = name,
-            lowConfidence = confidence != null && confidence < LOW_CONFIDENCE_THRESHOLD
+        return ParsedIngredient(
+            item = IngredientItem(
+                id        = UUID.randomUUID().toString(),
+                qtyString = qtyString,
+                unit      = unitKey,
+                name      = name,
+            ),
+            lowConfidence = confidence != null && confidence < LOW_CONFIDENCE_THRESHOLD,
         )
     }
 

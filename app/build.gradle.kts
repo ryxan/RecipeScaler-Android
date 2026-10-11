@@ -130,9 +130,19 @@ dependencies {
 
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
+    // Robolectric unit tests read the *variant* manifest (test_config.properties points at
+    // packaged_manifests/<variant>), so testReleaseUnitTest needs ui-test-manifest merged into
+    // the release manifest too — testImplementation alone does not merge manifests for unit tests.
+    releaseImplementation(libs.compose.ui.test.manifest)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.turbine)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(composeBom)
+    testImplementation(libs.compose.ui.test.junit4)
+    testImplementation(libs.compose.ui.test.manifest)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso)
     androidTestImplementation(libs.compose.ui.test.junit4)

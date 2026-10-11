@@ -15,10 +15,18 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import com.ryxan.recipescaler.core.data.settings.DataStoreSettingsRepository
+import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
+import com.ryxan.recipescaler.core.domain.formatting.defaultMeasurementSystemFor
 import com.ryxan.recipescaler.core.domain.repository.RecipeRepository
 import com.ryxan.recipescaler.core.domain.repository.SettingsRepository
 import java.io.File
+import java.util.Locale
+import javax.inject.Qualifier
 import javax.inject.Singleton
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class DefaultMeasurementSystem
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -42,6 +50,12 @@ object DataModule {
     @Provides
     @Singleton
     fun provideClock(): Clock = Clock { System.currentTimeMillis() }
+
+    @Provides
+    @Singleton
+    @DefaultMeasurementSystem
+    fun provideDefaultMeasurementSystem(): MeasurementSystem =
+        defaultMeasurementSystemFor(Locale.getDefault().country)
 }
 
 @Module

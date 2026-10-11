@@ -41,13 +41,13 @@ class DataStoreSettingsRepositoryTest {
 
     @Test
     fun `defaults when nothing stored`() = runTest {
-        val repo = DataStoreSettingsRepository(newDataStore(backgroundScope))
+        val repo = DataStoreSettingsRepository(newDataStore(backgroundScope), MeasurementSystem.MATCH_RECIPE)
         assertEquals(AppSettings(), repo.settings.first())
     }
 
     @Test
     fun `each setter round-trips`() = runTest {
-        val repo = DataStoreSettingsRepository(newDataStore(backgroundScope))
+        val repo = DataStoreSettingsRepository(newDataStore(backgroundScope), MeasurementSystem.MATCH_RECIPE)
         repo.setMeasurementSystem(MeasurementSystem.METRIC)
         repo.setDisplayMode(DisplayMode.DECIMAL)
         repo.setThemeMode(ThemeMode.DARK)
@@ -63,10 +63,10 @@ class DataStoreSettingsRepositoryTest {
     @Test
     fun `values persist across a new repository instance on same file`() = runTest {
         val dataStore = newDataStore(backgroundScope)
-        val repo = DataStoreSettingsRepository(dataStore)
+        val repo = DataStoreSettingsRepository(dataStore, MeasurementSystem.MATCH_RECIPE)
         repo.setThemeMode(ThemeMode.LIGHT)
 
-        val repo2 = DataStoreSettingsRepository(dataStore)
+        val repo2 = DataStoreSettingsRepository(dataStore, MeasurementSystem.MATCH_RECIPE)
         assertEquals(ThemeMode.LIGHT, repo2.settings.first().themeMode)
     }
 
@@ -75,7 +75,25 @@ class DataStoreSettingsRepositoryTest {
         val dataStore = newDataStore(backgroundScope)
         dataStore.edit { it[stringPreferencesKey("theme_mode")] = "PLAID" }
 
-        val repo = DataStoreSettingsRepository(dataStore)
+        val repo = DataStoreSettingsRepository(dataStore, MeasurementSystem.MATCH_RECIPE)
         assertEquals(ThemeMode.SYSTEM, repo.settings.first().themeMode)
+    }
+
+    @Test
+    fun `absent measurement system key yields injected default`() = runTest {
+        val repo = DataStoreSettingsRepository(
+            newDataStore(backgroundScope),
+            MeasurementSystem.US,
+        )
+        assertEquals(MeasurementSystem.US, repo.settings.first().display.system)
+    }
+
+    @Test
+    fun `corrupt measurement system key yields injected default`() = runTest {
+        val dataStore = newDataStore(backgroundScope)
+        dataStore.edit { it[stringPreferencesKey("measurement_system")] = "GALLONS" }
+
+        val repo = DataStoreSettingsRepository(dataStore, MeasurementSystem.US)
+        assertEquals(MeasurementSystem.US, repo.settings.first().display.system)
     }
 }

@@ -10,6 +10,7 @@ import com.ryxan.recipescaler.core.domain.formatting.DisplayPrefs
 import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
 import com.ryxan.recipescaler.core.domain.model.AppSettings
 import com.ryxan.recipescaler.core.domain.model.ThemeMode
+import com.ryxan.recipescaler.core.data.DefaultMeasurementSystem
 import com.ryxan.recipescaler.core.domain.repository.SettingsRepository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.map
 @Singleton
 class DataStoreSettingsRepository @Inject constructor(
     private val dataStore: DataStore<Preferences>,
+    @DefaultMeasurementSystem private val defaultSystem: MeasurementSystem,
 ) : SettingsRepository {
 
     private object Keys {
@@ -33,7 +35,7 @@ class DataStoreSettingsRepository @Inject constructor(
     override val settings: Flow<AppSettings> = dataStore.data.map { prefs ->
         AppSettings(
             display = DisplayPrefs(
-                system = prefs.enumOr(Keys.MEASUREMENT_SYSTEM, defaults.display.system),
+                system = prefs.enumOr(Keys.MEASUREMENT_SYSTEM, defaultSystem),
                 mode = prefs.enumOr(Keys.DISPLAY_MODE, defaults.display.mode),
             ),
             themeMode = prefs.enumOr(Keys.THEME_MODE, defaults.themeMode),

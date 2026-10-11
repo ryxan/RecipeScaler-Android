@@ -5,7 +5,12 @@ data class IngredientItem(
     val qtyString: String,
     val unit: String,
     val name: String,
-    val lowConfidence: Boolean = false
+)
+
+/** An [IngredientItem] produced by OCR parsing, with its recognition-confidence flag. */
+data class ParsedIngredient(
+    val item: IngredientItem,
+    val lowConfidence: Boolean = false,
 )
 
 data class UnitOption(

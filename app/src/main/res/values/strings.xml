@@ -3,4 +3,37 @@
     <string name="app_name">Rescale</string>
     <string name="title_recipes">My Recipes</string>
     <string name="title_settings">Settings</string>
+    <string name="title_editor">Edit recipe</string>
+    <string name="title_scale">Scale recipe</string>
+    <string name="action_back">Back</string>
+
+    <!-- Recipe list -->
+    <string name="action_new_recipe">New recipe</string>
+    <string name="search_recipes">Search recipes</string>
+    <string name="action_clear_search">Clear search</string>
+    <string name="untitled_recipe">Untitled recipe</string>
+    <string name="empty_recipes_title">No recipes yet</string>
+    <string name="empty_recipes_body">Tap New recipe to add one</string>
+    <string name="empty_search_results">No recipes match your search</string>
+    <plurals name="ingredient_count">
+        <item quantity="one">%d ingredient</item>
+        <item quantity="other">%d ingredients</item>
+    </plurals>
+
+    <!-- Settings -->
+    <string name="settings_section_measurement">Measurement system</string>
+    <string name="settings_system_us">US customary</string>
+    <string name="settings_system_metric">Metric</string>
+    <string name="settings_system_match">Match recipe</string>
+    <string name="settings_section_display">Display</string>
+    <string name="settings_display_kitchen">Kitchen fractions</string>
+    <string name="settings_display_keep_units">Keep recipe units</string>
+    <string name="settings_display_decimal">Decimals</string>
+    <string name="settings_section_theme">Theme</string>
+    <string name="settings_theme_system">System default</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_dynamic_color">Dynamic color</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_version">Version %1$s</string>
 </resources>

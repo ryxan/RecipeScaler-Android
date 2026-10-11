@@ -12,7 +12,7 @@ class RecipeOcrParserTest {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    private fun parseLine(line: String) = RecipeOcrParser.parse(line).firstOrNull()
+    private fun parseLine(line: String) = RecipeOcrParser.parse(line).firstOrNull()?.item
 
     private fun assertQty(line: String, expected: Double) {
         val item = parseLine(line)
@@ -32,7 +32,7 @@ class RecipeOcrParserTest {
             1 tbsp yeast
             1¼ tsp salt
         """.trimIndent()
-        val items = RecipeOcrParser.parse(raw)
+        val items = RecipeOcrParser.parse(raw).map { it.item }
         assertEquals("should parse 6 ingredients", 6, items.size)
         assertEquals("4",    items[0].qtyString); assertEquals("cup",  items[0].unit)
         assertEquals("cup",  items[1].unit)
@@ -58,7 +58,7 @@ class RecipeOcrParserTest {
             1 tbsp yeast
             14 tsp salt
         """.trimIndent()
-        val items = RecipeOcrParser.parse(raw)
+        val items = RecipeOcrParser.parse(raw).map { it.item }
         assertEquals("should parse 6 ingredients", 6, items.size)
         assertEquals("4",   items[0].qtyString); assertEquals("cup",  items[0].unit)
         val qty1 = RecipeScalerCalculator.parseQuantity(items[1].qtyString)
@@ -186,7 +186,7 @@ class RecipeOcrParserTest {
             1 egg
             V1Tbsp chopped parsley
         """.trimIndent()
-        val items = RecipeOcrParser.parse(raw)
+        val items = RecipeOcrParser.parse(raw).map { it.item }
         assertEquals("should parse 9 ingredients", 9, items.size)
 
         assertEquals("2",     items[0].qtyString); assertEquals("cup",  items[0].unit)
@@ -312,7 +312,7 @@ class RecipeOcrParserTest {
             4 1/2 C. rolled oats
             1 C. chocolate chips (or any extras)
         """.trimIndent()
-        val items = RecipeOcrParser.parse(raw)
+        val items = RecipeOcrParser.parse(raw).map { it.item }
         assertEquals("should parse 8 ingredients", 8, items.size)
 
         // 3/4 C. butter (parenthetical stripped)
@@ -375,7 +375,7 @@ class RecipeOcrParserTest {
             4 1|2 C. rolled oats
             1 C. chocolate chips (or any extras)
         """.trimIndent()
-        val items = RecipeOcrParser.parse(raw)
+        val items = RecipeOcrParser.parse(raw).map { it.item }
         assertEquals("should parse 8 ingredients", 8, items.size)
 
         val qty0 = RecipeScalerCalculator.parseQuantity(items[0].qtyString)
@@ -653,7 +653,7 @@ class RecipeOcrParserTest {
             4 YaColled ts
             lc chocolat chps Cor any exas
         """.trimIndent()
-        val items = RecipeOcrParser.parse(raw)
+        val items = RecipeOcrParser.parse(raw).map { it.item }
         assertEquals("should parse 7 rows", 7, items.size)
 
         val q0 = RecipeScalerCalculator.parseQuantity(items[0].qtyString)
@@ -734,7 +734,7 @@ class RecipeOcrParserTest {
             OcrLine("2 eggs",        left = 600, top = 300, right = 1000, bottom = 340),
             OcrLine("3 eggs",        left = 600, top = 500, right = 1000, bottom = 540)
         )
-        val items = RecipeOcrParser.parseLines(lines)
+        val items = RecipeOcrParser.parseLines(lines).map { it.item }
         assertEquals("should parse 6 ingredients", 6, items.size)
         // All left-column ingredients precede all right-column ones.
         assertEquals("Flour", items[0].name)
@@ -750,7 +750,7 @@ class RecipeOcrParserTest {
             OcrLine("2 cups all-purpose flour,", left = 0, top = 0,  right = 390, bottom = 40),
             OcrLine("sifted twice",              left = 0, top = 50, right = 200, bottom = 90)
         )
-        val items = RecipeOcrParser.parseLines(lines)
+        val items = RecipeOcrParser.parseLines(lines).map { it.item }
         assertEquals("wrapped line should merge into one ingredient", 1, items.size)
         // The comma clause is stripped, leaving the base name.
         assertEquals("All-purpose flour", items[0].name)
@@ -764,7 +764,7 @@ class RecipeOcrParserTest {
             OcrLine("1 cup flour",               left = 0, top = 0,  right = 300, bottom = 40),
             OcrLine("salt and pepper to taste",  left = 0, top = 50, right = 300, bottom = 90)
         )
-        val items = RecipeOcrParser.parseLines(lines)
+        val items = RecipeOcrParser.parseLines(lines).map { it.item }
         assertEquals(2, items.size)
         assertEquals("Flour", items[0].name)
         assertEquals("Salt and pepper to taste", items[1].name)
@@ -775,7 +775,7 @@ class RecipeOcrParserTest {
             OcrLine("1 cup shredded cheddar and", left = 0, top = 0,  right = 390, bottom = 40),
             OcrLine("mozzarella",                 left = 0, top = 50, right = 200, bottom = 90)
         )
-        val items = RecipeOcrParser.parseLines(lines)
+        val items = RecipeOcrParser.parseLines(lines).map { it.item }
         assertEquals(1, items.size)
         assertEquals("Shredded cheddar and mozzarella", items[0].name)
     }
@@ -820,7 +820,7 @@ class RecipeOcrParserTest {
             OcrLine("1 cup flour", left = 0,  top = 0,  right = 300, bottom = 40),
             OcrLine("sifted",      left = 30, top = 50, right = 200, bottom = 90)
         )
-        val items = RecipeOcrParser.parseLines(lines)
+        val items = RecipeOcrParser.parseLines(lines).map { it.item }
         assertEquals(1, items.size)
         assertEquals("Flour sifted", items[0].name)
     }
@@ -830,7 +830,7 @@ class RecipeOcrParserTest {
             OcrLine("2 cups flour", left = 0, top = 0,  right = 300, bottom = 40),
             OcrLine("1 tsp salt",   left = 0, top = 50, right = 300, bottom = 90)
         )
-        val items = RecipeOcrParser.parseLines(lines)
+        val items = RecipeOcrParser.parseLines(lines).map { it.item }
         assertEquals(2, items.size)
         assertEquals("Flour", items[0].name)
         assertEquals("Salt",  items[1].name)
@@ -841,7 +841,7 @@ class RecipeOcrParserTest {
             OcrLine("2 cups flour", left = 0, top = 0,   right = 300, bottom = 40),
             OcrLine("Butter or margarine", left = 0, top = 200, right = 300, bottom = 240)
         )
-        val items = RecipeOcrParser.parseLines(lines)
+        val items = RecipeOcrParser.parseLines(lines).map { it.item }
         assertEquals(2, items.size)
         assertEquals("Flour",              items[0].name)
         assertEquals("Butter or margarine", items[1].name)
@@ -853,7 +853,7 @@ class RecipeOcrParserTest {
             OcrLine("1 cup sugar",   left = 0, top = 0,   right = 400, bottom = 40),
             OcrLine("1 tsp vanilla", left = 0, top = 200, right = 400, bottom = 240)
         )
-        val items = RecipeOcrParser.parseLines(lines)
+        val items = RecipeOcrParser.parseLines(lines).map { it.item }
         assertEquals(3, items.size)
         assertEquals("Sugar",   items[0].name)
         assertEquals("Vanilla", items[1].name)
