@@ -3,6 +3,31 @@
 How to pull the Recipe Scaler out of ToolStack-Android and turn it into its own native Android app (Kotlin, Jetpack Compose, Material 3). iOS will be a separate native rewrite later, so this plan has no cross-platform frameworks. It does keep the domain logic pure Kotlin with a full test suite, so those tests can serve as the spec for the Swift port.
 
 > Audit baseline: ToolStack-Android working tree as of 2026-10-11 (`compileSdk/targetSdk 36`, `minSdk 26`, Hilt, Compose BOM 2025.09.01, DataStore, ML Kit, Firebase AI, Play Billing 8).
+>
+> **This copy (RecipeScaler-Android `docs/plan.md`) is the source of truth.** The original in ToolStack-Android is frozen at the extraction point.
+
+## Progress
+
+| Phase | Status | Commit(s) | Notes |
+| --- | --- | --- | --- |
+| 0. Project setup | ✅ Done 2026-10-11 | `0a87f1c` | Multi-module skeleton, CI, Hilt, M3 theme, placeholder nav |
+| 1. Core logic | ✅ Done 2026-10-11 | `9135fd2`, `69c1a73` | 248 `:core:domain` tests green; B1–B10 fixed |
+| 2. Data layer | ⏭ Next | | Room + DataStore settings |
+| 3. MVP UI | Not started | | |
+| 4. Polish | Not started | | |
+| 5. Import, monetization, ads | Not started | | |
+| 6. Play Store readiness | Not started | | |
+
+**Spec decisions made during implementation** (details in §3.3 and the tests):
+- Tiny amounts show `pinch`: US below 1/16 tsp, and metric below the same volume (~0.31 mL).
+- In DECIMAL mode, amounts stay in the recipe's own units (no US/metric conversion).
+- US weights never show less than ¼ oz.
+- `QuantityParser` rejects `NaN`, `Infinity`, exponents, and negative numbers. They come back as unparseable and show unscaled.
+- Ranges (`2-3`) scale the low end, and the row is marked `RANGE_LOW_END` so the UI can flag it.
+
+**Carried forward:**
+- Splitting `lowConfidence` out of `IngredientItem` moved from Phase 1 to Phase 3, where the editor model is designed.
+- Pointing `AiRecipeMapper` at `KitchenUnit` moves to Phase 5 together with the AI code.
 
 ---
 
@@ -397,20 +422,20 @@ Phase 5 (in v1): ML Kit Text Recognition + Document Scanner, Firebase AI + App C
 Each phase has exit criteria. Don't start the next phase until they're met.
 
 ### Phase 0: Project Setup
-- [ ] Decide app name, `applicationId` (permanent once published), and package namespace.
-- [ ] New repo; Android Studio "Empty Compose Activity"; version catalog; `minSdk 26` (matches ToolStack), `compileSdk/targetSdk 36`.
-- [ ] Add `:core:domain` (JVM), `:core:data`, `:core:designsystem` modules; Hilt; CI (GitHub Actions: `./gradlew test lint assembleDebug`).
-- [ ] Add `AGENTS.md` with build/test commands.
+- [x] Decide app name, `applicationId` (permanent once published), and package namespace. *(`Rescale`, `com.ryxan.recipescaler`)*
+- [x] New repo; version catalog; `minSdk 26` (matches ToolStack), `compileSdk/targetSdk 36`. *(Scaffolded by hand rather than with the Android Studio wizard; same toolchain versions as ToolStack.)*
+- [x] Add `:core:domain` (JVM), `:core:data`, `:core:designsystem` modules; Hilt; CI (GitHub Actions: `./gradlew test lint assembleDebug`).
+- [x] Add `AGENTS.md` with build/test commands.
 - **Exit:** empty app builds in CI; `:core:domain` has one passing test.
 
 ### Phase 1: Extract and Refactor Core Logic (most important)
-- [ ] Copy `RecipeScalerCalculator`, `RecipeOcrParser`, `IngredientNameCorrector`, models, and their tests into `:core:domain` (new package). Get them green **unchanged**.
-- [ ] Add characterization tests for current behavior on the B1–B10 inputs, marked as "documents old behavior".
-- [ ] Introduce `KitchenUnit` enum; migrate `ALL_UNITS`/`canonicalUnit` callers (OCR parser unit lookup, AI mapper).
-- [ ] `QuantityParser`: return `Double?`, handle thousands separators and ranges (B8–B10).
-- [ ] `KitchenFormatter` per §3.3, driven by the spec table. Start from today's `toTsp`/`decompose`/`formatUsVolume`, then add ½ tsp snapping, cup fractions, and the fewest-parts selection. Fixes B1–B7. Rewrite the old-behavior tests listed at the end of §3.3.
-- [ ] `ScaleRecipe` with `ByYield / ByIngredient / ByFactor` and family-mismatch errors.
-- [ ] Split `lowConfidence` out of the editable model (`ParsedIngredient(ingredient, confidence)`).
+- [x] Copy `RecipeScalerCalculator`, `RecipeOcrParser`, `IngredientNameCorrector`, models, and their tests into `:core:domain` (new package). Get them green **unchanged**. *(153 tests; the 6 UiState tests were dropped and their behavior re-covered in `ScaleRecipeTest`.)*
+- [x] Characterize old behavior on B1–B10. *(Done through the ported tests that encoded the old output. Each one rewritten to the new spec is annotated `Was …` in `KitchenFormatterTest`.)*
+- [x] Introduce `KitchenUnit` enum; `ALL_UNITS` is now derived from it. *(OCR parser unchanged; AI mapper migrates in Phase 5.)*
+- [x] `QuantityParser`: return `Double?`, handle thousands separators and ranges (B8–B10).
+- [x] `KitchenFormatter` per §3.3, driven by the spec table, with ½ tsp snapping, cup fractions, and the fewest-parts selection. Fixes B1–B7.
+- [x] `ScaleRecipe` with `ByYield / ByIngredient / ByFactor` and family-mismatch errors.
+- [ ] ~~Split `lowConfidence` out of the editable model~~ → moved to Phase 3.
 - **Exit:** `:core:domain` has zero Android imports; all ported tests plus the new spec tests pass; B1–B10 have tests asserting the *new* behavior.
 
 ### Phase 2: Data Layer
@@ -423,6 +448,7 @@ Each phase has exit criteria. Don't start the next phase until they're met.
 - [ ] Theme (dynamic color + fallback), typography, `QuantityText` component.
 - [ ] Recipe List → Editor → Scale View → Settings with type-safe navigation.
 - [ ] Accessory bar (fraction + unit chips), autosave draft, Paste-text import.
+- [ ] Editor model: split `lowConfidence` out of `IngredientItem` (`ParsedIngredient(ingredient, confidence)`). *(Carried from Phase 1.)*
 - [ ] Copy/Share (reuse `generateFormattedRecipe`).
 - [ ] ViewModel tests with fake repos + Turbine; one Compose UI test per screen's happy path.
 - **Exit:** you can enter a recipe, scale it all three ways, save it, and reopen it on a real device.
@@ -471,8 +497,10 @@ Still open, not blocking: **should ToolStack keep its Recipe Scaler** after the 
 
 ## 8. First Week Checklist
 
-1. ~~Pick the `applicationId`~~ (done: `com.ryxan.recipescaler`).
-2. Phase 0 skeleton with `:core:domain` as a JVM module.
-3. Copy the domain files and tests; get them green unchanged.
-4. Write the §3.3 spec table as failing tests in `KitchenFormatterTest`.
-5. Implement `KitchenUnit` + `QuantityParser` fixes, then `KitchenFormatter` until the spec table passes.
+All done on 2026-10-11 (see [Progress](#progress)).
+
+1. ~~Pick the `applicationId`~~ (`com.ryxan.recipescaler`).
+2. ~~Phase 0 skeleton with `:core:domain` as a JVM module.~~
+3. ~~Copy the domain files and tests; get them green unchanged.~~
+4. ~~Write the §3.3 spec table as tests in `KitchenFormatterTest`.~~
+5. ~~Implement `KitchenUnit` + `QuantityParser` fixes, then `KitchenFormatter` until the spec table passes.~~

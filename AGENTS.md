@@ -27,4 +27,4 @@ Rescale — a standalone Android recipe scaler. `applicationId`: `com.ryxan.reci
 
 ## Plan
 
-Full roadmap: `docs/plan.md`.
+Full roadmap: `docs/plan.md`. It's the source of truth for progress. When a phase or checklist item finishes, tick it, update the **Progress** table (status + commit SHAs), and record any spec decision made during implementation.
