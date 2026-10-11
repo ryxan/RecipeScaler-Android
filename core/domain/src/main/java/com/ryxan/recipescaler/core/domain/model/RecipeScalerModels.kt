@@ -13,13 +13,17 @@ data class UnitOption(
     val label: String
 )
 
+enum class ScaleStatus { SCALED, RANGE_LOW_END, UNPARSED, BLANK }
+
 data class ScaledIngredient(
     val id: String,
-    val originalQty: Double,
-    val scaledQty: Double,
-    val unit: String,
     val name: String,
-    val displayText: String
+    val unit: String,
+    val originalQty: Double?,
+    val scaledQty: Double?,
+    val displayText: String,
+    val originalDisplayText: String,
+    val status: ScaleStatus
 )
 
 data class SavedRecipe(

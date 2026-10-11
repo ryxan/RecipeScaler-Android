@@ -7,6 +7,7 @@ Rescale — a standalone Android recipe scaler. `applicationId`: `com.ryxan.reci
 ## Build & verify
 
 - Tests: `.\gradlew.bat test`
+- Current test baseline: **248 tests, 0 failures, 0 skipped** in `:core:domain`
 - Debug APK: `.\gradlew.bat assembleDebug`
 - Lint: `.\gradlew.bat lint`
 - Full check: `.\gradlew.bat test assembleDebug lint`
