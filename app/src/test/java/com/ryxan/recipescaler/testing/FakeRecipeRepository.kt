@@ -67,4 +67,15 @@ class FakeRecipeRepository : RecipeRepository {
         current.remove(id)
         recipes.value = current
     }
+
+    override suspend fun restore(recipe: Recipe) {
+        val current = recipes.value.toMutableMap()
+        if (current.containsKey(recipe.id)) return
+        current[recipe.id] = recipe.copy(
+            ingredients = recipe.ingredients.mapIndexed { i, ing ->
+                if (ing.id == 0L) ing.copy(id = recipe.id * 1000 + i + 1) else ing
+            },
+        )
+        recipes.value = current
+    }
 }

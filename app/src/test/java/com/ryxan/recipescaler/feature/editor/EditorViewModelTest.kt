@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import com.ryxan.recipescaler.core.domain.model.Ingredient
 import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import com.ryxan.recipescaler.core.domain.model.Recipe
+import com.ryxan.recipescaler.feature.recipes.UndoDeleteController
 import com.ryxan.recipescaler.testing.FakeRecipeRepository
 import com.ryxan.recipescaler.testing.MainDispatcherRule
 import kotlinx.coroutines.flow.first
@@ -37,7 +38,7 @@ class EditorViewModelTest {
     fun `a new empty recipe is never inserted`() = runTest {
         val repo = FakeRecipeRepository()
         val handle = SavedStateHandle()
-        val vm = EditorViewModel(handle, repo, backgroundScope)
+        val vm = EditorViewModel(handle, repo, UndoDeleteController(repo, backgroundScope), backgroundScope)
 
         advanceTimeBy(1_000)
         assertTrue(repo.observeSummaries("").first().isEmpty())
@@ -51,7 +52,7 @@ class EditorViewModelTest {
     fun `typing a title inserts once after debounce then updates the same id`() = runTest {
         val repo = FakeRecipeRepository()
         val handle = SavedStateHandle()
-        val vm = EditorViewModel(handle, repo, backgroundScope)
+        val vm = EditorViewModel(handle, repo, UndoDeleteController(repo, backgroundScope), backgroundScope)
 
         vm.onTitleChange("Bread")
         advanceTimeBy(600)
@@ -71,7 +72,7 @@ class EditorViewModelTest {
     @Test
     fun `yield text persists via QuantityParser`() = runTest {
         val repo = FakeRecipeRepository()
-        val vm = EditorViewModel(SavedStateHandle(), repo, backgroundScope)
+        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), backgroundScope)
         // Yield alone doesn't make a recipe non-empty; give a row a qty first.
         vm.onRowQtyChange(vm.uiState.value.rows[0].key, "1")
 
@@ -101,7 +102,7 @@ class EditorViewModelTest {
                 ),
             ),
         )
-        val vm = EditorViewModel(SavedStateHandle(mapOf("recipeId" to id)), repo, backgroundScope)
+        val vm = EditorViewModel(SavedStateHandle(mapOf("recipeId" to id)), repo, UndoDeleteController(repo, backgroundScope), backgroundScope)
 
         val state = vm.uiState.value
         assertEquals("Cookies", state.title)
@@ -117,7 +118,7 @@ class EditorViewModelTest {
     @Test
     fun `paste into blank rows replaces silently`() = runTest {
         val repo = FakeRecipeRepository()
-        val vm = EditorViewModel(SavedStateHandle(), repo, backgroundScope)
+        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), backgroundScope)
 
         vm.importText("1 cup flour\n2 eggs")
         val s = vm.uiState.value
@@ -129,7 +130,7 @@ class EditorViewModelTest {
     @Test
     fun `paste into non-blank rows confirms then replaces or appends`() = runTest {
         val repo = FakeRecipeRepository()
-        val vm = EditorViewModel(SavedStateHandle(), repo, backgroundScope)
+        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), backgroundScope)
 
         vm.importText("1 cup flour")            // silent: rows were blank
         vm.importText("2 eggs\n1 tsp salt")     // now non-blank → confirm dialog
@@ -147,7 +148,7 @@ class EditorViewModelTest {
     @Test
     fun `append truncates at the cap and reports dropped rows`() = runTest {
         val repo = FakeRecipeRepository()
-        val vm = EditorViewModel(SavedStateHandle(), repo, backgroundScope)
+        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), backgroundScope)
 
         val first = (1..48).joinToString("\n") { "1 cup ingredient$it" }
         vm.importText(first)
@@ -167,7 +168,7 @@ class EditorViewModelTest {
         val repo = FakeRecipeRepository()
 
         // Created in session, then emptied → deleted.
-        val vm = EditorViewModel(SavedStateHandle(), repo, backgroundScope)
+        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), backgroundScope)
         vm.onTitleChange("Temp")
         advanceTimeBy(600)
         val id = repo.observeSummaries("").first()[0].id
@@ -181,6 +182,7 @@ class EditorViewModelTest {
         val vm2 = EditorViewModel(
             SavedStateHandle(mapOf("recipeId" to existingId)),
             repo,
+            UndoDeleteController(repo, backgroundScope),
             backgroundScope,
         )
         val key = vm2.uiState.value.rows[0].key
@@ -195,12 +197,12 @@ class EditorViewModelTest {
     @Test
     fun `delete removes the recipe and navigates up`() = runTest {
         val repo = FakeRecipeRepository()
-        val vm = EditorViewModel(SavedStateHandle(), repo, backgroundScope)
+        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), backgroundScope)
         vm.onTitleChange("Gone")
         advanceTimeBy(600)
         val id = repo.observeSummaries("").first()[0].id
 
-        vm.confirmDelete()
+        vm.deleteRecipe()
         runCurrent()
         assertNull(repo.get(id))
         assertEquals(EditorEvent.NavigateUp, vm.events.first())
@@ -209,12 +211,12 @@ class EditorViewModelTest {
     @Test
     fun `flush after delete does not resurrect the recipe or crash`() = runTest {
         val repo = FakeRecipeRepository()
-        val vm = EditorViewModel(SavedStateHandle(), repo, backgroundScope)
+        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), backgroundScope)
         vm.onTitleChange("Gone")
         advanceTimeBy(600)
         val id = repo.observeSummaries("").first()[0].id
 
-        vm.confirmDelete()
+        vm.deleteRecipe()
         runCurrent()
         assertNull(repo.get(id))
 
@@ -231,6 +233,7 @@ class EditorViewModelTest {
         val vm = EditorViewModel(
             SavedStateHandle(mapOf("recipeId" to existingId)),
             repo,
+            UndoDeleteController(repo, backgroundScope),
             backgroundScope,
         )
 
@@ -248,12 +251,155 @@ class EditorViewModelTest {
     @Test
     fun `prepareToScale flushes and returns the id or null when empty`() = runTest {
         val repo = FakeRecipeRepository()
-        val vm = EditorViewModel(SavedStateHandle(), repo, backgroundScope)
+        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), backgroundScope)
         assertNull(vm.prepareToScale())
 
         vm.onTitleChange("Bread")
         val id = vm.prepareToScale()
         assertNotNull(id)
         assertNotNull(repo.get(id!!))
+    }
+
+    @Test
+    fun `deleteRecipe saves latest edits first so undo restores them`() = runTest {
+        val repo = FakeRecipeRepository()
+        val undo = UndoDeleteController(repo, backgroundScope)
+        val id = repo.save(recipe("Cookies"))
+        val vm = EditorViewModel(
+            SavedStateHandle(mapOf("recipeId" to id)),
+            repo,
+            undo,
+            backgroundScope,
+        )
+
+        vm.onTitleChange("Cookies v2")
+        vm.deleteRecipe()
+        runCurrent()
+
+        assertNull(repo.get(id))
+        assertEquals("Cookies v2", undo.pending.value?.title)
+        assertEquals(EditorEvent.NavigateUp, vm.events.first())
+
+        undo.undo()
+        runCurrent()
+        assertEquals("Cookies v2", repo.get(id)?.title)
+    }
+
+    @Test
+    fun `moveRow moves a row to the target position and ignores unknown keys`() = runTest {
+        val repo = FakeRecipeRepository()
+        val vm = EditorViewModel(
+            SavedStateHandle(),
+            repo,
+            UndoDeleteController(repo, backgroundScope),
+            backgroundScope,
+        )
+        vm.importText("1 cup flour\n2 eggs\n1 tsp salt")
+        val keys = vm.uiState.value.rows.map { it.key }
+
+        vm.moveRow(keys[2], keys[0])
+        assertEquals(listOf("Salt", "Flour", "Eggs"), vm.uiState.value.rows.map { it.name })
+
+        vm.moveRow(999L, keys[0])
+        assertEquals(listOf("Salt", "Flour", "Eggs"), vm.uiState.value.rows.map { it.name })
+    }
+
+    @Test
+    fun `inferFromName splits quantity and unit out of the name`() = runTest {
+        val repo = FakeRecipeRepository()
+        val vm = EditorViewModel(
+            SavedStateHandle(),
+            repo,
+            UndoDeleteController(repo, backgroundScope),
+            backgroundScope,
+        )
+        val key = vm.uiState.value.rows[0].key
+        vm.onRowNameChange(key, "2 cups flour")
+        vm.inferFromName(key)
+
+        val row = vm.uiState.value.rows[0]
+        assertEquals("2", row.rawQuantity)
+        assertEquals(KitchenUnit.CUP, row.unit)
+        assertEquals("Flour", row.name)
+        assertTrue(row.key != key) // fresh key so the qty field picks up the value
+    }
+
+    @Test
+    fun `inferFromName handles fractions and bare quantities`() = runTest {
+        val repo = FakeRecipeRepository()
+        val vm = EditorViewModel(
+            SavedStateHandle(),
+            repo,
+            UndoDeleteController(repo, backgroundScope),
+            backgroundScope,
+        )
+        val k1 = vm.uiState.value.rows[0].key
+        vm.onRowNameChange(k1, "1 1/2 tsp salt")
+        vm.inferFromName(k1)
+        var row = vm.uiState.value.rows[0]
+        assertEquals("1 1/2", row.rawQuantity)
+        assertEquals(KitchenUnit.TSP, row.unit)
+        assertEquals("Salt", row.name)
+
+        val k2 = vm.addRow()
+        vm.onRowNameChange(k2, "3 eggs")
+        vm.inferFromName(k2)
+        row = vm.uiState.value.rows[1]
+        assertEquals("3", row.rawQuantity)
+        assertEquals("Eggs", row.name)
+    }
+
+    @Test
+    fun `inferFromName is a no-op without a quantity or with an existing qty`() = runTest {
+        val repo = FakeRecipeRepository()
+        val vm = EditorViewModel(
+            SavedStateHandle(),
+            repo,
+            UndoDeleteController(repo, backgroundScope),
+            backgroundScope,
+        )
+        val key = vm.uiState.value.rows[0].key
+        vm.onRowNameChange(key, "flour")
+        vm.inferFromName(key)
+        var row = vm.uiState.value.rows[0]
+        assertEquals("flour", row.name)
+        assertEquals("", row.rawQuantity)
+        assertEquals(key, row.key)
+
+        vm.onRowNameChange(key, "salt to taste")
+        vm.inferFromName(key)
+        row = vm.uiState.value.rows[0]
+        assertEquals("salt to taste", row.name)
+        assertEquals("", row.rawQuantity)
+
+        val k2 = vm.addRow()
+        vm.onRowQtyChange(k2, "5")
+        vm.onRowNameChange(k2, "2 cups flour")
+        vm.inferFromName(k2)
+        row = vm.uiState.value.rows[1]
+        assertEquals("5", row.rawQuantity)
+        assertEquals("2 cups flour", row.name)
+        assertEquals(k2, row.key)
+    }
+
+    @Test
+    fun `initialTitle prefills the title and autofocuses the first row without saving`() = runTest {
+        val repo = FakeRecipeRepository()
+        val handle = SavedStateHandle(mapOf("initialTitle" to "Quick scale"))
+        val vm = EditorViewModel(
+            handle,
+            repo,
+            UndoDeleteController(repo, backgroundScope),
+            backgroundScope,
+        )
+
+        val s = vm.uiState.value
+        assertEquals("Quick scale", s.title)
+        assertEquals(s.rows[0].key, s.autoFocusKey)
+
+        // Backing out without edits saves nothing.
+        vm.flush()
+        runCurrent()
+        assertTrue(repo.observeSummaries("").first().isEmpty())
     }
 }

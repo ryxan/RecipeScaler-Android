@@ -149,6 +149,64 @@ class ScaleViewModelTest {
     }
 
     @Test
+    fun `cook mode toggles checks and turning it off clears them`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        vm.toggleCookMode()
+        var s = vm.uiState.filter { it.cookMode }.first()
+        assertTrue(s.cookMode)
+
+        val rowId = s.rows[0].id
+        vm.toggleChecked(rowId)
+        s = vm.uiState.filter { rowId in it.checkedIds }.first()
+        assertTrue(rowId in s.checkedIds)
+
+        vm.toggleChecked(rowId)
+        s = vm.uiState.filter { it.checkedIds.isEmpty() }.first()
+
+        vm.toggleChecked(rowId)
+        vm.uiState.filter { it.checkedIds.isNotEmpty() }.first()
+        vm.toggleCookMode()
+        s = vm.uiState.filter { !it.cookMode }.first()
+        assertTrue(s.checkedIds.isEmpty())
+    }
+
+    @Test
+    fun `cook mode and checks persist in the saved state handle`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val settings = FakeSettingsRepository()
+        val handle = SavedStateHandle(mapOf("recipeId" to id))
+        val vm = ScaleViewModel(handle, repo, settings)
+
+        vm.toggleCookMode()
+        val s = vm.uiState.filter { it.cookMode }.first()
+        vm.toggleChecked(s.rows[0].id)
+        vm.uiState.filter { it.checkedIds.isNotEmpty() }.first()
+
+        // A new VM over the same handle (process death) restores both.
+        val vm2 = ScaleViewModel(handle, repo, settings)
+        val s2 = vm2.uiState.filter { !it.isLoading }.first()
+        assertTrue(s2.cookMode)
+        assertEquals(setOf(s.rows[0].id), s2.checkedIds)
+    }
+
+    @Test
+    fun `a deleted recipe reports recipeMissing`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        repo.delete(id)
+
+        val s = vm.uiState.filter { it.recipeMissing }.first()
+        assertTrue(s.recipeMissing)
+    }
+
+    @Test
     fun `copyText matches generateFormattedRecipe`() = runTest {
         val repo = FakeRecipeRepository()
         val id = seeded(repo)

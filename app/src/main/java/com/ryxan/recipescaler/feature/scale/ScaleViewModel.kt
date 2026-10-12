@@ -71,6 +71,10 @@ data class ScaleUiState(
     val showScaleWarning: Boolean = false,
     val rows: List<ScaledIngredient> = emptyList(),
     val showOriginal: Boolean = false,
+    val cookMode: Boolean = false,
+    val checkedIds: Set<String> = emptySet(),
+    /** True when the recipe is gone (deleted) — the screen shows an empty state. */
+    val recipeMissing: Boolean = false,
     val ingredientChoices: List<IngredientChoice> = emptyList(),
     val unitChoices: List<KitchenUnit> = emptyList(),
 )
@@ -78,7 +82,7 @@ data class ScaleUiState(
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class ScaleViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle,
     repository: RecipeRepository,
     settingsRepository: SettingsRepository,
 ) : ViewModel() {
@@ -88,14 +92,18 @@ class ScaleViewModel @Inject constructor(
     /** Null until the recipe first loads — defaults depend on its yield/ingredients. */
     private val inputs = MutableStateFlow<ScaleInputs?>(null)
     private val showOriginal = MutableStateFlow(false)
+    private val cookMode = savedStateHandle.getStateFlow("cookMode", false)
+    private val checkedIds =
+        savedStateHandle.getStateFlow<List<String>>("checked", emptyList())
 
     val uiState: StateFlow<ScaleUiState> = combine(
         repository.observe(recipeId),
         settingsRepository.settings,
         inputs,
         showOriginal,
-    ) { recipe, settings, inp, original ->
-        buildState(recipe, settings.display, inp, original)
+        combine(cookMode, checkedIds) { c, ids -> c to ids.toSet() },
+    ) { recipe, settings, inp, original, (cook, checked) ->
+        buildState(recipe, settings.display, inp, original, cook, checked)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ScaleUiState())
 
     // ── Inputs ────────────────────────────────────────────────────────────────
@@ -124,6 +132,19 @@ class ScaleViewModel @Inject constructor(
         showOriginal.value = v
     }
 
+    /** Toggles cook/checklist mode; turning it off clears the checked rows. */
+    fun toggleCookMode() {
+        val on = !cookMode.value
+        savedStateHandle["cookMode"] = on
+        if (!on) savedStateHandle["checked"] = ArrayList<String>()
+    }
+
+    fun toggleChecked(id: String) {
+        val current = checkedIds.value
+        val next = if (id in current) current - id else current + id
+        savedStateHandle["checked"] = ArrayList(next)
+    }
+
     // ── State building ────────────────────────────────────────────────────────
 
     private fun buildState(
@@ -131,8 +152,18 @@ class ScaleViewModel @Inject constructor(
         prefs: DisplayPrefs,
         rawInputs: ScaleInputs?,
         original: Boolean,
+        cook: Boolean,
+        checked: Set<String>,
     ): ScaleUiState {
-        if (recipe == null) return ScaleUiState(isLoading = false, recipeId = recipeId)
+        if (recipe == null) {
+            return ScaleUiState(
+                isLoading = false,
+                recipeId = recipeId,
+                cookMode = cook,
+                checkedIds = checked,
+                recipeMissing = true,
+            )
+        }
 
         val items = recipe.ingredients.map { it.toScaleItem() }
         val choices = items
@@ -199,6 +230,8 @@ class ScaleViewModel @Inject constructor(
             showScaleWarning = warning,
             rows = rows,
             showOriginal = original,
+            cookMode = cook,
+            checkedIds = checked,
             ingredientChoices = choices,
             unitChoices = unitChoicesFor(inp, items),
         )

@@ -1,6 +1,9 @@
 package com.ryxan.recipescaler.feature.editor
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.assertIsNotEnabled
@@ -96,5 +99,19 @@ class EditorContentTest {
         )
         composeRule.onNode(hasClickAction() and hasAnyDescendant(hasText("Scale")), useUnmergedTree = true).performClick()
         assertTrue(scaled)
+    }
+
+    @Test
+    fun `delete menu item calls onDelete immediately without a dialog`() {
+        var deleted = false
+        content(
+            state(recipeId = 5),
+            EditorCallbacks(onDelete = { deleted = true }),
+        )
+        composeRule.onNodeWithContentDescription("More options").performClick()
+        composeRule.onNodeWithText("Delete recipe").performClick()
+        assertTrue(deleted)
+        // No confirmation dialog appears.
+        composeRule.onAllNodesWithText("Delete recipe?").assertCountEquals(0)
     }
 }

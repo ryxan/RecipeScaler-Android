@@ -69,6 +69,23 @@ class RoomRecipeRepository @Inject constructor(
         dao.deleteRecipe(id)
     }
 
+    override suspend fun restore(recipe: Recipe) = db.withTransaction {
+        if (dao.getRecipeEntity(recipe.id) != null) return@withTransaction
+        dao.insertRecipe(
+            RecipeEntity(
+                id = recipe.id,
+                title = recipe.title,
+                yieldAmount = recipe.yieldAmount,
+                yieldLabel = recipe.yieldLabel,
+                createdAt = recipe.createdAt,
+                updatedAt = recipe.updatedAt,
+            )
+        )
+        dao.insertIngredients(
+            recipe.ingredients.mapIndexed { i, ing -> ing.copy(id = 0).toEntity(recipe.id, i) }
+        )
+    }
+
     private companion object {
         /** Escape LIKE wildcards so queries containing `%`, `_`, or `\` match literally. */
         fun escapeLike(query: String): String = query

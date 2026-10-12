@@ -25,4 +25,11 @@ interface RecipeRepository {
 
     /** Cascades to ingredients; no-op if missing. */
     suspend fun delete(id: Long)
+
+    /**
+     * Re-inserts a previously deleted recipe with its original id, createdAt and
+     * updatedAt (so it returns to the same list position) and its ingredients in
+     * order. No-op if a recipe with that id already exists.
+     */
+    suspend fun restore(recipe: Recipe)
 }

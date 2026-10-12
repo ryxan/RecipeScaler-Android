@@ -12,6 +12,7 @@ import com.ryxan.recipescaler.core.domain.parsing.QuantityParser
 import com.ryxan.recipescaler.core.domain.parsing.RecipeOcrParser
 import com.ryxan.recipescaler.core.domain.repository.RecipeRepository
 import com.ryxan.recipescaler.di.ApplicationScope
+import com.ryxan.recipescaler.feature.recipes.UndoDeleteController
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -43,7 +44,6 @@ data class EditorRow(
 sealed interface EditorDialog {
     data object PasteText : EditorDialog
     data class ConfirmImport(val items: List<IngredientItem>) : EditorDialog
-    data object ConfirmDelete : EditorDialog
     data object ConfirmClear : EditorDialog
 }
 
@@ -55,6 +55,8 @@ data class EditorUiState(
     val yieldLabel: String = "servings",
     val rows: List<EditorRow> = emptyList(),
     val dialog: EditorDialog? = null,
+    /** Row key that should grab qty focus once on open (Quick scale). */
+    val autoFocusKey: Long? = null,
 ) {
     val yieldError: Boolean
         get() = yieldText.isNotBlank() && QuantityParser.parse(yieldText) == null
@@ -73,6 +75,7 @@ sealed interface EditorEvent {
 class EditorViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val repository: RecipeRepository,
+    private val undoController: UndoDeleteController,
     @ApplicationScope private val appScope: CoroutineScope,
 ) : ViewModel() {
 
@@ -92,6 +95,9 @@ class EditorViewModel @Inject constructor(
     /** True once the recipe was deleted — blocks every later save so it can't resurrect. */
     private var deleted = false
 
+    /** False until the user edits — a prefilled Quick scale alone never inserts. */
+    private var dirty = false
+
     init {
         viewModelScope.launch {
             val id = savedStateHandle.get<Long>("recipeId") ?: 0L
@@ -107,10 +113,14 @@ class EditorViewModel @Inject constructor(
                 )
             } else {
                 // Unknown id (or 0): fall back to a new blank recipe.
+                val initialTitle = savedStateHandle.get<String>("initialTitle")
+                val row = newRow()
                 _uiState.value = EditorUiState(
                     isLoading = false,
                     recipeId = 0L,
-                    rows = listOf(newRow()),
+                    title = initialTitle.orEmpty(),
+                    rows = listOf(row),
+                    autoFocusKey = if (initialTitle != null) row.key else null,
                 )
             }
         }
@@ -161,6 +171,43 @@ class EditorViewModel @Inject constructor(
 
     fun removeRow(key: Long) {
         _uiState.update { s -> s.copy(rows = s.rows.filterNot { it.key == key }) }
+        scheduleSave()
+    }
+
+    /** Moves the row [fromKey] to the position of row [toKey]; unknown keys are ignored. */
+    fun moveRow(fromKey: Long, toKey: Long) {
+        var moved = false
+        _uiState.update { s ->
+            val from = s.rows.indexOfFirst { it.key == fromKey }
+            val to = s.rows.indexOfFirst { it.key == toKey }
+            if (from < 0 || to < 0 || from == to) return@update s
+            moved = true
+            val rows = s.rows.toMutableList().apply { add(to, removeAt(from)) }
+            s.copy(rows = rows)
+        }
+        if (moved) scheduleSave()
+    }
+
+    /**
+     * Splits a quantity/unit off the name when the qty field is blank, e.g.
+     * "2 cups flour" → qty "2", unit CUP, name "flour". The row gets a fresh
+     * key so the cached qty TextFieldValue picks up the new value. No-op when
+     * the row already has a quantity or the name carries none.
+     */
+    fun inferFromName(key: Long) {
+        val row = _uiState.value.rows.firstOrNull { it.key == key } ?: return
+        if (row.rawQuantity.isNotBlank() || row.name.isBlank()) return
+        val item = RecipeOcrParser.parse(row.name, 1).firstOrNull()?.item ?: return
+        if (item.qtyString.isBlank()) return
+        val inferred = row.copy(
+            key = ++keyCounter,
+            rawQuantity = item.qtyString,
+            unit = KitchenUnit.fromKey(item.unit)?.takeIf { it != KitchenUnit.NONE } ?: row.unit,
+            name = item.name,
+        )
+        _uiState.update { s ->
+            s.copy(rows = s.rows.map { if (it.key == key) inferred else it })
+        }
         scheduleSave()
     }
 
@@ -233,18 +280,15 @@ class EditorViewModel @Inject constructor(
         scheduleSave()
     }
 
-    fun requestDelete() {
-        _uiState.update { it.copy(dialog = EditorDialog.ConfirmDelete) }
-    }
-
-    fun confirmDelete() {
-        _uiState.update { it.copy(dialog = null) }
+    /** Saves latest edits, deletes via [undoController] (undoable), then navigates up. */
+    fun deleteRecipe() {
         appScope.launch {
             saveMutex.withLock {
                 saveJob?.cancel()
+                doSave()
                 deleted = true
                 val id = _uiState.value.recipeId
-                if (id != 0L) repository.delete(id)
+                if (id != 0L) undoController.delete(id)
                 _events.send(EditorEvent.NavigateUp)
             }
         }
@@ -257,6 +301,7 @@ class EditorViewModel @Inject constructor(
     // ── Saving ────────────────────────────────────────────────────────────────
 
     private fun scheduleSave() {
+        dirty = true
         saveJob?.cancel()
         saveJob = appScope.launch {
             delay(SAVE_DEBOUNCE_MS)
@@ -278,6 +323,7 @@ class EditorViewModel @Inject constructor(
         if (deleted) return null
         val s = _uiState.value
         if (s.isLoading) return s.recipeId.takeIf { it != 0L }
+        if (!dirty && s.recipeId == 0L) return null
         val empty = s.title.isBlank() &&
             s.rows.all { it.rawQuantity.isBlank() && it.name.isBlank() }
         if (empty) {

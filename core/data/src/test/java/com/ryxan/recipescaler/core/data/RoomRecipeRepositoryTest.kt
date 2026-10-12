@@ -150,6 +150,47 @@ class RoomRecipeRepositoryTest {
     }
 
     @Test
+    fun `restore re-inserts a deleted recipe with its id timestamps and order`() = runTest {
+        repo.save(recipe(title = "Newer"))
+        now = 500L
+        val id = repo.save(recipe(title = "Pancakes"))
+        val original = repo.get(id)!!
+
+        repo.delete(id)
+        assertNull(repo.get(id))
+
+        repo.restore(original)
+        val restored = repo.get(id)!!
+        assertEquals(original.id, restored.id)
+        assertEquals(original.title, restored.title)
+        assertEquals(original.createdAt, restored.createdAt)
+        assertEquals(original.updatedAt, restored.updatedAt)
+        assertEquals(original.ingredients.map { it.name }, restored.ingredients.map { it.name })
+        assertEquals(
+            original.ingredients.map { it.rawQuantity },
+            restored.ingredients.map { it.rawQuantity },
+        )
+
+        // Back in the same summary position (sorted by updatedAt desc).
+        repo.observeSummaries().test {
+            assertEquals(listOf("Newer", "Pancakes"), awaitItem().map { it.title })
+        }
+    }
+
+    @Test
+    fun `restore is a no-op when the id already exists`() = runTest {
+        val id = repo.save(recipe(title = "Pancakes"))
+        val kept = repo.get(id)!!
+
+        repo.restore(kept.copy(title = "Impostor", updatedAt = 9_999L))
+
+        val loaded = repo.get(id)!!
+        assertEquals("Pancakes", loaded.title)
+        assertEquals(kept.updatedAt, loaded.updatedAt)
+        assertEquals(3, dao.ingredientCount(id))
+    }
+
+    @Test
     fun `summaries ordered by updatedAt desc with ingredient counts`() = runTest {
         val a = repo.save(recipe(title = "Alpha"))
         val b = repo.save(recipe(title = "Beta", ingredients = emptyList()))

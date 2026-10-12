@@ -1,7 +1,9 @@
 package com.ryxan.recipescaler.feature.scale
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.ryxan.recipescaler.core.designsystem.RescaleTheme
@@ -37,6 +39,9 @@ class ScaleContentTest {
         tab: ScaleTab = ScaleTab.FACTOR,
         factor: Double = 2.0,
         showWarning: Boolean = false,
+        cookMode: Boolean = false,
+        checkedIds: Set<String> = emptySet(),
+        recipeMissing: Boolean = false,
     ) = ScaleUiState(
         isLoading = false,
         title = "Bread",
@@ -47,6 +52,9 @@ class ScaleContentTest {
         derivedYieldAmount = 8.0,
         showScaleWarning = showWarning,
         rows = listOf(row("2 cup", "Flour")),
+        cookMode = cookMode,
+        checkedIds = checkedIds,
+        recipeMissing = recipeMissing,
     )
 
     private fun content(state: ScaleUiState, callbacks: ScaleCallbacks = ScaleCallbacks()) {
@@ -81,7 +89,7 @@ class ScaleContentTest {
     fun `warning banner shows for large factors`() {
         content(state(factor = 5.0, showWarning = true))
         composeRule.onNodeWithText(
-            "Big batches don't always scale evenly — check pan sizes, baking times and leaveners.",
+            "×5 is a big jump.",
             substring = true,
         ).assertIsDisplayed()
     }
@@ -90,8 +98,40 @@ class ScaleContentTest {
     fun `warning banner shows for very small factors`() {
         content(state(factor = 0.1, showWarning = true))
         composeRule.onNodeWithText(
-            "Very small batches can be hard to measure accurately.",
+            "makes a very small batch.",
             substring = true,
         ).assertIsDisplayed()
+    }
+
+    @Test
+    fun `cook mode hides inputs and shows the hint`() {
+        content(state(cookMode = true))
+        composeRule.onNodeWithText(
+            "Tap an ingredient to check it off. The screen stays on.",
+        ).assertIsDisplayed()
+        composeRule.onAllNodesWithText("Custom multiplier").assertCountEquals(0)
+        composeRule.onAllNodesWithText("Show original amounts").assertCountEquals(0)
+        composeRule.onAllNodesWithText("×Factor").assertCountEquals(0)
+        // Summary and rows still visible.
+        composeRule.onNodeWithText("×2 · Makes 8 servings").assertIsDisplayed()
+        composeRule.onNodeWithText("Flour").assertIsDisplayed()
+    }
+
+    @Test
+    fun `tapping a row in cook mode toggles it checked`() {
+        var toggled = ""
+        content(
+            state(cookMode = true),
+            ScaleCallbacks(onToggleChecked = { toggled = it }),
+        )
+        composeRule.onNodeWithText("Flour").performClick()
+        assertEquals("1", toggled)
+    }
+
+    @Test
+    fun `a missing recipe shows the empty message`() {
+        content(state(recipeMissing = true))
+        composeRule.onNodeWithText("This recipe no longer exists").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Flour").assertCountEquals(0)
     }
 }

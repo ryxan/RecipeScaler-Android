@@ -1,5 +1,6 @@
 package com.ryxan.recipescaler.feature.recipes
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,26 +13,41 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -43,15 +59,21 @@ import com.ryxan.recipescaler.core.domain.model.formatYield
 fun RecipeListScreen(
     onOpenRecipe: (Long) -> Unit,
     onNewRecipe: () -> Unit,
+    onQuickScale: (String) -> Unit,
     onNavigateToSettings: () -> Unit,
     viewModel: RecipeListViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val quickScaleTitle = stringResource(R.string.quick_scale_title)
     RecipeListContent(
         state = state,
         onQueryChange = viewModel::onQueryChange,
         onOpenRecipe = onOpenRecipe,
         onNewRecipe = onNewRecipe,
+        onQuickScale = { onQuickScale(quickScaleTitle) },
+        onDelete = viewModel::delete,
+        onUndo = viewModel::undoDelete,
+        onDismissUndo = viewModel::dismissUndo,
         onNavigateToSettings = onNavigateToSettings,
     )
 }
@@ -63,13 +85,45 @@ fun RecipeListContent(
     onQueryChange: (String) -> Unit,
     onOpenRecipe: (Long) -> Unit,
     onNewRecipe: () -> Unit,
+    onQuickScale: () -> Unit,
+    onDelete: (Long) -> Unit,
+    onUndo: () -> Unit,
+    onDismissUndo: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
+    val undoLabel = stringResource(R.string.action_undo)
+    val deletedMessage = state.pendingUndo?.let {
+        if (it.title.isBlank()) stringResource(R.string.snackbar_recipe_deleted)
+        else stringResource(R.string.snackbar_deleted_titled, it.title)
+    }
+    LaunchedEffect(state.pendingUndo?.id) {
+        if (deletedMessage != null) {
+            when (
+                snackbarHostState.showSnackbar(
+                    message = deletedMessage,
+                    actionLabel = undoLabel,
+                    duration = SnackbarDuration.Long,
+                )
+            ) {
+                SnackbarResult.ActionPerformed -> onUndo()
+                SnackbarResult.Dismissed -> onDismissUndo()
+            }
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.title_recipes)) },
                 actions = {
+                    IconButton(onClick = onQuickScale) {
+                        Icon(
+                            imageVector = Icons.Filled.Bolt,
+                            contentDescription = stringResource(R.string.quick_scale_title),
+                        )
+                    }
                     IconButton(onClick = onNavigateToSettings) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
@@ -122,6 +176,8 @@ fun RecipeListContent(
                     EmptyMessage(
                         title = stringResource(R.string.empty_recipes_title),
                         body = stringResource(R.string.empty_recipes_body),
+                        actionLabel = stringResource(R.string.quick_scale_title),
+                        onAction = onQuickScale,
                     )
                 }
                 state.recipes.isEmpty() && state.query.isNotBlank() -> {
@@ -136,11 +192,16 @@ fun RecipeListContent(
                         contentPadding = PaddingValues(bottom = 88.dp),
                     ) {
                         items(state.recipes, key = { it.id }) { summary ->
-                            RecipeRow(
-                                summary = summary,
-                                onClick = { onOpenRecipe(summary.id) },
+                            SwipeToDeleteItem(
+                                onDelete = { onDelete(summary.id) },
                                 modifier = Modifier.animateItem(),
-                            )
+                            ) {
+                                RecipeRow(
+                                    summary = summary,
+                                    onClick = { onOpenRecipe(summary.id) },
+                                    onDelete = { onDelete(summary.id) },
+                                )
+                            }
                         }
                     }
                 }
@@ -149,14 +210,63 @@ fun RecipeListContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SwipeToDeleteItem(
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val dismissState = rememberSwipeToDismissBoxState()
+    LaunchedEffect(dismissState.currentValue) {
+        if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
+            onDelete()
+            dismissState.snapTo(SwipeToDismissBoxValue.Settled)
+        }
+    }
+    SwipeToDismissBox(
+        state = dismissState,
+        modifier = modifier,
+        enableDismissFromStartToEnd = false,
+        backgroundContent = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.errorContainer)
+                    .padding(end = 24.dp),
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                Icon(
+                    Icons.Filled.Delete,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                )
+            }
+        },
+    ) {
+        content()
+    }
+}
+
 @Composable
 private fun RecipeRow(
     summary: RecipeSummary,
     onClick: () -> Unit,
+    onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val deleteLabel = stringResource(R.string.action_delete)
     ListItem(
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .semantics {
+                customActions = listOf(
+                    CustomAccessibilityAction(label = deleteLabel) {
+                        onDelete()
+                        true
+                    },
+                )
+            },
         headlineContent = {
             Text(
                 text = summary.title.ifBlank { stringResource(R.string.untitled_recipe) },
@@ -184,7 +294,12 @@ private fun supportingText(summary: RecipeSummary): String {
 }
 
 @Composable
-private fun EmptyMessage(title: String, body: String?) {
+private fun EmptyMessage(
+    title: String,
+    body: String?,
+    actionLabel: String? = null,
+    onAction: (() -> Unit)? = null,
+) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -202,6 +317,11 @@ private fun EmptyMessage(title: String, body: String?) {
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            }
+            if (actionLabel != null && onAction != null) {
+                FilledTonalButton(onClick = onAction) {
+                    Text(actionLabel)
+                }
             }
         }
     }

@@ -37,11 +37,15 @@
     <string name="ingredient_cap_reached">Only the first 50 ingredients were added</string>
     <string name="confirm_import_title">Import ingredients</string>
     <string name="confirm_import_message">Replace the current ingredients, or append to them?</string>
-    <string name="confirm_delete_title">Delete recipe?</string>
-    <string name="confirm_delete_message">This can\'t be undone.</string>
     <string name="confirm_clear_title">Clear ingredients?</string>
     <string name="confirm_clear_message">Remove all ingredient rows?</string>
     <string name="msg_cant_read">Can\'t read \'%1$s\'</string>
+    <string name="action_undo">Undo</string>
+    <string name="snackbar_recipe_deleted">Recipe deleted</string>
+    <string name="snackbar_deleted_titled">Deleted “%1$s”</string>
+    <string name="action_reorder">Reorder</string>
+    <string name="action_move_up">Move up</string>
+    <string name="action_move_down">Move down</string>
 
     <!-- Scale view -->
     <string name="action_copy">Copy</string>
@@ -56,8 +60,8 @@
     <string name="scale_original_yield">Original: %1$s %2$s</string>
     <string name="scale_factor_prefix">×%1$s</string>
     <string name="scale_makes">Makes %1$s %2$s</string>
-    <string name="scale_warning_big">Big batches don\'t always scale evenly — check pan sizes, baking times and leaveners.</string>
-    <string name="scale_warning_small">Very small batches can be hard to measure accurately.</string>
+    <string name="scale_warning_big">×%1$s is a big jump. Large batches don\'t scale perfectly: split across pans or use bigger ones, check doneness early, and taste before adding all the salt and spices.</string>
+    <string name="scale_warning_small">×%1$s makes a very small batch. Tiny amounts are hard to measure — a kitchen scale helps, and cooking times will be shorter.</string>
     <string name="scale_show_original">Show original amounts</string>
     <string name="scale_was">was %1$s</string>
     <string name="scale_from_range">Scaled from the low end of a range</string>
@@ -71,14 +75,19 @@
     <string name="scale_label_amount">Amount</string>
     <string name="scale_label_unit">Unit</string>
     <string name="scale_label_custom_factor">Custom multiplier</string>
+    <string name="action_cook_mode">Cook mode</string>
+    <string name="action_exit_cook_mode">Exit cook mode</string>
+    <string name="cook_mode_hint">Tap an ingredient to check it off. The screen stays on.</string>
+    <string name="scale_recipe_missing">This recipe no longer exists</string>
 
     <!-- Recipe list -->
     <string name="action_new_recipe">New recipe</string>
+    <string name="quick_scale_title">Quick scale</string>
     <string name="search_recipes">Search recipes</string>
     <string name="action_clear_search">Clear search</string>
     <string name="untitled_recipe">Untitled recipe</string>
     <string name="empty_recipes_title">No recipes yet</string>
-    <string name="empty_recipes_body">Tap New recipe to add one</string>
+    <string name="empty_recipes_body">Save a recipe once, then scale it to any batch size.</string>
     <string name="empty_search_results">No recipes match your search</string>
     <plurals name="ingredient_count">
         <item quantity="one">%d ingredient</item>

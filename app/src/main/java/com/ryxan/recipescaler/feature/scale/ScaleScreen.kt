@@ -15,11 +15,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.outlined.Checklist
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -43,6 +46,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,7 +54,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import android.content.ClipData
@@ -93,6 +101,8 @@ fun ScaleScreen(
             onIngredientUnit = viewModel::setIngredientUnit,
             onFactorText = viewModel::setFactorText,
             onShowOriginal = viewModel::setShowOriginal,
+            onCookMode = viewModel::toggleCookMode,
+            onToggleChecked = viewModel::toggleChecked,
             onCopy = { format ->
                 scope.launch {
                     clipboard.setClipEntry(
@@ -120,6 +130,8 @@ data class ScaleCallbacks(
     val onIngredientUnit: (KitchenUnit) -> Unit = {},
     val onFactorText: (String) -> Unit = {},
     val onShowOriginal: (Boolean) -> Unit = {},
+    val onCookMode: () -> Unit = {},
+    val onToggleChecked: (String) -> Unit = {},
     val onCopy: (CopyFormat) -> Unit = {},
     val onShare: () -> Unit = {},
 )
@@ -132,6 +144,11 @@ fun ScaleContent(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     var copyMenuExpanded by remember { mutableStateOf(false) }
+    val view = LocalView.current
+    DisposableEffect(state.cookMode) {
+        view.keepScreenOn = state.cookMode
+        onDispose { view.keepScreenOn = false }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -153,6 +170,15 @@ fun ScaleContent(
                     }
                 },
                 actions = {
+                    IconButton(onClick = callbacks.onCookMode) {
+                        Icon(
+                            Icons.Outlined.Checklist,
+                            contentDescription = stringResource(
+                                if (state.cookMode) R.string.action_exit_cook_mode
+                                else R.string.action_cook_mode,
+                            ),
+                        )
+                    }
                     Box {
                         IconButton(onClick = { copyMenuExpanded = true }) {
                             Icon(
@@ -198,42 +224,66 @@ fun ScaleContent(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            item(key = "tabs") {
-                val tabs = listOf(
-                    ScaleTab.SERVINGS to R.string.scale_tab_servings,
-                    ScaleTab.INGREDIENT to R.string.scale_tab_ingredient,
-                    ScaleTab.FACTOR to R.string.scale_tab_factor,
-                )
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                    tabs.forEachIndexed { index, (tab, labelRes) ->
-                        SegmentedButton(
-                            selected = state.inputs.tab == tab,
-                            onClick = { callbacks.onTab(tab) },
-                            shape = SegmentedButtonDefaults.itemShape(
-                                index = index,
-                                count = tabs.size,
-                            ),
-                        ) {
-                            Text(stringResource(labelRes))
+            if (state.recipeMissing) {
+                item(key = "missing") {
+                    Box(
+                        modifier = Modifier.fillParentMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            stringResource(R.string.scale_recipe_missing),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            } else {
+            if (!state.cookMode) {
+                item(key = "tabs") {
+                    val tabs = listOf(
+                        ScaleTab.SERVINGS to R.string.scale_tab_servings,
+                        ScaleTab.INGREDIENT to R.string.scale_tab_ingredient,
+                        ScaleTab.FACTOR to R.string.scale_tab_factor,
+                    )
+                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                        tabs.forEachIndexed { index, (tab, labelRes) ->
+                            SegmentedButton(
+                                selected = state.inputs.tab == tab,
+                                onClick = { callbacks.onTab(tab) },
+                                shape = SegmentedButtonDefaults.itemShape(
+                                    index = index,
+                                    count = tabs.size,
+                                ),
+                            ) {
+                                Text(stringResource(labelRes))
+                            }
                         }
                     }
                 }
-            }
 
-            item(key = "input") {
-                when (state.inputs.tab) {
-                    ScaleTab.SERVINGS -> ServingsInput(state, callbacks)
-                    ScaleTab.INGREDIENT -> IngredientInput(state, callbacks)
-                    ScaleTab.FACTOR -> FactorInput(state, callbacks)
+                item(key = "input") {
+                    when (state.inputs.tab) {
+                        ScaleTab.SERVINGS -> ServingsInput(state, callbacks)
+                        ScaleTab.INGREDIENT -> IngredientInput(state, callbacks)
+                        ScaleTab.FACTOR -> FactorInput(state, callbacks)
+                    }
                 }
-            }
 
-            state.message?.let { message ->
-                item(key = "message") {
+                state.message?.let { message ->
+                    item(key = "message") {
+                        Text(
+                            text = messageText(message),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
+            } else {
+                item(key = "cook_hint") {
                     Text(
-                        text = messageText(message),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
+                        stringResource(R.string.cook_mode_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -249,37 +299,55 @@ fun ScaleContent(
                             containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         ),
                     ) {
-                        Text(
-                            text = stringResource(
-                                if (state.factor > 4.0) R.string.scale_warning_big
-                                else R.string.scale_warning_small,
-                            ),
-                            style = MaterialTheme.typography.bodyMedium,
+                        Row(
                             modifier = Modifier.padding(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.Top,
+                        ) {
+                            Icon(
+                                Icons.Outlined.WarningAmber,
+                                contentDescription = null,
+                            )
+                            Text(
+                                text = stringResource(
+                                    if (state.factor > 4.0) R.string.scale_warning_big
+                                    else R.string.scale_warning_small,
+                                    formatYield(state.factor),
+                                ),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (!state.cookMode) {
+                item(key = "show_original") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            stringResource(R.string.scale_show_original),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Switch(
+                            checked = state.showOriginal,
+                            onCheckedChange = callbacks.onShowOriginal,
                         )
                     }
                 }
             }
 
-            item(key = "show_original") {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        stringResource(R.string.scale_show_original),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Switch(
-                        checked = state.showOriginal,
-                        onCheckedChange = callbacks.onShowOriginal,
-                    )
-                }
-            }
-
             items(state.rows, key = { it.id }) { row ->
-                ScaledRow(row = row, showOriginal = state.showOriginal)
+                ScaledRow(
+                    row = row,
+                    showOriginal = state.showOriginal && !state.cookMode,
+                    checked = if (state.cookMode) row.id in state.checkedIds else null,
+                    onToggle = { callbacks.onToggleChecked(row.id) },
+                )
+            }
             }
         }
     }
@@ -432,9 +500,27 @@ private fun SummaryLine(state: ScaleUiState) {
 }
 
 @Composable
-private fun ScaledRow(row: ScaledIngredient, showOriginal: Boolean) {
+private fun ScaledRow(
+    row: ScaledIngredient,
+    showOriginal: Boolean,
+    checked: Boolean?,
+    onToggle: () -> Unit,
+) {
+    val struck = checked == true
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (checked != null) {
+                    Modifier.toggleable(
+                        value = checked,
+                        role = Role.Checkbox,
+                        onValueChange = { onToggle() },
+                    )
+                } else {
+                    Modifier
+                },
+            ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -444,11 +530,21 @@ private fun ScaledRow(row: ScaledIngredient, showOriginal: Boolean) {
         ) { text ->
             QuantityText(
                 text = text,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleMedium.merge(
+                    color = if (struck) MaterialTheme.colorScheme.onSurfaceVariant
+                    else Color.Unspecified,
+                    textDecoration = if (struck) TextDecoration.LineThrough else null,
+                ),
             )
         }
         Column {
-            Text(row.name, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                row.name,
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (struck) MaterialTheme.colorScheme.onSurfaceVariant
+                else Color.Unspecified,
+                textDecoration = if (struck) TextDecoration.LineThrough else null,
+            )
             val captions = buildList {
                 when (row.status) {
                     ScaleStatus.RANGE_LOW_END -> {

@@ -15,6 +15,7 @@ room = "2.6.1"
 androidxTestCore = "1.6.1"
 robolectric = "4.14.1"
 turbine = "1.2.0"
+reorderable = "2.4.3"
 composeBom = "2025.09.01"
 junit = "4.13.2"
 junitExt = "1.2.1"
@@ -62,6 +63,7 @@ room-testing = { group = "androidx.room", name = "room-testing", version.ref = "
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
+reorderable = { group = "sh.calvin.reorderable", name = "reorderable", version.ref = "reorderable" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitExt" }

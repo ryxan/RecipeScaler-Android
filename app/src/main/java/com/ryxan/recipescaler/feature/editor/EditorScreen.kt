@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material3.AlertDialog
@@ -51,6 +53,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,6 +64,8 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.alpha
@@ -75,6 +80,8 @@ import com.ryxan.recipescaler.R
 import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import com.ryxan.recipescaler.core.domain.model.UnitFamily
 import kotlinx.coroutines.launch
+import sh.calvin.reorderable.ReorderableItem
+import sh.calvin.reorderable.rememberReorderableLazyListState
 
 @Composable
 fun EditorScreen(
@@ -119,8 +126,9 @@ fun EditorScreen(
             onImportAppend = viewModel::confirmImportAppend,
             onClearClick = viewModel::requestClear,
             onClearConfirm = viewModel::confirmClear,
-            onDeleteClick = viewModel::requestDelete,
-            onDeleteConfirm = viewModel::confirmDelete,
+            onDelete = viewModel::deleteRecipe,
+            onMoveRow = viewModel::moveRow,
+            onInferName = viewModel::inferFromName,
             onDismissDialog = viewModel::dismissDialog,
         ),
     )
@@ -144,8 +152,9 @@ data class EditorCallbacks(
     val onImportAppend: () -> Unit = {},
     val onClearClick: () -> Unit = {},
     val onClearConfirm: () -> Unit = {},
-    val onDeleteClick: () -> Unit = {},
-    val onDeleteConfirm: () -> Unit = {},
+    val onDelete: () -> Unit = {},
+    val onMoveRow: (Long, Long) -> Unit = { _, _ -> },
+    val onInferName: (Long) -> Unit = {},
     val onDismissDialog: () -> Unit = {},
 )
 
@@ -168,10 +177,25 @@ fun EditorContent(
     var pendingFocusKey by remember { mutableStateOf<Long?>(null) }
     var unitPickerRowKey by remember { mutableStateOf<Long?>(null) }
     var menuExpanded by remember { mutableStateOf(false) }
+    var autoFocusHandled by rememberSaveable { mutableStateOf(false) }
     val qtyValues = remember { mutableStateMapOf<Long, androidx.compose.runtime.MutableState<TextFieldValue>>() }
+    val lazyListState = rememberLazyListState()
+    val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
+        val fromKey = from.key
+        val toKey = to.key
+        if (fromKey is Long && toKey is Long) callbacks.onMoveRow(fromKey, toKey)
+    }
+
+    LaunchedEffect(state.autoFocusKey) {
+        if (!autoFocusHandled && state.autoFocusKey != null) {
+            pendingFocusKey = state.autoFocusKey
+            autoFocusHandled = true
+        }
+    }
 
     fun goNext() {
         val f = focused ?: return
+        if (f.field == RowField.NAME) callbacks.onInferName(f.rowKey)
         val idx = state.rows.indexOfFirst { it.key == f.rowKey }
         val next = state.rows.getOrNull(idx + 1)
         if (next != null) {
@@ -244,7 +268,7 @@ fun EditorContent(
                                     text = { Text(stringResource(R.string.action_delete_recipe)) },
                                     onClick = {
                                         menuExpanded = false
-                                        callbacks.onDeleteClick()
+                                        callbacks.onDelete()
                                     },
                                 )
                             }
@@ -273,6 +297,7 @@ fun EditorContent(
                 .imePadding(),
         ) {
             LazyColumn(
+                state = lazyListState,
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(
                     start = 16.dp,
@@ -333,31 +358,62 @@ fun EditorContent(
                     )
                 }
                 items(state.rows, key = { it.key }) { row ->
-                    IngredientRow(
-                        row = row,
-                        qtyValue = qtyValues.getOrPut(row.key) {
-                            mutableStateOf(
-                                TextFieldValue(
-                                    row.rawQuantity,
-                                    TextRange(row.rawQuantity.length),
-                                ),
-                            )
-                        },
-                        requestFocus = pendingFocusKey == row.key,
-                        onFocusedHandled = { pendingFocusKey = null },
-                        onFocusChanged = { hasFocus, field ->
-                            if (hasFocus) {
-                                focused = FocusedField(row.key, field)
-                            } else if (focused?.rowKey == row.key && focused?.field == field) {
-                                focused = null
-                            }
-                        },
-                        onQtyChange = { callbacks.onQtyChange(row.key, it) },
-                        onUnitClick = { unitPickerRowKey = row.key },
-                        onNameChange = { callbacks.onNameChange(row.key, it) },
-                        onNext = ::goNext,
-                        onRemove = { callbacks.onRemoveRow(row.key) },
-                    )
+                    ReorderableItem(reorderableState, key = row.key) {
+                        val idx = state.rows.indexOfFirst { it.key == row.key }
+                        val prev = state.rows.getOrNull(idx - 1)
+                        val next = state.rows.getOrNull(idx + 1)
+                        val moveUp = stringResource(R.string.action_move_up)
+                        val moveDown = stringResource(R.string.action_move_down)
+                        IngredientRow(
+                            row = row,
+                            modifier = Modifier.semantics {
+                                customActions = buildList {
+                                    if (prev != null) {
+                                        add(
+                                            CustomAccessibilityAction(moveUp) {
+                                                callbacks.onMoveRow(row.key, prev.key)
+                                                true
+                                            },
+                                        )
+                                    }
+                                    if (next != null) {
+                                        add(
+                                            CustomAccessibilityAction(moveDown) {
+                                                callbacks.onMoveRow(row.key, next.key)
+                                                true
+                                            },
+                                        )
+                                    }
+                                }
+                            },
+                            qtyValue = qtyValues.getOrPut(row.key) {
+                                mutableStateOf(
+                                    TextFieldValue(
+                                        row.rawQuantity,
+                                        TextRange(row.rawQuantity.length),
+                                    ),
+                                )
+                            },
+                            dragModifier = Modifier.draggableHandle(),
+                            requestFocus = pendingFocusKey == row.key,
+                            onFocusedHandled = { pendingFocusKey = null },
+                            onFocusChanged = { hasFocus, field ->
+                                if (hasFocus) {
+                                    focused = FocusedField(row.key, field)
+                                } else {
+                                    if (field == RowField.NAME) callbacks.onInferName(row.key)
+                                    if (focused?.rowKey == row.key && focused?.field == field) {
+                                        focused = null
+                                    }
+                                }
+                            },
+                            onQtyChange = { callbacks.onQtyChange(row.key, it) },
+                            onUnitClick = { unitPickerRowKey = row.key },
+                            onNameChange = { callbacks.onNameChange(row.key, it) },
+                            onNext = ::goNext,
+                            onRemove = { callbacks.onRemoveRow(row.key) },
+                        )
+                    }
                 }
                 item(key = "add_row") {
                     TextButton(
@@ -403,6 +459,8 @@ fun EditorContent(
 private fun IngredientRow(
     row: EditorRow,
     qtyValue: androidx.compose.runtime.MutableState<TextFieldValue>,
+    modifier: Modifier = Modifier,
+    dragModifier: Modifier = Modifier,
     requestFocus: Boolean,
     onFocusedHandled: () -> Unit,
     onFocusChanged: (hasFocus: Boolean, field: RowField) -> Unit,
@@ -420,9 +478,16 @@ private fun IngredientRow(
         }
     }
     Row(
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
+        Icon(
+            Icons.Filled.DragHandle,
+            contentDescription = stringResource(R.string.action_reorder),
+            modifier = dragModifier,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         OutlinedTextField(
             value = qtyValue.value,
             onValueChange = { v ->
@@ -591,21 +656,6 @@ private fun EditorDialogs(state: EditorUiState, callbacks: EditorCallbacks) {
                     TextButton(onClick = callbacks.onImportAppend) {
                         Text(stringResource(R.string.action_append))
                     }
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = callbacks.onDismissDialog) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            },
-        )
-        EditorDialog.ConfirmDelete -> AlertDialog(
-            onDismissRequest = callbacks.onDismissDialog,
-            title = { Text(stringResource(R.string.confirm_delete_title)) },
-            text = { Text(stringResource(R.string.confirm_delete_message)) },
-            confirmButton = {
-                TextButton(onClick = callbacks.onDeleteConfirm) {
-                    Text(stringResource(R.string.action_delete))
                 }
             },
             dismissButton = {

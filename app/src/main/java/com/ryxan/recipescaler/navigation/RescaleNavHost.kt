@@ -16,9 +16,9 @@ object RecipeList
 @Serializable
 object Settings
 
-/** [recipeId] 0 means a new recipe. */
+/** [recipeId] 0 means a new recipe; [initialTitle] prefills the title (Quick scale). */
 @Serializable
-data class Editor(val recipeId: Long = 0L)
+data class Editor(val recipeId: Long = 0L, val initialTitle: String? = null)
 
 @Serializable
 data class Scale(val recipeId: Long)
@@ -32,8 +32,9 @@ fun RescaleNavHost() {
     ) {
         composable<RecipeList> {
             RecipeListScreen(
-                onOpenRecipe = { id -> navController.navigate(Editor(id)) },
+                onOpenRecipe = { id -> navController.navigate(Editor(recipeId = id)) },
                 onNewRecipe = { navController.navigate(Editor()) },
+                onQuickScale = { title -> navController.navigate(Editor(initialTitle = title)) },
                 onNavigateToSettings = { navController.navigate(Settings) },
             )
         }
