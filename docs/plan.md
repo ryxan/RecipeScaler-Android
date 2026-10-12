@@ -14,7 +14,7 @@ How to pull the Recipe Scaler out of ToolStack-Android and turn it into its own 
 | 1. Core logic | ✅ Done 2026-10-11 | `9135fd2`, `69c1a73` | 248 `:core:domain` tests green; B1–B10 fixed |
 | 2. Data layer | ✅ Done 2026-10-11 | `5473ec9` | Room + DataStore settings; 15 `:core:data` tests green; schema v1 exported |
 | 3. MVP UI | 🟡 Code done 2026-10-11, device check pending | `a487219`, `d512808` | List/Editor/Scale/Settings; 258 domain + 17 data + 42 app tests green |
-| 4. Polish | 🟡 4a done 2026-10-11; 4b (adaptive, a11y, icon/splash) pending | `4ab5b71` | Undo/swipe delete, cook mode, Quick scale, reorder, unit inference; 258 domain + 19 data + 65 app tests green |
+| 4. Polish | ✅ 4a done 2026-10-11 | `4ab5b71` | Undo/swipe delete, cook mode, Quick scale, reorder, unit inference; 258 domain + 19 data + 65 app tests green. Adaptive/a11y/icon moved to [Later](#later-deferred-and-future-ideas) |
 | 5. Import, monetization, ads | Not started | | |
 | 6. Play Store readiness | Not started | | |
 
@@ -466,12 +466,8 @@ Each phase has exit criteria. Don't start the next phase until they're met.
 - **Exit:** you can enter a recipe, scale it all three ways, save it, and reopen it on a real device. *(Still needs a check on a real device.)*
 
 ### Phase 4: Polish
-- [ ] Adaptive list-detail layout; landscape and foldable checks.
-- [ ] Accessibility pass (TalkBack fraction speech, 200% font scale, contrast).
 - [x] Checklist/cook mode (keep screen on), Undo on delete, empty states, scale-warning copy. *(4a. Swipe-to-delete on the list with a "Delete" a11y action; Quick scale in the list empty state and top bar; a "recipe no longer exists" state on Scale View; warning copy now includes the factor.)*
-- [ ] App icon (adaptive + themed monochrome), splash screen. *(User will supply final art; 4b wires up the plumbing with the placeholder.)*
-- Adaptive layout decision: `material3-adaptive` `NavigableListDetailPaneScaffold` (per §4.1).
-- **Exit:** no a11y scanner warnings; screenshots look right on phone, tablet, and dark mode.
+- Moved to [Later](#later-deferred-and-future-ideas) on 2026-10-11, so the UI can be tweaked first: adaptive layout, the accessibility pass, and the app icon/splash.
 
 ### Phase 5: Import, Monetization and Ads (required for v1)
 - [ ] Ads: Google Mobile Ads SDK (AdMob) + **UMP consent** (GDPR/US-states consent form before the first ad request). Prefer banner placement on list/scale screens; no interstitials mid-cooking. Don't initialize or request ads at all for Pro users.
@@ -491,6 +487,14 @@ Each phase has exit criteria. Don't start the next phase until they're met.
 - [ ] **Closed testing:** new *personal* developer accounts must run a closed test with a minimum number of testers for a minimum period before production access. Check current numbers in Play Console (they've been 12 testers / 14 days) and plan for it early.
 - [ ] Internal testing → closed testing → production staged rollout.
 - **Exit:** production release approved.
+
+### Later: Deferred and Future Ideas
+Not scheduled yet. Pick these up after the UI tweaks. The icon and the accessibility pass need to be done before the Phase 6 store listing.
+- [ ] Adaptive list-detail layout; landscape and foldable checks. *(Decided: `material3-adaptive` `NavigableListDetailPaneScaffold`, per §4.1.)*
+- [ ] Accessibility pass (TalkBack fraction speech, 200% font scale, contrast).
+- [ ] App icon (adaptive + themed monochrome), splash screen. *(User will supply final art; until then, wire up the plumbing with the placeholder.)*
+- [ ] Unit inference edge case: after typing "2 cups flour" in the name field, tapping straight into the same row's qty field loses focus, because the split gives the row a new key.
+- **Exit (from the old Phase 4):** no a11y scanner warnings; screenshots look right on phone, tablet, and dark mode.
 
 ---
 
