@@ -15,7 +15,7 @@ How to pull the Recipe Scaler out of ToolStack-Android and turn it into its own 
 | 2. Data layer | ✅ Done 2026-10-11 | `5473ec9` | Room + DataStore settings; 15 `:core:data` tests green; schema v1 exported |
 | 3. MVP UI | 🟡 Code done 2026-10-11, device check pending | `a487219`, `d512808` | List/Editor/Scale/Settings; 258 domain + 17 data + 42 app tests green |
 | 4. Polish | ✅ 4a done 2026-10-11 | `4ab5b71` | Undo/swipe delete, cook mode, Quick scale, reorder, unit inference; 258 domain + 19 data + 65 app tests green. Adaptive/a11y/icon moved to [Later](#later-deferred-and-future-ideas) |
-| 5. Import, monetization, ads | Not started | | |
+| 5. Import, monetization | ✅ Code done 2026-10-12, device/billing check pending | `b195d82` | Scan (doc scanner/camera/gallery) + ML Kit OCR, Firebase AI import w/ quota + refund, Play Billing monthly+lifetime Pro, debug Pro toggle; 273 domain + 38 data + 107 app tests green. Ads deferred (untestable); Firebase app registration + Play products still needed — see Phase 5 notes |
 | 6. Play Store readiness | Not started | | |
 
 **Spec decisions made during implementation** (details in §3.3 and the tests):
@@ -470,12 +470,21 @@ Each phase has exit criteria. Don't start the next phase until they're met.
 - Moved to [Later](#later-deferred-and-future-ideas) on 2026-10-11, so the UI can be tweaked first: adaptive layout, the accessibility pass, and the app icon/splash.
 
 ### Phase 5: Import, Monetization and Ads (required for v1)
-- [ ] Ads: Google Mobile Ads SDK (AdMob) + **UMP consent** (GDPR/US-states consent form before the first ad request). Prefer banner placement on list/scale screens; no interstitials mid-cooking. Don't initialize or request ads at all for Pro users.
-- [ ] Move image helpers out of the old VM into `ImagePreprocessor` (data layer).
-- [ ] ML Kit scan behind an `OcrEngine` interface → `RecipeOcrParser.parseLines`.
-- [ ] AI import: `AiRecipeImporter` + `FirebaseAiRecipeImporter` + quota repo; new Firebase project and App Check.
-- [ ] Billing/paywall if AI import is paid. Port `RecipeScalerViewModelAiTest` scenarios to the new import VM.
-- **Exit:** scan and AI paths tested with fakes; credits refunded on every non-success (same rule as today).
+- [ ] Ads: Google Mobile Ads SDK (AdMob) + **UMP consent** (GDPR/US-states consent form before the first ad request). Prefer banner placement on list/scale screens; no interstitials mid-cooking. Don't initialize or request ads at all for Pro users. **Deferred 2026-10-12 at user request — can't test without an AdMob setup; do it with the Phase 6 store work.**
+- [x] Move image helpers out of the old VM into `ImagePreprocessor` (data layer).
+- [x] ML Kit scan behind an `OcrEngine` interface → `RecipeOcrParser.parseLines`.
+- [x] AI import: `AiRecipeImporter` + `FirebaseAiRecipeImporter` + quota repo; new Firebase project and App Check.
+- [x] Billing/paywall if AI import is paid. Port `RecipeScalerViewModelAiTest` scenarios to the new import VM.
+- **Exit:** scan and AI paths tested with fakes; credits refunded on every non-success (same rule as today). ✅ met 2026-10-12.
+
+**Phase 5 implementation notes (2026-10-12):**
+- Scan entry points: ML Kit Document Scanner, camera (`TakePicture` + FileProvider, no CAMERA permission), gallery (`PickVisualMedia`). Editor overflow → "Scan recipe" → source sheet with an AI-import toggle.
+- `ScanImporter` orchestrates: on-device OCR first, AI retry on poor results, on-device fallback on AI network errors, paywall when free credits are gone. Credit is reserved before the AI call and refunded (once, `NonCancellable`) on every non-success.
+- Quota: 2 free lifetime imports; Pro gets a hidden 30/day cap (`DataStoreAiImportQuota`).
+- Pro: monthly subscription + lifetime one-time purchase via Play Billing 8 (`PlayBillingProRepository`); entitlement re-queried on every process resume and persisted so Pro users don't flash free UI. Debug-only "Pretend Pro" switch in Settings (no-op in release).
+- **Firebase:** `google-services.json` is git-ignored and the google-services plugin applies only when the file is present, so clones still build (`AI_IMPORT_ENABLED` BuildConfig flag hides the AI toggle). ⚠️ ToolStack's `google-services.json` only registers `com.toolstack.io[.debug]` — a `com.ryxan.recipescaler` (and `.debug`) app registration in the Firebase project is still needed before AI import works on device.
+- **Untested on device:** real Play Billing (needs a Play Console test track + products `pro_monthly`/`pro_lifetime`), document-scanner/camera flows, App Check attestation.
+- Build env: `gradle/gradle-daemon-jvm.properties` pins the daemon to JDK 21 and `kotlin.compiler.execution.strategy=in-process` — JAVA_HOME points at JDK 25, which Kotlin 2.0.21 can't run on.
 
 ### Phase 6: Play Store Readiness
 - [ ] Release signing (Play App Signing), R8 rules verified on a release build, Baseline Profile.
