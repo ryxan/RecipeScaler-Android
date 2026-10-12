@@ -14,11 +14,25 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import com.ryxan.recipescaler.core.data.billing.PlayBillingProRepository
+import com.ryxan.recipescaler.core.data.billing.ProRepository
+import com.ryxan.recipescaler.core.data.di.ApplicationScope
+import com.ryxan.recipescaler.core.data.importer.AiImportQuota
+import com.ryxan.recipescaler.core.data.importer.AiRecipeImporter
+import com.ryxan.recipescaler.core.data.importer.AndroidImagePreprocessor
+import com.ryxan.recipescaler.core.data.importer.DataStoreAiImportQuota
+import com.ryxan.recipescaler.core.data.importer.FirebaseAiRecipeImporter
+import com.ryxan.recipescaler.core.data.importer.ImagePreprocessor
+import com.ryxan.recipescaler.core.data.importer.MlKitOcrEngine
+import com.ryxan.recipescaler.core.data.importer.OcrEngine
 import com.ryxan.recipescaler.core.data.settings.DataStoreSettingsRepository
 import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
 import com.ryxan.recipescaler.core.domain.formatting.defaultMeasurementSystemFor
 import com.ryxan.recipescaler.core.domain.repository.RecipeRepository
 import com.ryxan.recipescaler.core.domain.repository.SettingsRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import java.io.File
 import java.util.Locale
 import javax.inject.Qualifier
@@ -56,6 +70,12 @@ object DataModule {
     @DefaultMeasurementSystem
     fun provideDefaultMeasurementSystem(): MeasurementSystem =
         defaultMeasurementSystemFor(Locale.getDefault().country)
+
+    @Provides
+    @Singleton
+    @ApplicationScope
+    fun provideApplicationScope(): CoroutineScope =
+        CoroutineScope(SupervisorJob() + Dispatchers.Default)
 }
 
 @Module
@@ -69,4 +89,24 @@ abstract class RepositoryBindingsModule {
     @Binds
     @Singleton
     abstract fun bindSettingsRepository(impl: DataStoreSettingsRepository): SettingsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindOcrEngine(impl: MlKitOcrEngine): OcrEngine
+
+    @Binds
+    @Singleton
+    abstract fun bindImagePreprocessor(impl: AndroidImagePreprocessor): ImagePreprocessor
+
+    @Binds
+    @Singleton
+    abstract fun bindAiRecipeImporter(impl: FirebaseAiRecipeImporter): AiRecipeImporter
+
+    @Binds
+    @Singleton
+    abstract fun bindAiImportQuota(impl: DataStoreAiImportQuota): AiImportQuota
+
+    @Binds
+    @Singleton
+    abstract fun bindProRepository(impl: PlayBillingProRepository): ProRepository
 }

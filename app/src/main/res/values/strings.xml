@@ -47,6 +47,53 @@
     <string name="action_move_up">Move up</string>
     <string name="action_move_down">Move down</string>
 
+    <!-- Scan import -->
+    <string name="action_scan_recipe">Scan recipe</string>
+    <string name="scan_source_title">Scan a recipe</string>
+    <string name="action_scan_document">Scan document</string>
+    <string name="action_take_photo">Take photo</string>
+    <string name="action_choose_gallery">Choose from gallery</string>
+    <string name="scan_use_ai">Use AI import</string>
+    <string name="scan_ai_pro">Best for handwriting</string>
+    <string name="scan_ai_free_left">Best for handwriting · %1$d free left</string>
+    <string name="scan_ai_pro_feature">Pro feature</string>
+    <string name="scan_reading">Reading recipe…</string>
+    <string name="scan_reading_ai">Reading with AI…</string>
+    <string name="scan_error_no_ingredients">Couldn\'t find any ingredients in that image.</string>
+    <string name="scan_error_recognition">Couldn\'t read that image.</string>
+    <string name="scan_error_network">AI import needs an internet connection.</string>
+    <string name="scan_error_blocked">That image couldn\'t be processed.</string>
+    <string name="scan_error_failed">AI import didn\'t work. No import credit was used.</string>
+    <string name="scan_error_limit">You\'ve reached today\'s AI import limit. Try again tomorrow.</string>
+    <string name="scan_error_rate_limited">AI import is busy right now. Try again in a minute.</string>
+    <string name="scan_failed_title">Scan didn\'t work</string>
+    <string name="action_try_ai_import">Try AI import</string>
+    <string name="action_scan_on_device">Scan on device</string>
+    <string name="action_ok">OK</string>
+    <string name="scan_snackbar_not_right">Not quite right?</string>
+    <string name="scan_no_scanner">Scanner isn\'t available on this device</string>
+    <string name="scan_no_camera">No camera app available</string>
+    <string name="row_needs_review">Check this line</string>
+    <string name="ai_paywall_title">AI import is a Pro feature</string>
+    <string name="ai_paywall_body">You\'ve used your 2 free AI imports. Upgrade to Pro for unlimited imports.</string>
+    <string name="action_see_pro">See Pro</string>
+    <string name="action_not_now">Not now</string>
+
+    <!-- Pro -->
+    <string name="title_pro">Rescale Pro</string>
+    <string name="pro_benefit_ai">Unlimited AI recipe import</string>
+    <string name="pro_benefit_handwriting">Reads handwritten and printed recipe cards</string>
+    <string name="pro_price_monthly">%1$s / month</string>
+    <string name="pro_price_lifetime">%1$s · lifetime</string>
+    <string name="pro_unavailable">Purchases aren\'t available right now</string>
+    <string name="action_restore_purchases">Restore purchases</string>
+    <string name="pro_active">You\'re Pro — thank you!</string>
+    <string name="pro_pending">Purchase pending</string>
+    <string name="pro_state_active">Active</string>
+    <string name="pro_refresh_failed">Couldn\'t check purchases. Try again later.</string>
+    <string name="settings_section_debug">Debug</string>
+    <string name="settings_debug_pro">Pretend Pro</string>
+
     <!-- Scale view -->
     <string name="action_copy">Copy</string>
     <string name="action_share">Share</string>

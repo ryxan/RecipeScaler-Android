@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.serialization)
 }
 
 android {
@@ -20,6 +21,9 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    buildFeatures {
+        buildConfig = true
+    }
     sourceSets {
         getByName("test") {
             assets.srcDir("$projectDir/schemas")
@@ -28,6 +32,10 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
+            all {
+                it.systemProperty("robolectric.logging", "stdout")
+                it.testLogging { events("standard_out") }
+            }
         }
     }
 }
@@ -46,6 +54,16 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.core.ktx)
+    implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.lifecycle.process)
+
+    implementation(libs.billing.ktx)
+    implementation(libs.mlkit.text.recognition)
+    val firebaseBom = platform(libs.firebase.bom)
+    implementation(firebaseBom)
+    implementation(libs.firebase.ai)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

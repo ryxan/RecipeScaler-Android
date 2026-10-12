@@ -1,6 +1,15 @@
 package com.ryxan.recipescaler.feature.editor
 
+import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,6 +45,8 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -43,6 +54,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -63,6 +75,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
@@ -77,8 +90,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ryxan.recipescaler.R
+import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import com.ryxan.recipescaler.core.domain.model.UnitFamily
+import com.ryxan.recipescaler.feature.importer.ScanError
 import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -87,13 +104,68 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 fun EditorScreen(
     onNavigateUp: () -> Unit,
     onScale: (Long) -> Unit,
+    onNavigateToPro: () -> Unit = {},
     viewModel: EditorViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val nothingImported = stringResource(R.string.msg_nothing_imported)
     val capReached = stringResource(R.string.ingredient_cap_reached)
+    val scannerUnavailable = stringResource(R.string.scan_no_scanner)
+    val noCamera = stringResource(R.string.scan_no_camera)
+    val scanNotRight = stringResource(R.string.scan_snackbar_not_right)
+    val tryAiLabel = stringResource(R.string.action_try_ai_import)
+
+    // ── Scan launchers ────────────────────────────────────────────────────────
+
+    // TakePicture grants the camera app a URI permission, so no CAMERA runtime
+    // permission is needed.
+    var pendingCameraUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+    val cameraLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicture(),
+    ) { success: Boolean ->
+        val uri = pendingCameraUri
+        pendingCameraUri = null
+        if (success && uri != null) {
+            viewModel.onImageCaptured(uri, deleteWhenDone = true)
+        }
+    }
+
+    // ML Kit Document Scanner: live edge detection, auto-capture, perspective
+    // correction, cleanup filters, and built-in gallery import — no CAMERA
+    // permission required.
+    val docScanner = remember {
+        val options = GmsDocumentScannerOptions.Builder()
+            .setGalleryImportAllowed(true)
+            .setPageLimit(1)
+            .setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_JPEG)
+            .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_FULL)
+            .build()
+        GmsDocumentScanning.getClient(options)
+    }
+    val docScannerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult(),
+    ) { result: ActivityResult ->
+        val uri = if (result.resultCode == Activity.RESULT_OK) {
+            GmsDocumentScanningResult.fromActivityResultIntent(result.data)
+                ?.pages?.firstOrNull()?.imageUri
+        } else {
+            null
+        }
+        if (uri != null) {
+            viewModel.onImageCaptured(uri, deleteWhenDone = true)
+        }
+    }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia(),
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.onImageCaptured(uri, deleteWhenDone = false)
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -102,6 +174,15 @@ fun EditorScreen(
                 EditorEvent.NothingToImport ->
                     snackbarHostState.showSnackbar(nothingImported)
                 EditorEvent.IngredientCapReached -> snackbarHostState.showSnackbar(capReached)
+                EditorEvent.ScanLooksPoor -> {
+                    val result = snackbarHostState.showSnackbar(
+                        message = scanNotRight,
+                        actionLabel = tryAiLabel,
+                    )
+                    if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
+                        viewModel.retryAiImport()
+                    }
+                }
             }
         }
     }
@@ -130,6 +211,53 @@ fun EditorScreen(
             onMoveRow = viewModel::moveRow,
             onInferName = viewModel::inferFromName,
             onDismissDialog = viewModel::dismissDialog,
+            onScanClick = viewModel::openScanSheet,
+            onUseAiChange = viewModel::setUseAiImport,
+            onScanDocument = {
+                val activity = context as? Activity
+                if (activity == null) {
+                    scope.launch { snackbarHostState.showSnackbar(scannerUnavailable) }
+                } else {
+                    docScanner.getStartScanIntent(activity)
+                        .addOnSuccessListener { intentSender ->
+                            try {
+                                docScannerLauncher.launch(
+                                    IntentSenderRequest.Builder(intentSender).build(),
+                                )
+                            } catch (e: Exception) {
+                                scope.launch { snackbarHostState.showSnackbar(scannerUnavailable) }
+                            }
+                        }
+                        .addOnFailureListener {
+                            scope.launch { snackbarHostState.showSnackbar(scannerUnavailable) }
+                        }
+                }
+            },
+            onTakePhoto = {
+                val uri = viewModel.newCameraUri()
+                if (uri == null) {
+                    scope.launch { snackbarHostState.showSnackbar(noCamera) }
+                } else {
+                    pendingCameraUri = uri
+                    try {
+                        cameraLauncher.launch(uri)
+                    } catch (e: ActivityNotFoundException) {
+                        pendingCameraUri = null
+                        scope.launch { snackbarHostState.showSnackbar(noCamera) }
+                    }
+                }
+            },
+            onChooseGallery = {
+                galleryLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                )
+            },
+            onRetryAi = viewModel::retryAiImport,
+            onUseOnDevice = viewModel::useOnDevice,
+            onSeePro = {
+                viewModel.dismissDialog()
+                onNavigateToPro()
+            },
         ),
     )
 }
@@ -156,6 +284,14 @@ data class EditorCallbacks(
     val onMoveRow: (Long, Long) -> Unit = { _, _ -> },
     val onInferName: (Long) -> Unit = {},
     val onDismissDialog: () -> Unit = {},
+    val onScanClick: () -> Unit = {},
+    val onUseAiChange: (Boolean) -> Unit = {},
+    val onScanDocument: () -> Unit = {},
+    val onTakePhoto: () -> Unit = {},
+    val onChooseGallery: () -> Unit = {},
+    val onRetryAi: () -> Unit = {},
+    val onUseOnDevice: () -> Unit = {},
+    val onSeePro: () -> Unit = {},
 )
 
 private enum class RowField { QTY, NAME }
@@ -250,6 +386,13 @@ fun EditorContent(
                             onDismissRequest = { menuExpanded = false },
                         ) {
                             DropdownMenuItem(
+                                text = { Text(stringResource(R.string.action_scan_recipe)) },
+                                onClick = {
+                                    menuExpanded = false
+                                    callbacks.onScanClick()
+                                },
+                            )
+                            DropdownMenuItem(
                                 text = { Text(stringResource(R.string.action_paste_text)) },
                                 onClick = {
                                     menuExpanded = false
@@ -296,6 +439,20 @@ fun EditorContent(
                 .consumeWindowInsets(innerPadding)
                 .imePadding(),
         ) {
+            state.importBusy?.let { busy ->
+                Column(Modifier.padding(horizontal = 16.dp)) {
+                    LinearProgressIndicator(Modifier.fillMaxWidth())
+                    Text(
+                        text = stringResource(
+                            if (busy == ImportBusy.AI) R.string.scan_reading_ai
+                            else R.string.scan_reading,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
+            }
             LazyColumn(
                 state = lazyListState,
                 modifier = Modifier.weight(1f),
@@ -516,6 +673,14 @@ private fun IngredientRow(
                 .weight(1f)
                 .onFocusChanged { onFocusChanged(it.hasFocus, RowField.NAME) },
             placeholder = { Text(stringResource(R.string.hint_ingredient_name)) },
+            supportingText = {
+                if (row.needsReview) {
+                    Text(
+                        text = stringResource(R.string.row_needs_review),
+                        color = MaterialTheme.colorScheme.tertiary,
+                    )
+                }
+            },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { onNext() }),
             singleLine = true,
@@ -664,6 +829,49 @@ private fun EditorDialogs(state: EditorUiState, callbacks: EditorCallbacks) {
                 }
             },
         )
+        EditorDialog.ScanSource -> ScanSourceSheet(
+            state = state,
+            callbacks = callbacks,
+        )
+        is EditorDialog.ScanFailed -> AlertDialog(
+            onDismissRequest = callbacks.onDismissDialog,
+            title = { Text(stringResource(R.string.scan_failed_title)) },
+            text = { Text(stringResource(scanErrorText(dialog.error))) },
+            confirmButton = {
+                Row {
+                    if (dialog.canRetryWithAi) {
+                        TextButton(onClick = callbacks.onRetryAi) {
+                            Text(stringResource(R.string.action_try_ai_import))
+                        }
+                    }
+                    if (dialog.canUseOnDevice) {
+                        TextButton(onClick = callbacks.onUseOnDevice) {
+                            Text(stringResource(R.string.action_scan_on_device))
+                        }
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = callbacks.onDismissDialog) {
+                    Text(stringResource(R.string.action_ok))
+                }
+            },
+        )
+        EditorDialog.AiPaywall -> AlertDialog(
+            onDismissRequest = callbacks.onDismissDialog,
+            title = { Text(stringResource(R.string.ai_paywall_title)) },
+            text = { Text(stringResource(R.string.ai_paywall_body)) },
+            confirmButton = {
+                TextButton(onClick = callbacks.onSeePro) {
+                    Text(stringResource(R.string.action_see_pro))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = callbacks.onDismissDialog) {
+                    Text(stringResource(R.string.action_not_now))
+                }
+            },
+        )
         EditorDialog.ConfirmClear -> AlertDialog(
             onDismissRequest = callbacks.onDismissDialog,
             title = { Text(stringResource(R.string.confirm_clear_title)) },
@@ -682,3 +890,68 @@ private fun EditorDialogs(state: EditorUiState, callbacks: EditorCallbacks) {
         null -> Unit
     }
 }
+
+private fun scanErrorText(error: ScanError): Int = when (error) {
+    ScanError.NO_INGREDIENTS_FOUND -> R.string.scan_error_no_ingredients
+    ScanError.RECOGNITION_FAILED -> R.string.scan_error_recognition
+    ScanError.AI_NETWORK_ERROR -> R.string.scan_error_network
+    ScanError.AI_BLOCKED -> R.string.scan_error_blocked
+    ScanError.AI_FAILED -> R.string.scan_error_failed
+    ScanError.AI_LIMIT_REACHED -> R.string.scan_error_limit
+    ScanError.AI_RATE_LIMITED -> R.string.scan_error_rate_limited
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun ScanSourceSheet(
+    state: EditorUiState,
+    callbacks: EditorCallbacks,
+) {
+    ModalBottomSheet(onDismissRequest = callbacks.onDismissDialog) {
+        Column(Modifier.padding(horizontal = 16.dp)) {
+            Text(
+                stringResource(R.string.scan_source_title),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.action_scan_document)) },
+                modifier = Modifier.clickableEntry { callbacks.onScanDocument() },
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.action_take_photo)) },
+                modifier = Modifier.clickableEntry { callbacks.onTakePhoto() },
+            )
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.action_choose_gallery)) },
+                modifier = Modifier.clickableEntry { callbacks.onChooseGallery() },
+            )
+            if (state.aiAvailable) {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.scan_use_ai)) },
+                    supportingContent = {
+                        Text(
+                            when {
+                                state.isPro -> stringResource(R.string.scan_ai_pro)
+                                state.aiFreeRemaining > 0 -> stringResource(
+                                    R.string.scan_ai_free_left,
+                                    state.aiFreeRemaining,
+                                )
+                                else -> stringResource(R.string.scan_ai_pro_feature)
+                            },
+                        )
+                    },
+                    trailingContent = {
+                        Switch(
+                            checked = state.useAiImport,
+                            onCheckedChange = callbacks.onUseAiChange,
+                        )
+                    },
+                )
+            }
+        }
+    }
+}
+
+private fun Modifier.clickableEntry(onClick: () -> Unit): Modifier =
+    this.then(Modifier.clickable(onClick = onClick))

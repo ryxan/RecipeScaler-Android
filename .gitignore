@@ -23,3 +23,6 @@ captures/
 # OS junk
 .DS_Store
 Thumbs.db
+
+# Firebase config for AI import — never commit
+app/google-services.json

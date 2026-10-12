@@ -3,6 +3,7 @@ package com.ryxan.recipescaler.feature.settings
 import com.ryxan.recipescaler.core.domain.formatting.DisplayMode
 import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
 import com.ryxan.recipescaler.core.domain.model.ThemeMode
+import com.ryxan.recipescaler.testing.FakeProRepository
 import com.ryxan.recipescaler.testing.FakeSettingsRepository
 import com.ryxan.recipescaler.testing.MainDispatcherRule
 import kotlinx.coroutines.flow.filter
@@ -21,7 +22,7 @@ class SettingsViewModelTest {
     @Test
     fun `setters delegate to the repository and update state`() = runTest {
         val repo = FakeSettingsRepository()
-        val vm = SettingsViewModel(repo)
+        val vm = SettingsViewModel(repo, FakeProRepository())
 
         vm.setMeasurementSystem(MeasurementSystem.METRIC)
         vm.setDisplayMode(DisplayMode.DECIMAL)

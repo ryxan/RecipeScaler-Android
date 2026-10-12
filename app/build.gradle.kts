@@ -7,6 +7,14 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.serialization)
+    alias(libs.plugins.google.services) apply false
+}
+
+// AI recipe import needs a Firebase project; the google-services plugin only runs
+// when the (git-ignored) config file is present, so clones/CI without it still build.
+val aiImportEnabled = file("google-services.json").exists()
+if (aiImportEnabled) {
+    apply(plugin = "com.google.gms.google-services")
 }
 
 // Version lives in version.properties (tracked in git) rather than being hardcoded here. Play consumes
@@ -42,6 +50,8 @@ android {
         targetSdk = 36
         versionCode = appVersionCode
         versionName = appVersionName
+
+        buildConfigField("boolean", "AI_IMPORT_ENABLED", aiImportEnabled.toString())
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -136,6 +146,12 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.compose.material.icons.extended)
     implementation(libs.reorderable)
+    implementation(libs.mlkit.document.scanner)
+
+    val firebaseBom = platform(libs.firebase.bom)
+    implementation(firebaseBom)
+    implementation(libs.firebase.appcheck.playintegrity)
+    debugImplementation(libs.firebase.appcheck.debug)
 
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)

@@ -52,6 +52,31 @@ class SettingsContentTest {
     }
 
     @Test
+    fun `pro row renders and shows Active when pro`() {
+        var clicked = false
+        composeRule.setContent {
+            RescaleTheme(dynamicColor = false) {
+                SettingsContent(
+                    settings = AppSettings(),
+                    onSystem = {},
+                    onDisplayMode = {},
+                    onThemeMode = {},
+                    onDynamicColor = {},
+                    showDynamicColor = false,
+                    versionName = "1.0-test",
+                    isPro = true,
+                    onProClick = { clicked = true },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Rescale Pro").assertIsDisplayed()
+        composeRule.onNodeWithText("Active").assertIsDisplayed()
+        composeRule.onNodeWithText("Rescale Pro").performClick()
+        assertEquals(true, clicked)
+    }
+
+    @Test
     fun `sections and version render`() {
         content()
         composeRule.onNodeWithText("Measurement system").assertIsDisplayed()

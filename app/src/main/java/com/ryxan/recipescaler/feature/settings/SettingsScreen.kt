@@ -41,9 +41,12 @@ import com.ryxan.recipescaler.core.domain.model.ThemeMode
 @Composable
 fun SettingsScreen(
     onNavigateUp: () -> Unit,
+    onNavigateToPro: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val isPro by viewModel.isPro.collectAsStateWithLifecycle()
+    val debugPro by viewModel.debugPro.collectAsStateWithLifecycle()
     SettingsContent(
         settings = settings,
         onSystem = viewModel::setMeasurementSystem,
@@ -53,6 +56,11 @@ fun SettingsScreen(
         showDynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
         versionName = BuildConfig.VERSION_NAME,
         onNavigateUp = onNavigateUp,
+        isPro = isPro,
+        onProClick = onNavigateToPro,
+        showDebug = BuildConfig.DEBUG,
+        debugPro = debugPro,
+        onDebugPro = viewModel::setDebugPro,
     )
 }
 
@@ -67,6 +75,11 @@ fun SettingsContent(
     showDynamicColor: Boolean,
     versionName: String,
     onNavigateUp: () -> Unit = {},
+    isPro: Boolean = false,
+    onProClick: () -> Unit = {},
+    showDebug: Boolean = false,
+    debugPro: Boolean = false,
+    onDebugPro: (Boolean) -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -89,6 +102,29 @@ fun SettingsContent(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState()),
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .clickable(onClick = onProClick)
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.title_pro),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    if (isPro) {
+                        Text(
+                            text = stringResource(R.string.pro_state_active),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+            }
+
             SectionHeader(stringResource(R.string.settings_section_measurement))
             Column(Modifier.selectableGroup()) {
                 RadioRow(
@@ -163,6 +199,28 @@ fun SettingsContent(
                     Switch(
                         checked = settings.dynamicColor,
                         onCheckedChange = onDynamicColor,
+                    )
+                }
+            }
+
+            if (showDebug) {
+                SectionHeader(stringResource(R.string.settings_section_debug))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clickable { onDebugPro(!debugPro) }
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings_debug_pro),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Switch(
+                        checked = debugPro,
+                        onCheckedChange = onDebugPro,
                     )
                 }
             }
