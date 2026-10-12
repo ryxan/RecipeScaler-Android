@@ -14,7 +14,7 @@ How to pull the Recipe Scaler out of ToolStack-Android and turn it into its own 
 | 1. Core logic | ✅ Done 2026-10-11 | `9135fd2`, `69c1a73` | 248 `:core:domain` tests green; B1–B10 fixed |
 | 2. Data layer | ✅ Done 2026-10-11 | `5473ec9` | Room + DataStore settings; 15 `:core:data` tests green; schema v1 exported |
 | 3. MVP UI | 🟡 Code done 2026-10-11, device check pending | `a487219`, `d512808` | List/Editor/Scale/Settings; 258 domain + 17 data + 42 app tests green |
-| 4. Polish | Not started | | |
+| 4. Polish | 🟡 4a done 2026-10-11; 4b (adaptive, a11y, icon/splash) pending | `4ab5b71` | Undo/swipe delete, cook mode, Quick scale, reorder, unit inference; 258 domain + 19 data + 65 app tests green |
 | 5. Import, monetization, ads | Not started | | |
 | 6. Play Store readiness | Not started | | |
 
@@ -29,6 +29,11 @@ How to pull the Recipe Scaler out of ToolStack-Android and turn it into its own 
 - First-run measurement system follows the device locale (US/LR/MM → US, everywhere else → Metric).
 - Scale inputs that are blank or can't be read show an inline error, and the list falls back to 1× (never zero).
 - `:app` unit tests run on the debug variant only. Release unit tests are disabled so the Compose test manifest never ships in release.
+- **Delete is undoable instead of confirmed.** Swipe (list) or overflow Delete (editor) removes the recipe right away and shows an Undo snackbar on the list. Undo calls `RecipeRepository.restore`, which brings the recipe back with its original id and timestamps, so it lands in the same list position. The editor saves pending edits before deleting, so Undo restores the latest version.
+- **Quick scale** is a normal autosaved recipe with the title "Quick scale" pre-filled and the first qty field focused. It's only inserted once the user edits something, so backing out without typing saves nothing.
+- **Cook mode** (Scale View) hides the inputs, lets you tap rows to strike them through, and keeps the screen on. Checks survive process death and are cleared when you leave cook mode.
+- **Unit inference** runs when the name field loses focus or on IME Next, and only when the row's qty is blank. "2 cups flour" becomes `2` / `cup` / `flour`. Lines with no quantity are left alone.
+- Drag-to-reorder uses `sh.calvin.reorderable` 2.4.3, plus "Move up/Move down" accessibility actions.
 
 **Carried forward:**
 - Splitting `lowConfidence` out of `IngredientItem` moved from Phase 1 to Phase 3, where the editor model is designed.
@@ -457,14 +462,15 @@ Each phase has exit criteria. Don't start the next phase until they're met.
 - [x] Parse yield/servings and key-ingredient target inputs with `QuantityParser`, never `toDoubleOrNull()`, so `½` and `4-6` work. This completes B10. *(Covered by tests in `EditorViewModelTest` and `ScaleViewModelTest`.)*
 - [x] Copy/Share (reuse `generateFormattedRecipe`). *(Copy as Plain/Markdown/Shopping list; Share sends Plain.)*
 - [x] ViewModel tests with fake repos + Turbine; one Compose UI test per screen's happy path. *(Robolectric, run against the stateless `*Content` composables.)*
-- [ ] Not done in Phase 3 (moved to Phase 4): drag-to-reorder ingredients, the "Quick scale" scratch recipe, and inferring units from the name field ("2 cups flour").
+- [x] Not done in Phase 3 (moved to Phase 4): drag-to-reorder ingredients, the "Quick scale" scratch recipe, and inferring units from the name field ("2 cups flour"). *(Done in Phase 4a.)*
 - **Exit:** you can enter a recipe, scale it all three ways, save it, and reopen it on a real device. *(Still needs a check on a real device.)*
 
 ### Phase 4: Polish
 - [ ] Adaptive list-detail layout; landscape and foldable checks.
 - [ ] Accessibility pass (TalkBack fraction speech, 200% font scale, contrast).
-- [ ] Checklist/cook mode (keep screen on), Undo on delete, empty states, scale-warning copy.
-- [ ] App icon (adaptive + themed monochrome), splash screen.
+- [x] Checklist/cook mode (keep screen on), Undo on delete, empty states, scale-warning copy. *(4a. Swipe-to-delete on the list with a "Delete" a11y action; Quick scale in the list empty state and top bar; a "recipe no longer exists" state on Scale View; warning copy now includes the factor.)*
+- [ ] App icon (adaptive + themed monochrome), splash screen. *(User will supply final art; 4b wires up the plumbing with the placeholder.)*
+- Adaptive layout decision: `material3-adaptive` `NavigableListDetailPaneScaffold` (per §4.1).
 - **Exit:** no a11y scanner warnings; screenshots look right on phone, tablet, and dark mode.
 
 ### Phase 5: Import, Monetization and Ads (required for v1)
