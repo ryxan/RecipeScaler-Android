@@ -7,7 +7,7 @@ Rescale — a standalone Android recipe scaler. `applicationId`: `com.ryxan.reci
 ## Build & verify
 
 - Tests: `.\gradlew.bat test`
-- Current test baseline (0 failures, 0 skipped): **273** `:core:domain`, **38** per variant `:core:data`, **119** `:app` (debug only — release unit tests are disabled in `:app`)
+- Current test baseline (0 failures, 0 skipped): **273** `:core:domain`, **40** per variant `:core:data`, **119** `:app` (debug only — release unit tests are disabled in `:app`)
 - `:app` UI tests are Robolectric Compose tests against stateless `*Content` composables; VM tests use `app/src/test/.../testing` fakes (`FakeRecipeRepository`, `FakeSettingsRepository`, `MainDispatcherRule`).
 - Debug APK: `.\gradlew.bat assembleDebug`
 - Lint: `.\gradlew.bat lint`
@@ -19,7 +19,7 @@ Rescale — a standalone Android recipe scaler. `applicationId`: `com.ryxan.reci
 - `:app` — Android application: `RescaleApplication`, `MainActivity`, `NavHost`. Feature code lives under `com.ryxan.recipescaler.feature.*` inside this module for now.
 - `:core:domain` — **plain Kotlin/JVM** module. `com.ryxan.recipescaler.core.domain`. **Must never depend on Android** — no `android.*`, `androidx.*`, or Android Gradle plugins here.
 - `:core:data` — Android library (`com.ryxan.recipescaler.core.data`), Hilt wired; depends on `:core:domain`.
-- `:core:designsystem` — Android library (`com.ryxan.recipescaler.core.designsystem`); `RescaleTheme` (M3, dynamic color on API 31+ with terracotta fallback) and `Typography`.
+- `:core:designsystem` — Android library (`com.ryxan.recipescaler.core.designsystem`); `RescaleTheme` (M3, dynamic color opt-in (default off) on API 31+ with Fresh herb green/teal brand palette, brand gradient + shared components (`GradientTopAppBar`, `GradientExtendedFab`, `RescaleCard`, `GradientButton`, `SectionHeader`)) and `Typography`.
 
 ## Versioning & signing
 

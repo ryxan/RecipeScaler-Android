@@ -9,6 +9,10 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -44,7 +48,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -60,7 +63,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -93,6 +95,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ryxan.recipescaler.R
+import com.ryxan.recipescaler.core.designsystem.GradientExtendedFab
+import com.ryxan.recipescaler.core.designsystem.GradientTopAppBar
 import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
@@ -380,7 +384,7 @@ fun EditorContent(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
+            GradientTopAppBar(
                 title = {
                     Text(
                         stringResource(
@@ -460,7 +464,7 @@ fun EditorContent(
         },
         floatingActionButton = {
             val canScale = state.canScale
-            ExtendedFloatingActionButton(
+            GradientExtendedFab(
                 onClick = { if (canScale) callbacks.onScale() },
                 modifier = Modifier
                     .semantics { if (!canScale) disabled() }
@@ -679,7 +683,11 @@ private fun IngredientRow(
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        if (editing) {
+        AnimatedVisibility(
+            visible = editing,
+            enter = expandHorizontally() + fadeIn(),
+            exit = shrinkHorizontally() + fadeOut(),
+        ) {
             Icon(
                 Icons.Filled.DragHandle,
                 contentDescription = stringResource(R.string.action_reorder),
@@ -728,7 +736,11 @@ private fun IngredientRow(
             keyboardActions = KeyboardActions(onNext = { onNext() }),
             singleLine = true,
         )
-        if (editing) {
+        AnimatedVisibility(
+            visible = editing,
+            enter = expandHorizontally() + fadeIn(),
+            exit = shrinkHorizontally() + fadeOut(),
+        ) {
             IconButton(
                 onClick = onRemove,
                 modifier = Modifier.padding(top = 4.dp),

@@ -20,13 +20,14 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -35,7 +36,6 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,6 +43,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -52,6 +56,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ryxan.recipescaler.R
+import com.ryxan.recipescaler.core.designsystem.GradientExtendedFab
+import com.ryxan.recipescaler.core.designsystem.GradientTopAppBar
+import com.ryxan.recipescaler.core.designsystem.RescaleCard
+import com.ryxan.recipescaler.core.designsystem.RescaleTheme
+import com.ryxan.recipescaler.core.designsystem.Spacing
 import com.ryxan.recipescaler.core.domain.model.RecipeSummary
 import com.ryxan.recipescaler.core.domain.model.formatYield
 
@@ -115,7 +124,7 @@ fun RecipeListContent(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
+            GradientTopAppBar(
                 title = { Text(stringResource(R.string.title_recipes)) },
                 actions = {
                     IconButton(onClick = onQuickScale) {
@@ -134,7 +143,7 @@ fun RecipeListContent(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            GradientExtendedFab(
                 onClick = onNewRecipe,
                 icon = { Icon(Icons.Filled.Add, contentDescription = null) },
                 text = { Text(stringResource(R.string.action_new_recipe)) },
@@ -152,7 +161,13 @@ fun RecipeListContent(
                     onValueChange = onQueryChange,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding(horizontal = Spacing.l, vertical = Spacing.s),
+                    shape = MaterialTheme.shapes.extraLarge,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        unfocusedBorderColor = Color.Transparent,
+                    ),
                     placeholder = { Text(stringResource(R.string.search_recipes)) },
                     leadingIcon = {
                         Icon(Icons.Filled.Search, contentDescription = null)
@@ -194,13 +209,17 @@ fun RecipeListContent(
                         items(state.recipes, key = { it.id }) { summary ->
                             SwipeToDeleteItem(
                                 onDelete = { onDelete(summary.id) },
-                                modifier = Modifier.animateItem(),
+                                modifier = Modifier
+                                    .animateItem()
+                                    .padding(horizontal = Spacing.l, vertical = 6.dp),
                             ) {
-                                RecipeRow(
-                                    summary = summary,
-                                    onClick = { onOpenRecipe(summary.id) },
-                                    onDelete = { onDelete(summary.id) },
-                                )
+                                RescaleCard(Modifier.fillMaxWidth()) {
+                                    RecipeRow(
+                                        summary = summary,
+                                        onClick = { onOpenRecipe(summary.id) },
+                                        onDelete = { onDelete(summary.id) },
+                                    )
+                                }
                             }
                         }
                     }
@@ -232,6 +251,7 @@ private fun SwipeToDeleteItem(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .clip(MaterialTheme.shapes.large)
                     .background(MaterialTheme.colorScheme.errorContainer)
                     .padding(end = 24.dp),
                 contentAlignment = Alignment.CenterEnd,
@@ -267,6 +287,31 @@ private fun RecipeRow(
                     },
                 )
             },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        leadingContent = {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                val trimmedTitle = summary.title.trim()
+                if (trimmedTitle.isEmpty()) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                } else {
+                    Text(
+                        text = trimmedTitle.first().uppercase(),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                }
+            }
+        },
         headlineContent = {
             Text(
                 text = summary.title.ifBlank { stringResource(R.string.untitled_recipe) },
@@ -305,12 +350,21 @@ private fun EmptyMessage(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.MenuBook,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(title, style = MaterialTheme.typography.titleMedium)
+            Box(
+                modifier = Modifier
+                    .size(96.dp)
+                    .clip(CircleShape)
+                    .background(RescaleTheme.brandGradient),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.MenuBook,
+                    contentDescription = null,
+                    modifier = Modifier.size(40.dp),
+                    tint = RescaleTheme.extendedColors.onGradient,
+                )
+            }
+            Text(title, style = MaterialTheme.typography.headlineSmall)
             if (body != null) {
                 Text(
                     body,

@@ -90,7 +90,7 @@ class SettingsContentTest {
     fun `selecting Decimals calls onDisplayMode`() {
         var selected: DisplayMode? = null
         content(onDisplayMode = { selected = it })
-        composeRule.onNodeWithText("Decimals").performClick()
+        composeRule.onNodeWithText("Decimals").performScrollTo().performClick()
         assertEquals(DisplayMode.DECIMAL, selected)
     }
 }

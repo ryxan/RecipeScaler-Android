@@ -2,6 +2,11 @@ package com.ryxan.recipescaler.feature.scale
 
 import android.content.Intent
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +35,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -39,7 +45,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -47,6 +52,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.animation.animateContentSize
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -63,7 +69,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ryxan.recipescaler.R
+import com.ryxan.recipescaler.core.designsystem.GradientTopAppBar
 import com.ryxan.recipescaler.core.designsystem.QuantityText
+import com.ryxan.recipescaler.core.designsystem.RescaleCard
+import com.ryxan.recipescaler.core.designsystem.Spacing
 import com.ryxan.recipescaler.core.domain.model.ScaleStatus
 import com.ryxan.recipescaler.core.domain.model.ScaledIngredient
 import com.ryxan.recipescaler.core.domain.model.formatYield
@@ -141,7 +150,7 @@ fun ScaleContent(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
+            GradientTopAppBar(
                 title = {
                     Text(
                         state.title.ifBlank {
@@ -264,6 +273,10 @@ fun ScaleContent(
                                     abs(state.factor - n) < 1e-9,
                                 onClick = { callbacks.onMultiplier(n) },
                                 label = { Text("${n}×") },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor =
+                                        MaterialTheme.colorScheme.primaryContainer,
+                                ),
                             )
                         }
                     }
@@ -292,8 +305,12 @@ fun ScaleContent(
                 SummaryLine(state)
             }
 
-            if (state.showScaleWarning) {
-                item(key = "warning") {
+            item(key = "warning") {
+                AnimatedVisibility(
+                    visible = state.showScaleWarning,
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut(),
+                ) {
                     Card(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.tertiaryContainer,
@@ -340,13 +357,22 @@ fun ScaleContent(
                 }
             }
 
-            items(state.rows, key = { it.id }) { row ->
-                ScaledRow(
-                    row = row,
-                    showOriginal = state.showOriginal && !state.cookMode,
-                    checked = if (state.cookMode) row.id in state.checkedIds else null,
-                    onToggle = { callbacks.onToggleChecked(row.id) },
-                )
+            item(key = "results") {
+                RescaleCard(Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier.padding(Spacing.m),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.m),
+                    ) {
+                        state.rows.forEach { row ->
+                            ScaledRow(
+                                row = row,
+                                showOriginal = state.showOriginal && !state.cookMode,
+                                checked = if (state.cookMode) row.id in state.checkedIds else null,
+                                onToggle = { callbacks.onToggleChecked(row.id) },
+                            )
+                        }
+                    }
+                }
             }
             }
         }
@@ -392,6 +418,7 @@ private fun ScaledRow(
     ) {
         AnimatedContent(
             targetState = row.displayText,
+            modifier = Modifier.animateContentSize(),
             label = "qty",
         ) { text ->
             QuantityText(

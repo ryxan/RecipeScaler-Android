@@ -7,5 +7,5 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 data class AppSettings(
     val display: DisplayPrefs = DisplayPrefs(),
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    val dynamicColor: Boolean = true,
+    val dynamicColor: Boolean = false,
 )

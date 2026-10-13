@@ -24,7 +24,6 @@ import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.OndemandVideo
 import androidx.compose.material.icons.filled.WorkspacePremium
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
@@ -55,6 +54,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.ryxan.recipescaler.R
 import com.ryxan.recipescaler.core.data.billing.ProProduct
+import com.ryxan.recipescaler.core.designsystem.GradientButton
+import com.ryxan.recipescaler.core.designsystem.RescaleTheme
 import com.ryxan.recipescaler.core.data.billing.ProProductIds
 import com.ryxan.recipescaler.core.domain.importer.AiImportConfig
 import kotlinx.coroutines.delay
@@ -216,7 +217,7 @@ private fun ScanPackCard(
     OptionCard(
         onClick = onClick,
         enabled = product != null,
-        border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary),
+        border = BorderStroke(2.dp, RescaleTheme.brandGradient),
         containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f),
     ) {
         IconBadge(
@@ -326,10 +327,9 @@ private fun ProCard(
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     subscription?.let { product ->
-                        Button(
+                        GradientButton(
                             onClick = { onBuyProduct(product.id) },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
                         ) {
                             Text(
                                 text = stringResource(R.string.pro_price_monthly, product.price),

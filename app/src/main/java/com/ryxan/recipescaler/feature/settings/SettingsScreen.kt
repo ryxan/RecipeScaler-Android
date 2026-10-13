@@ -21,7 +21,6 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -33,6 +32,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ryxan.recipescaler.BuildConfig
 import com.ryxan.recipescaler.R
+import com.ryxan.recipescaler.core.designsystem.GradientTopAppBar
+import com.ryxan.recipescaler.core.designsystem.RescaleCard
+import com.ryxan.recipescaler.core.designsystem.SectionHeader
+import com.ryxan.recipescaler.core.designsystem.Spacing
 import com.ryxan.recipescaler.core.domain.formatting.DisplayMode
 import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
 import com.ryxan.recipescaler.core.domain.model.AppSettings
@@ -83,7 +86,7 @@ fun SettingsContent(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
+            GradientTopAppBar(
                 title = { Text(stringResource(R.string.title_settings)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
@@ -102,148 +105,165 @@ fun SettingsContent(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState()),
         ) {
-            Row(
+            RescaleCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
-                    .clickable(onClick = onProClick)
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                    .padding(horizontal = Spacing.l),
             ) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.title_pro),
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                    if (isPro) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .clickable(onClick = onProClick)
+                        .padding(horizontal = Spacing.l),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
                         Text(
-                            text = stringResource(R.string.pro_state_active),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
+                            text = stringResource(R.string.title_pro),
+                            style = MaterialTheme.typography.bodyLarge,
                         )
+                        if (isPro) {
+                            Text(
+                                text = stringResource(R.string.pro_state_active),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
                     }
                 }
             }
 
             SectionHeader(stringResource(R.string.settings_section_measurement))
-            Column(Modifier.selectableGroup()) {
-                RadioRow(
-                    text = stringResource(R.string.settings_system_us),
-                    selected = settings.display.system == MeasurementSystem.US,
-                    onClick = { onSystem(MeasurementSystem.US) },
-                )
-                RadioRow(
-                    text = stringResource(R.string.settings_system_metric),
-                    selected = settings.display.system == MeasurementSystem.METRIC,
-                    onClick = { onSystem(MeasurementSystem.METRIC) },
-                )
-                RadioRow(
-                    text = stringResource(R.string.settings_system_match),
-                    selected = settings.display.system == MeasurementSystem.MATCH_RECIPE,
-                    onClick = { onSystem(MeasurementSystem.MATCH_RECIPE) },
-                )
+            SettingsCard {
+                Column(Modifier.selectableGroup()) {
+                    RadioRow(
+                        text = stringResource(R.string.settings_system_us),
+                        selected = settings.display.system == MeasurementSystem.US,
+                        onClick = { onSystem(MeasurementSystem.US) },
+                    )
+                    RadioRow(
+                        text = stringResource(R.string.settings_system_metric),
+                        selected = settings.display.system == MeasurementSystem.METRIC,
+                        onClick = { onSystem(MeasurementSystem.METRIC) },
+                    )
+                    RadioRow(
+                        text = stringResource(R.string.settings_system_match),
+                        selected = settings.display.system == MeasurementSystem.MATCH_RECIPE,
+                        onClick = { onSystem(MeasurementSystem.MATCH_RECIPE) },
+                    )
+                }
             }
 
             SectionHeader(stringResource(R.string.settings_section_display))
-            Column(Modifier.selectableGroup()) {
-                RadioRow(
-                    text = stringResource(R.string.settings_display_kitchen),
-                    selected = settings.display.mode == DisplayMode.KITCHEN,
-                    onClick = { onDisplayMode(DisplayMode.KITCHEN) },
-                )
-                RadioRow(
-                    text = stringResource(R.string.settings_display_keep_units),
-                    selected = settings.display.mode == DisplayMode.KEEP_UNITS,
-                    onClick = { onDisplayMode(DisplayMode.KEEP_UNITS) },
-                )
-                RadioRow(
-                    text = stringResource(R.string.settings_display_decimal),
-                    selected = settings.display.mode == DisplayMode.DECIMAL,
-                    onClick = { onDisplayMode(DisplayMode.DECIMAL) },
-                )
+            SettingsCard {
+                Column(Modifier.selectableGroup()) {
+                    RadioRow(
+                        text = stringResource(R.string.settings_display_kitchen),
+                        selected = settings.display.mode == DisplayMode.KITCHEN,
+                        onClick = { onDisplayMode(DisplayMode.KITCHEN) },
+                    )
+                    RadioRow(
+                        text = stringResource(R.string.settings_display_keep_units),
+                        selected = settings.display.mode == DisplayMode.KEEP_UNITS,
+                        onClick = { onDisplayMode(DisplayMode.KEEP_UNITS) },
+                    )
+                    RadioRow(
+                        text = stringResource(R.string.settings_display_decimal),
+                        selected = settings.display.mode == DisplayMode.DECIMAL,
+                        onClick = { onDisplayMode(DisplayMode.DECIMAL) },
+                    )
+                }
             }
 
             SectionHeader(stringResource(R.string.settings_section_theme))
-            Column(Modifier.selectableGroup()) {
-                RadioRow(
-                    text = stringResource(R.string.settings_theme_system),
-                    selected = settings.themeMode == ThemeMode.SYSTEM,
-                    onClick = { onThemeMode(ThemeMode.SYSTEM) },
-                )
-                RadioRow(
-                    text = stringResource(R.string.settings_theme_light),
-                    selected = settings.themeMode == ThemeMode.LIGHT,
-                    onClick = { onThemeMode(ThemeMode.LIGHT) },
-                )
-                RadioRow(
-                    text = stringResource(R.string.settings_theme_dark),
-                    selected = settings.themeMode == ThemeMode.DARK,
-                    onClick = { onThemeMode(ThemeMode.DARK) },
-                )
-            }
+            SettingsCard {
+                Column(Modifier.selectableGroup()) {
+                    RadioRow(
+                        text = stringResource(R.string.settings_theme_system),
+                        selected = settings.themeMode == ThemeMode.SYSTEM,
+                        onClick = { onThemeMode(ThemeMode.SYSTEM) },
+                    )
+                    RadioRow(
+                        text = stringResource(R.string.settings_theme_light),
+                        selected = settings.themeMode == ThemeMode.LIGHT,
+                        onClick = { onThemeMode(ThemeMode.LIGHT) },
+                    )
+                    RadioRow(
+                        text = stringResource(R.string.settings_theme_dark),
+                        selected = settings.themeMode == ThemeMode.DARK,
+                        onClick = { onThemeMode(ThemeMode.DARK) },
+                    )
+                }
 
-            if (showDynamicColor) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .clickable { onDynamicColor(!settings.dynamicColor) }
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = stringResource(R.string.settings_dynamic_color),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Switch(
-                        checked = settings.dynamicColor,
-                        onCheckedChange = onDynamicColor,
-                    )
+                if (showDynamicColor) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .clickable { onDynamicColor(!settings.dynamicColor) }
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_dynamic_color),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Switch(
+                            checked = settings.dynamicColor,
+                            onCheckedChange = onDynamicColor,
+                        )
+                    }
                 }
             }
 
             if (showDebug) {
                 SectionHeader(stringResource(R.string.settings_section_debug))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .clickable { onDebugPro(!debugPro) }
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = stringResource(R.string.settings_debug_pro),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Switch(
-                        checked = debugPro,
-                        onCheckedChange = onDebugPro,
-                    )
+                SettingsCard {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .clickable { onDebugPro(!debugPro) }
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_debug_pro),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Switch(
+                            checked = debugPro,
+                            onCheckedChange = onDebugPro,
+                        )
+                    }
                 }
             }
 
             SectionHeader(stringResource(R.string.settings_section_about))
-            Text(
-                text = stringResource(R.string.settings_version, versionName),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            )
+            SettingsCard {
+                Text(
+                    text = stringResource(R.string.settings_version, versionName),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.s),
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-    )
+private fun SettingsCard(content: @Composable () -> Unit) {
+    RescaleCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.l),
+    ) {
+        content()
+    }
 }
 
 @Composable

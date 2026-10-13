@@ -471,6 +471,8 @@ Each phase has exit criteria. Don't start the next phase until they're met.
 - [x] Checklist/cook mode (keep screen on), Undo on delete, empty states, scale-warning copy. *(4a. Swipe-to-delete on the list with a "Delete" a11y action; Quick scale in the list empty state and top bar; a "recipe no longer exists" state on Scale View; warning copy now includes the factor.)*
 - Moved to [Later](#later-deferred-and-future-ideas) on 2026-10-11, so the UI can be tweaked first: adaptive layout, the accessibility pass, and the app icon/splash.
 
+**UI polish (2026-10-12):** "Fresh herb" green/teal palette replaces terracotta; dynamic (wallpaper) color is now opt-in — `AppSettings.dynamicColor` defaults to `false`. Flat style throughout: no card elevation, brand gradient on accents only (top bars, FAB/primary CTA, paywall highlights), shared components in `:core:designsystem` (`GradientTopAppBar`, `GradientExtendedFab`, `GradientButton`, `RescaleCard`, `SectionHeader`, `Spacing`, `RescaleMotion`). NavHost-level slide+fade transitions (emphasized easing); status-bar icons forced light via `SystemBarStyle.dark`.
+
 ### Phase 5: Import, Monetization and Ads (required for v1)
 - [ ] Ads: Google Mobile Ads SDK (AdMob) + **UMP consent** (GDPR/US-states consent form before the first ad request). Prefer banner placement on list/scale screens; no interstitials mid-cooking. Don't initialize or request ads at all for Pro users. **Deferred 2026-10-12 at user request — can't test without an AdMob setup; do it with the Phase 6 store work.**
 - [x] Move image helpers out of the old VM into `ImagePreprocessor` (data layer).

@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,7 +22,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,6 +35,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ryxan.recipescaler.R
 import com.ryxan.recipescaler.core.data.billing.ProProduct
+import com.ryxan.recipescaler.core.designsystem.GradientButton
+import com.ryxan.recipescaler.core.designsystem.GradientTopAppBar
+import com.ryxan.recipescaler.core.designsystem.RescaleCard
+import com.ryxan.recipescaler.core.designsystem.Spacing
 
 @Composable
 fun ProScreen(
@@ -73,7 +76,7 @@ fun ProContent(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
+            GradientTopAppBar(
                 title = { Text(stringResource(R.string.title_pro)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
@@ -93,14 +96,21 @@ fun ProContent(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(
-                text = stringResource(R.string.pro_benefit_ai),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-            Text(
-                text = stringResource(R.string.pro_benefit_handwriting),
-                style = MaterialTheme.typography.bodyLarge,
-            )
+            RescaleCard(Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(Spacing.l),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.s),
+                ) {
+                    Text(
+                        text = stringResource(R.string.pro_benefit_ai),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                    Text(
+                        text = stringResource(R.string.pro_benefit_handwriting),
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
+            }
 
             when {
                 state.isPro -> Text(
@@ -125,17 +135,30 @@ fun ProContent(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 else -> state.products.forEach { product: ProProduct ->
-                    Button(
-                        onClick = { onPurchase(product.id) },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(
-                            text = stringResource(
-                                if (product.isSubscription) R.string.pro_price_monthly
-                                else R.string.pro_price_lifetime,
-                                product.price,
-                            ),
-                        )
+                    if (product.isSubscription) {
+                        GradientButton(
+                            onClick = { onPurchase(product.id) },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = stringResource(
+                                    R.string.pro_price_monthly,
+                                    product.price,
+                                ),
+                            )
+                        }
+                    } else {
+                        FilledTonalButton(
+                            onClick = { onPurchase(product.id) },
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = stringResource(
+                                    R.string.pro_price_lifetime,
+                                    product.price,
+                                ),
+                            )
+                        }
                     }
                 }
             }
