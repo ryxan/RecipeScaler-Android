@@ -68,9 +68,9 @@ private val BadgeShape = RoundedCornerShape(50)
  * bonus credits both spent. Offers three ways back in: a consumable 100-scan
  * pack, Rescale Pro (unlimited), or a rewarded ad for a small top-up.
  *
- * The rewarded-ad row is rendered disabled ("Soon") until a real
- * [com.ryxan.recipescaler.core.data.ads.RewardedAds] is bound — the ads SDK
- * isn't integrated yet.
+ * The rewarded-ad row is enabled while
+ * [com.ryxan.recipescaler.core.data.ads.RewardedAds.isAvailable] reports a
+ * loaded ad.
  */
 @Composable
 fun AiPaywallDialog(

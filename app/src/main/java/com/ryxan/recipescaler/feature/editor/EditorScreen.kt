@@ -211,7 +211,6 @@ fun EditorScreen(
             onScale = { scope.launch { viewModel.prepareToScale()?.let(onScale) } },
             onTitleChange = viewModel::onTitleChange,
             onYieldTextChange = viewModel::onYieldTextChange,
-            onYieldLabelChange = viewModel::onYieldLabelChange,
             onQtyChange = viewModel::onRowQtyChange,
             onUnitChange = viewModel::onRowUnitChange,
             onNameChange = viewModel::onRowNameChange,
@@ -290,7 +289,6 @@ data class EditorCallbacks(
     val onScale: () -> Unit = {},
     val onTitleChange: (String) -> Unit = {},
     val onYieldTextChange: (String) -> Unit = {},
-    val onYieldLabelChange: (String) -> Unit = {},
     val onQtyChange: (Long, String) -> Unit = { _, _ -> },
     val onUnitChange: (Long, KitchenUnit) -> Unit = { _, _ -> },
     val onNameChange: (Long, String) -> Unit = { _, _ -> },
@@ -511,6 +509,13 @@ fun EditorContent(
                 ),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                item(key = "title_header") {
+                    Text(
+                        stringResource(R.string.header_name),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
                 item(key = "title") {
                     OutlinedTextField(
                         value = state.title,
@@ -520,39 +525,34 @@ fun EditorContent(
                         singleLine = true,
                     )
                 }
+                item(key = "yield_header") {
+                    Text(
+                        stringResource(R.string.scale_label_serves),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
                 item(key = "yield") {
                     val yieldError = state.yieldError
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.Top,
-                    ) {
-                        OutlinedTextField(
-                            value = state.yieldText,
-                            onValueChange = callbacks.onYieldTextChange,
-                            modifier = Modifier.width(120.dp),
-                            placeholder = { Text("4") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            isError = yieldError,
-                            supportingText = {
-                                if (yieldError) {
-                                    Text(
-                                        stringResource(
-                                            R.string.msg_cant_read,
-                                            state.yieldText,
-                                        ),
-                                    )
-                                }
-                            },
-                            singleLine = true,
-                        )
-                        OutlinedTextField(
-                            value = state.yieldLabel,
-                            onValueChange = callbacks.onYieldLabelChange,
-                            modifier = Modifier.weight(1f),
-                            placeholder = { Text(stringResource(R.string.hint_yield_label)) },
-                            singleLine = true,
-                        )
-                    }
+                    OutlinedTextField(
+                        value = state.yieldText,
+                        onValueChange = callbacks.onYieldTextChange,
+                        modifier = Modifier.width(120.dp),
+                        placeholder = { Text("1") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        isError = yieldError,
+                        supportingText = {
+                            if (yieldError) {
+                                Text(
+                                    stringResource(
+                                        R.string.msg_cant_read,
+                                        state.yieldText,
+                                    ),
+                                )
+                            }
+                        },
+                        singleLine = true,
+                    )
                 }
                 item(key = "ingredients_header") {
                     Text(

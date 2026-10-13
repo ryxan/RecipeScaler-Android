@@ -95,13 +95,13 @@ class ScaleViewModel @Inject constructor(
     fun setServes(text: String) = updateInputs { it.copy(servesText = text) }
     fun setScaleTo(text: String) = updateInputs { it.copy(scaleToText = text) }
 
-    /** Multiplies the current serves value by [n] and writes it into "Scale to". */
-    fun applyMultiplier(n: Int) = updateInputs { inp ->
+    /** Sets "Scale to" to [n] servings; a blank/unreadable serves defaults to 1. */
+    fun applyServings(n: Int) = updateInputs { inp ->
         val serves = QuantityParser.parse(inp.servesText)
-        if (serves != null && serves > 0) {
-            inp.copy(scaleToText = formatYield(serves * n))
-        } else {
+        if (serves == null || serves <= 0) {
             inp.copy(servesText = "1", scaleToText = n.toString())
+        } else {
+            inp.copy(scaleToText = n.toString())
         }
     }
 

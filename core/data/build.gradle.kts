@@ -61,6 +61,8 @@ dependencies {
 
     implementation(libs.billing.ktx)
     implementation(libs.mlkit.text.recognition)
+    implementation(libs.play.services.ads)
+    implementation(libs.user.messaging.platform)
     val firebaseBom = platform(libs.firebase.bom)
     implementation(firebaseBom)
     implementation(libs.firebase.ai)

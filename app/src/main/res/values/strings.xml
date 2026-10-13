@@ -25,9 +25,9 @@
     <string name="action_done_editing">Done editing</string>
     <string name="action_next">Next</string>
     <string name="hint_recipe_title">Recipe title</string>
-    <string name="hint_yield_label">servings</string>
     <string name="hint_quantity">Qty</string>
     <string name="hint_ingredient_name">Ingredient</string>
+    <string name="header_name">Name</string>
     <string name="header_ingredients">Ingredients</string>
     <string name="unit_picker_title">Unit</string>
     <string name="unit_group_volume">Volume</string>
@@ -111,6 +111,8 @@
     <string name="pro_refresh_failed">Couldn\'t check purchases. Try again later.</string>
     <string name="settings_section_debug">Debug</string>
     <string name="settings_debug_pro">Pretend Pro</string>
+    <string name="settings_debug_ai_scans">AI scans left: %1$d</string>
+    <string name="settings_debug_ai_scans_reset">Reset</string>
 
     <!-- Scale view -->
     <string name="action_copy">Copy</string>
@@ -129,7 +131,7 @@
     <string name="scale_not_scaled">Not scaled</string>
     <string name="err_amount_above_zero">Enter an amount above 0</string>
     <string name="scale_label_serves">Serves</string>
-    <string name="scale_label_scale_to">Scale to</string>
+    <string name="scale_label_scale_to">Scale to (servings)</string>
     <string name="action_cook_mode">Cook mode</string>
     <string name="action_exit_cook_mode">Exit cook mode</string>
     <string name="cook_mode_hint">Tap an ingredient to check it off. The screen stays on.</string>

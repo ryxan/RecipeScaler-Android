@@ -1,13 +1,16 @@
 package com.ryxan.recipescaler.feature.settings
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.ryxan.recipescaler.core.designsystem.RescaleTheme
 import com.ryxan.recipescaler.core.domain.formatting.DisplayMode
 import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
+import com.ryxan.recipescaler.core.domain.importer.AiImportConfig
 import com.ryxan.recipescaler.core.domain.model.AppSettings
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -92,5 +95,39 @@ class SettingsContentTest {
         content(onDisplayMode = { selected = it })
         composeRule.onNodeWithText("Decimals").performScrollTo().performClick()
         assertEquals(DisplayMode.DECIMAL, selected)
+    }
+
+    @Test
+    fun `debug AI scan controls hidden without showDebug`() {
+        content()
+        composeRule.onAllNodesWithText("Debug").assertCountEquals(0)
+        composeRule.onAllNodesWithText("AI scans left: 0").assertCountEquals(0)
+    }
+
+    @Test
+    fun `debug AI scan preset calls onSetAiScans`() {
+        var setTo: Int? = null
+        composeRule.setContent {
+            RescaleTheme(dynamicColor = false) {
+                SettingsContent(
+                    settings = AppSettings(),
+                    onSystem = {},
+                    onDisplayMode = {},
+                    onThemeMode = {},
+                    onDynamicColor = {},
+                    showDynamicColor = false,
+                    versionName = "1.0-test",
+                    showDebug = true,
+                    aiScansRemaining = 7,
+                    onSetAiScans = { setTo = it },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("AI scans left: 7").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("5").performScrollTo().performClick()
+        assertEquals(5, setTo)
+        composeRule.onNodeWithText("Reset").performClick()
+        assertEquals(AiImportConfig.FREE_LIFETIME_LIMIT, setTo)
     }
 }

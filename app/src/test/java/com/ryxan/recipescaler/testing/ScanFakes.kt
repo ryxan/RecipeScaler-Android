@@ -152,6 +152,15 @@ class FakeAiImportQuota : AiImportQuota {
     override suspend fun grantCredits(count: Int) {
         _bonusCredits.value += count
     }
+
+    override suspend fun debugSetRemaining(total: Int) {
+        val n = total.coerceAtLeast(0)
+        val freeLeft = minOf(n, AiImportConfig.FREE_LIFETIME_LIMIT)
+        freeUsed = AiImportConfig.FREE_LIFETIME_LIMIT - freeLeft
+        _remainingFree.value = freeLeft
+        _bonusCredits.value = n - freeLeft
+        lastDebitBonus = false
+    }
 }
 
 class FakeProRepository(pro: Boolean = false) : ProRepository {

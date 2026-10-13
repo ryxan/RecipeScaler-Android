@@ -34,6 +34,13 @@ val localProperties = Properties().apply {
     if (f.exists()) load(f.inputStream())
 }
 val releaseStoreFile = localProperties.getProperty("RELEASE_STORE_FILE")
+// AdMob IDs: debug always uses Google's official test IDs; release reads the real
+// ones from the (git-ignored) local.properties and falls back to the test IDs.
+val TEST_ADMOB_APP_ID = "ca-app-pub-3940256099942544~3347511713"
+val TEST_ADMOB_REWARDED_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"
+val adMobAppId = localProperties.getProperty("ADMOB_APP_ID")?.trim().orEmpty()
+val adMobRewardedUnitId = localProperties.getProperty("ADMOB_REWARDED_UNIT_ID")?.trim().orEmpty()
+
 val hasReleaseSigning = !releaseStoreFile.isNullOrBlank() &&
     !localProperties.getProperty("RELEASE_STORE_PASSWORD").isNullOrBlank() &&
     !localProperties.getProperty("RELEASE_KEY_ALIAS").isNullOrBlank() &&
@@ -74,6 +81,8 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             isDebuggable = true
+            manifestPlaceholders["admobAppId"] = TEST_ADMOB_APP_ID
+            buildConfigField("String", "ADMOB_REWARDED_UNIT_ID", "\"$TEST_ADMOB_REWARDED_UNIT_ID\"")
         }
         release {
             isMinifyEnabled = true
@@ -83,6 +92,16 @@ android {
                 "proguard-rules.pro"
             )
             signingConfig = if (hasReleaseSigning) signingConfigs.getByName("release") else null
+            val releaseAdMobAppId = adMobAppId.ifBlank {
+                logger.warn("ADMOB_APP_ID is not set in local.properties; release uses the AdMob test app ID.")
+                TEST_ADMOB_APP_ID
+            }
+            val releaseAdMobUnitId = adMobRewardedUnitId.ifBlank {
+                logger.warn("ADMOB_REWARDED_UNIT_ID is not set in local.properties; release uses the AdMob test rewarded unit ID.")
+                TEST_ADMOB_REWARDED_UNIT_ID
+            }
+            manifestPlaceholders["admobAppId"] = releaseAdMobAppId
+            buildConfigField("String", "ADMOB_REWARDED_UNIT_ID", "\"$releaseAdMobUnitId\"")
         }
     }
     compileOptions {

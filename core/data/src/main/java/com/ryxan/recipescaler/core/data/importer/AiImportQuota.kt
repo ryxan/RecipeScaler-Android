@@ -33,6 +33,9 @@ interface AiImportQuota {
 
     /** Adds [count] purchased or rewarded credits to the bonus balance. */
     suspend fun grantCredits(count: Int)
+
+    /** Debug tooling: sets total remaining free+bonus scans. */
+    suspend fun debugSetRemaining(total: Int)
 }
 
 /**
@@ -122,6 +125,16 @@ class DataStoreAiImportQuota internal constructor(
         if (count <= 0) return
         dataStore.edit { preferences ->
             preferences[KEY_BONUS_CREDITS] = (preferences[KEY_BONUS_CREDITS] ?: 0) + count
+        }
+    }
+
+    override suspend fun debugSetRemaining(total: Int) {
+        dataStore.edit { preferences ->
+            val n = total.coerceAtLeast(0)
+            val freeLeft = minOf(n, AiImportConfig.FREE_LIFETIME_LIMIT)
+            preferences[KEY_FREE_USED] = AiImportConfig.FREE_LIFETIME_LIMIT - freeLeft
+            preferences[KEY_BONUS_CREDITS] = n - freeLeft
+            preferences.remove(KEY_LAST_DEBIT)
         }
     }
 

@@ -14,6 +14,7 @@ import com.ryxan.recipescaler.testing.MainDispatcherRule
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlin.math.abs
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -100,27 +101,27 @@ class ScaleViewModelTest {
     }
 
     @Test
-    fun `multiplier chip scales the serves value`() = runTest {
+    fun `servings chip sets the scale-to target and keeps serves`() = runTest {
         val repo = FakeRecipeRepository()
-        val id = seeded(repo)
+        val id = seeded(repo, yieldAmount = 15.0)
         val vm = vm(repo, FakeSettingsRepository(), id)
 
         vm.uiState.filter { !it.isLoading }.first()
-        vm.applyMultiplier(3)
-        val s = vm.uiState.filter { it.factor == 3.0 }.first()
-        assertEquals("4", s.inputs.servesText)
-        assertEquals("12", s.inputs.scaleToText)
+        vm.applyServings(1)
+        val s = vm.uiState.filter { abs(it.factor - 1.0 / 15) < 1e-9 }.first()
+        assertEquals("15", s.inputs.servesText)
+        assertEquals("1", s.inputs.scaleToText)
     }
 
     @Test
-    fun `multiplier on a blank serves resets to 1`() = runTest {
+    fun `servings chip on a blank serves defaults serves to 1`() = runTest {
         val repo = FakeRecipeRepository()
         val id = seeded(repo)
         val vm = vm(repo, FakeSettingsRepository(), id)
 
         vm.uiState.filter { !it.isLoading }.first()
         vm.setServes("")
-        vm.applyMultiplier(3)
+        vm.applyServings(3)
         val s = vm.uiState.filter {
             !it.isLoading && it.inputs.servesText == "1" && it.inputs.scaleToText == "3"
         }.first()

@@ -23,6 +23,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -39,6 +40,7 @@ import com.ryxan.recipescaler.core.designsystem.RescaleCard
 import com.ryxan.recipescaler.core.designsystem.SectionHeader
 import com.ryxan.recipescaler.core.designsystem.Spacing
 import com.ryxan.recipescaler.core.domain.formatting.DisplayMode
+import com.ryxan.recipescaler.core.domain.importer.AiImportConfig
 import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
 import com.ryxan.recipescaler.core.domain.model.AppSettings
 import com.ryxan.recipescaler.core.domain.model.ThemeMode
@@ -52,6 +54,7 @@ fun SettingsScreen(
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val isPro by viewModel.isPro.collectAsStateWithLifecycle()
     val debugPro by viewModel.debugPro.collectAsStateWithLifecycle()
+    val aiScansRemaining by viewModel.aiScansRemaining.collectAsStateWithLifecycle()
     SettingsContent(
         settings = settings,
         onSystem = viewModel::setMeasurementSystem,
@@ -63,9 +66,11 @@ fun SettingsScreen(
         onNavigateUp = onNavigateUp,
         isPro = isPro,
         onProClick = onNavigateToPro,
-        showDebug = BuildConfig.DEBUG,
+        showDebug = true, // TODO: restore BuildConfig.DEBUG before closed testing / production
         debugPro = debugPro,
         onDebugPro = viewModel::setDebugPro,
+        aiScansRemaining = aiScansRemaining,
+        onSetAiScans = viewModel::setAiScans,
     )
 }
 
@@ -85,6 +90,8 @@ fun SettingsContent(
     showDebug: Boolean = false,
     debugPro: Boolean = false,
     onDebugPro: (Boolean) -> Unit = {},
+    aiScansRemaining: Int = 0,
+    onSetAiScans: (Int) -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -254,6 +261,25 @@ fun SettingsContent(
                             checked = debugPro,
                             onCheckedChange = onDebugPro,
                         )
+                    }
+                    Text(
+                        text = stringResource(R.string.settings_debug_ai_scans, aiScansRemaining),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                    ) {
+                        listOf(0, 1, 5, 10).forEach { preset ->
+                            TextButton(onClick = { onSetAiScans(preset) }) {
+                                Text("$preset")
+                            }
+                        }
+                        TextButton(onClick = { onSetAiScans(AiImportConfig.FREE_LIFETIME_LIMIT) }) {
+                            Text(stringResource(R.string.settings_debug_ai_scans_reset))
+                        }
                     }
                 }
             }

@@ -157,6 +157,35 @@ class DataStoreAiImportQuotaTest {
         assertFalse(quota.tryReserve(isPro = true))
     }
 
+    @Test
+    fun `debugSetRemaining splits the balance between free and bonus`() = runTest {
+        val quota = newQuota(backgroundScope)
+
+        quota.debugSetRemaining(0)
+        assertEquals(0, quota.remainingFree.first())
+        assertEquals(0, quota.bonusCredits.first())
+        assertFalse(quota.tryReserve(isPro = false))
+
+        quota.debugSetRemaining(3)
+        assertEquals(3, quota.remainingFree.first())
+        assertEquals(0, quota.bonusCredits.first())
+        assertTrue(quota.tryReserve(isPro = false))
+        assertEquals(2, quota.remainingFree.first())
+
+        val bonus = 7
+        quota.debugSetRemaining(AiImportConfig.FREE_LIFETIME_LIMIT + bonus)
+        assertEquals(AiImportConfig.FREE_LIFETIME_LIMIT, quota.remainingFree.first())
+        assertEquals(bonus, quota.bonusCredits.first())
+
+        // Free allowance is spent first, then bonus credits.
+        repeat(AiImportConfig.FREE_LIFETIME_LIMIT) {
+            assertTrue(quota.tryReserve(isPro = false))
+        }
+        assertEquals(0, quota.remainingFree.first())
+        assertTrue(quota.tryReserve(isPro = false))
+        assertEquals(bonus - 1, quota.bonusCredits.first())
+    }
+
     private companion object {
         const val DAY = "2026-10-10"
     }

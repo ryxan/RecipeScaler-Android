@@ -100,12 +100,27 @@ class EditorViewModelScanTest {
         val vm = newVm(f, backgroundScope)
         vm.setUseAiImport(true)
 
+        // Untouched default serves is treated as blank and gets overridden.
+        assertEquals("1", vm.uiState.value.yieldText)
+
         vm.onImageCaptured(uri, deleteWhenDone = false)
 
         val s = vm.uiState.value
         assertEquals("Test Cake", s.title)
         assertEquals("8", s.yieldText)
         assertEquals(listOf("flour", "sugar"), s.rows.map { it.name })
+    }
+
+    @Test
+    fun `AI scan prefill does not override a serves value the user typed`() = runTest {
+        val f = Fixture()
+        val vm = newVm(f, backgroundScope)
+        vm.setUseAiImport(true)
+        vm.onYieldTextChange("3")
+
+        vm.onImageCaptured(uri, deleteWhenDone = false)
+
+        assertEquals("3", vm.uiState.value.yieldText)
     }
 
     @Test

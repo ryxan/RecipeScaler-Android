@@ -76,9 +76,13 @@ import com.ryxan.recipescaler.core.designsystem.Spacing
 import com.ryxan.recipescaler.core.domain.model.ScaleStatus
 import com.ryxan.recipescaler.core.domain.model.ScaledIngredient
 import com.ryxan.recipescaler.core.domain.model.formatYield
+import com.ryxan.recipescaler.core.domain.parsing.QuantityParser
 import com.ryxan.recipescaler.core.domain.scaling.CopyFormat
 import kotlinx.coroutines.launch
 import kotlin.math.abs
+
+/** Target-servings chips for the "Scale to" shortcuts row. */
+private val servingChips = listOf(1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24)
 
 @Composable
 fun ScaleScreen(
@@ -99,7 +103,7 @@ fun ScaleScreen(
             onNavigateUp = onNavigateUp,
             onServes = viewModel::setServes,
             onScaleTo = viewModel::setScaleTo,
-            onMultiplier = viewModel::applyMultiplier,
+            onServings = viewModel::applyServings,
             onShowOriginal = viewModel::setShowOriginal,
             onCookMode = viewModel::toggleCookMode,
             onToggleChecked = viewModel::toggleChecked,
@@ -125,7 +129,7 @@ data class ScaleCallbacks(
     val onNavigateUp: () -> Unit = {},
     val onServes: (String) -> Unit = {},
     val onScaleTo: (String) -> Unit = {},
-    val onMultiplier: (Int) -> Unit = {},
+    val onServings: (Int) -> Unit = {},
     val onShowOriginal: (Boolean) -> Unit = {},
     val onCookMode: () -> Unit = {},
     val onToggleChecked: (String) -> Unit = {},
@@ -266,13 +270,13 @@ fun ScaleContent(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.selectableGroup(),
                     ) {
-                        items(10) { index ->
-                            val n = index + 1
+                        items(servingChips, key = { it }) { n ->
                             FilterChip(
                                 selected = state.message == null &&
-                                    abs(state.factor - n) < 1e-9,
-                                onClick = { callbacks.onMultiplier(n) },
-                                label = { Text("${n}×") },
+                                    QuantityParser.parse(state.inputs.scaleToText)
+                                        ?.let { abs(it - n.toDouble()) < 1e-9 } == true,
+                                onClick = { callbacks.onServings(n) },
+                                label = { Text("$n") },
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor =
                                         MaterialTheme.colorScheme.primaryContainer,

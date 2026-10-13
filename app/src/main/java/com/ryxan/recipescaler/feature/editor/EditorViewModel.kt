@@ -78,7 +78,7 @@ data class EditorUiState(
     val isLoading: Boolean = true,
     val recipeId: Long = 0,
     val title: String = "",
-    val yieldText: String = "",
+    val yieldText: String = "1",
     val yieldLabel: String = "servings",
     val rows: List<EditorRow> = emptyList(),
     val dialog: EditorDialog? = null,
@@ -228,7 +228,6 @@ class EditorViewModel @Inject constructor(
 
     fun onTitleChange(v: String) = edit { it.copy(title = v) }
     fun onYieldTextChange(v: String) = edit { it.copy(yieldText = v) }
-    fun onYieldLabelChange(v: String) = edit { it.copy(yieldLabel = v) }
 
     fun onRowQtyChange(key: Long, v: String) = editRows(key) { it.copy(rawQuantity = v, needsReview = false) }
     fun onRowUnitChange(key: Long, v: KitchenUnit) = editRows(key) { it.copy(unit = v, needsReview = false) }
@@ -364,14 +363,15 @@ class EditorViewModel @Inject constructor(
         consumeOfferAiRetry()
     }
 
-    /** Applies scan-detected title/servings to blank fields only. */
+    /** Applies scan-detected title/servings to fields the user hasn't touched. */
     private fun applyPrefill(s: EditorUiState, prefill: ImportPrefill?): EditorUiState {
         if (prefill == null) return s
         var next = s
         if (next.title.isBlank() && !prefill.title.isNullOrBlank()) {
             next = next.copy(title = prefill.title.trim())
         }
-        if (next.yieldText.isBlank() && !prefill.servings.isNullOrBlank()) {
+        val yieldUntouched = next.yieldText.isBlank() || next.yieldText == "1"
+        if (yieldUntouched && !prefill.servings.isNullOrBlank()) {
             splitYield(prefill.servings)?.let { split ->
                 next = next.copy(
                     yieldText = split.amountText,

@@ -9,11 +9,9 @@ import kotlinx.coroutines.flow.flowOf
 /**
  * Source of rewarded ads that grant bonus AI scans on completion.
  *
- * The Google Mobile Ads SDK is not integrated yet — [NoopRewardedAds] is bound
- * so the paywall renders the option in a "coming soon" state. When AdMob lands
- * (app ID in the manifest, AD_ID permission, UMP consent), bind a real
- * implementation that loads a RewardedAd behind [isAvailable] and returns the
- * earned credits from [showForScans].
+ * [AdMobRewardedAds] is bound in production: it keeps a RewardedAd preloaded
+ * behind [isAvailable] and grants the earned credits from [showForScans].
+ * [NoopRewardedAds] remains for tests and as a fallback.
  */
 interface RewardedAds {
 
@@ -31,7 +29,7 @@ interface RewardedAds {
     suspend fun showForScans(activity: Activity): Int
 }
 
-/** No-op provider bound until the Mobile Ads SDK is integrated. */
+/** No-op provider for tests — ads disabled, never grants credits. */
 @Singleton
 class NoopRewardedAds @Inject constructor() : RewardedAds {
     override val isAvailable: Flow<Boolean> = flowOf(false)

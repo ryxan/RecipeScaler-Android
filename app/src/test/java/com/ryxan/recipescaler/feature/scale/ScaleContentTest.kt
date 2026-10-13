@@ -81,7 +81,7 @@ class ScaleContentTest {
     fun `shows the serves and scale to fields`() {
         content(state())
         composeRule.onNodeWithText("Serves").assertIsDisplayed()
-        composeRule.onNodeWithText("Scale to").assertIsDisplayed()
+        composeRule.onNodeWithText("Scale to (servings)").assertIsDisplayed()
     }
 
     @Test
@@ -93,23 +93,23 @@ class ScaleContentTest {
     }
 
     @Test
-    fun `the 10x chip is reachable by scrolling`() {
+    fun `the 24 chip is reachable by scrolling`() {
         content(state())
         composeRule.onNode(
             hasScrollToIndexAction() and hasAnyAncestor(hasScrollToIndexAction()),
-        ).performScrollToNode(hasText("10×"))
-        composeRule.onNodeWithText("10×").assertIsDisplayed()
+        ).performScrollToNode(hasText("24"))
+        composeRule.onNodeWithText("24").assertIsDisplayed()
     }
 
     @Test
-    fun `tapping the 3x chip fires the multiplier callback`() {
-        var multiplier = 0
+    fun `tapping the 3 chip fires the servings callback`() {
+        var servings = 0
         content(
             state(factor = 1.0),
-            ScaleCallbacks(onMultiplier = { multiplier = it }),
+            ScaleCallbacks(onServings = { servings = it }),
         )
-        composeRule.onNodeWithText("3×").performClick()
-        assertEquals(3, multiplier)
+        composeRule.onNodeWithText("3").performClick()
+        assertEquals(3, servings)
     }
 
     @Test
@@ -137,8 +137,8 @@ class ScaleContentTest {
             "Tap an ingredient to check it off. The screen stays on.",
         ).assertIsDisplayed()
         composeRule.onAllNodesWithText("Serves").assertCountEquals(0)
-        composeRule.onAllNodesWithText("Scale to").assertCountEquals(0)
-        composeRule.onAllNodesWithText("3×").assertCountEquals(0)
+        composeRule.onAllNodesWithText("Scale to (servings)").assertCountEquals(0)
+        composeRule.onAllNodesWithText("3").assertCountEquals(0)
         composeRule.onAllNodesWithText("Show original amounts").assertCountEquals(0)
         // Summary and rows still visible.
         composeRule.onNodeWithText("×2 · Makes 8 servings").assertIsDisplayed()
