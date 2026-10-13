@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
@@ -28,18 +29,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
@@ -69,13 +64,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ryxan.recipescaler.R
 import com.ryxan.recipescaler.core.designsystem.QuantityText
-import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import com.ryxan.recipescaler.core.domain.model.ScaleStatus
 import com.ryxan.recipescaler.core.domain.model.ScaledIngredient
 import com.ryxan.recipescaler.core.domain.model.formatYield
-import com.ryxan.recipescaler.core.domain.parsing.QuantityParser
 import com.ryxan.recipescaler.core.domain.scaling.CopyFormat
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 @Composable
 fun ScaleScreen(
@@ -94,12 +88,9 @@ fun ScaleScreen(
         snackbarHostState = snackbarHostState,
         callbacks = ScaleCallbacks(
             onNavigateUp = onNavigateUp,
-            onTab = viewModel::setTab,
-            onTargetYield = viewModel::setTargetYield,
-            onSelectIngredient = viewModel::selectIngredient,
-            onIngredientAmount = viewModel::setIngredientAmount,
-            onIngredientUnit = viewModel::setIngredientUnit,
-            onFactorText = viewModel::setFactorText,
+            onServes = viewModel::setServes,
+            onScaleTo = viewModel::setScaleTo,
+            onMultiplier = viewModel::applyMultiplier,
             onShowOriginal = viewModel::setShowOriginal,
             onCookMode = viewModel::toggleCookMode,
             onToggleChecked = viewModel::toggleChecked,
@@ -123,12 +114,9 @@ fun ScaleScreen(
 
 data class ScaleCallbacks(
     val onNavigateUp: () -> Unit = {},
-    val onTab: (ScaleTab) -> Unit = {},
-    val onTargetYield: (String) -> Unit = {},
-    val onSelectIngredient: (String) -> Unit = {},
-    val onIngredientAmount: (String) -> Unit = {},
-    val onIngredientUnit: (KitchenUnit) -> Unit = {},
-    val onFactorText: (String) -> Unit = {},
+    val onServes: (String) -> Unit = {},
+    val onScaleTo: (String) -> Unit = {},
+    val onMultiplier: (Int) -> Unit = {},
     val onShowOriginal: (Boolean) -> Unit = {},
     val onCookMode: () -> Unit = {},
     val onToggleChecked: (String) -> Unit = {},
@@ -239,33 +227,45 @@ fun ScaleContent(
                 }
             } else {
             if (!state.cookMode) {
-                item(key = "tabs") {
-                    val tabs = listOf(
-                        ScaleTab.SERVINGS to R.string.scale_tab_servings,
-                        ScaleTab.INGREDIENT to R.string.scale_tab_ingredient,
-                        ScaleTab.FACTOR to R.string.scale_tab_factor,
-                    )
-                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                        tabs.forEachIndexed { index, (tab, labelRes) ->
-                            SegmentedButton(
-                                selected = state.inputs.tab == tab,
-                                onClick = { callbacks.onTab(tab) },
-                                shape = SegmentedButtonDefaults.itemShape(
-                                    index = index,
-                                    count = tabs.size,
-                                ),
-                            ) {
-                                Text(stringResource(labelRes))
-                            }
-                        }
+                item(key = "inputs") {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = state.inputs.servesText,
+                            onValueChange = callbacks.onServes,
+                            modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Decimal,
+                            ),
+                            label = { Text(stringResource(R.string.scale_label_serves)) },
+                            singleLine = true,
+                        )
+                        OutlinedTextField(
+                            value = state.inputs.scaleToText,
+                            onValueChange = callbacks.onScaleTo,
+                            modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Decimal,
+                            ),
+                            label = { Text(stringResource(R.string.scale_label_scale_to)) },
+                            singleLine = true,
+                        )
                     }
                 }
 
-                item(key = "input") {
-                    when (state.inputs.tab) {
-                        ScaleTab.SERVINGS -> ServingsInput(state, callbacks)
-                        ScaleTab.INGREDIENT -> IngredientInput(state, callbacks)
-                        ScaleTab.FACTOR -> FactorInput(state, callbacks)
+                item(key = "multipliers") {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.selectableGroup(),
+                    ) {
+                        items(10) { index ->
+                            val n = index + 1
+                            FilterChip(
+                                selected = state.message == null &&
+                                    abs(state.factor - n) < 1e-9,
+                                onClick = { callbacks.onMultiplier(n) },
+                                label = { Text("${n}×") },
+                            )
+                        }
                     }
                 }
 
@@ -350,140 +350,6 @@ fun ScaleContent(
             }
             }
         }
-    }
-}
-
-@Composable
-private fun ServingsInput(state: ScaleUiState, callbacks: ScaleCallbacks) {
-    Column {
-        OutlinedTextField(
-            value = state.inputs.targetYieldText,
-            onValueChange = callbacks.onTargetYield,
-            modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            label = { Text(stringResource(R.string.scale_label_target)) },
-            suffix = { Text(state.yieldLabel) },
-            singleLine = true,
-        )
-        if (state.yieldAmount > 0) {
-            Text(
-                stringResource(
-                    R.string.scale_original_yield,
-                    formatYield(state.yieldAmount),
-                    state.yieldLabel,
-                ),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun IngredientInput(state: ScaleUiState, callbacks: ScaleCallbacks) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        var ingredientExpanded by remember { mutableStateOf(false) }
-        ExposedDropdownMenuBox(
-            expanded = ingredientExpanded,
-            onExpandedChange = { ingredientExpanded = it },
-        ) {
-            val selected = state.ingredientChoices.find { it.id == state.inputs.ingredientId }
-            OutlinedTextField(
-                value = selected?.label.orEmpty(),
-                onValueChange = {},
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-                readOnly = true,
-                label = { Text(stringResource(R.string.scale_label_ingredient)) },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(ingredientExpanded) },
-            )
-            ExposedDropdownMenu(
-                expanded = ingredientExpanded,
-                onDismissRequest = { ingredientExpanded = false },
-            ) {
-                state.ingredientChoices.forEach { choice ->
-                    DropdownMenuItem(
-                        text = { Text(choice.label) },
-                        onClick = {
-                            ingredientExpanded = false
-                            callbacks.onSelectIngredient(choice.id)
-                        },
-                    )
-                }
-            }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
-                value = state.inputs.ingredientAmountText,
-                onValueChange = callbacks.onIngredientAmount,
-                modifier = Modifier.weight(1f),
-                label = { Text(stringResource(R.string.scale_label_amount)) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                singleLine = true,
-            )
-            var unitExpanded by remember { mutableStateOf(false) }
-            ExposedDropdownMenuBox(
-                expanded = unitExpanded,
-                onExpandedChange = { unitExpanded = it },
-                modifier = Modifier.weight(1f),
-            ) {
-                OutlinedTextField(
-                    value = (state.inputs.ingredientUnit
-                        ?: state.unitChoices.firstOrNull())?.label.orEmpty(),
-                    onValueChange = {},
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-                    readOnly = true,
-                    label = { Text(stringResource(R.string.scale_label_unit)) },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(unitExpanded) },
-                )
-                ExposedDropdownMenu(
-                    expanded = unitExpanded,
-                    onDismissRequest = { unitExpanded = false },
-                ) {
-                    state.unitChoices.forEach { unit ->
-                        DropdownMenuItem(
-                            text = { Text(unit.label) },
-                            onClick = {
-                                unitExpanded = false
-                                callbacks.onIngredientUnit(unit)
-                            },
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun FactorInput(state: ScaleUiState, callbacks: ScaleCallbacks) {
-    val presets = listOf("0.5" to "½×", "1" to "1×", "2" to "2×", "3" to "3×")
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.selectableGroup(),
-        ) {
-            val current = QuantityParser.parse(state.inputs.factorText)
-            presets.forEach { (value, label) ->
-                FilterChip(
-                    selected = current?.let { it == value.toDouble() } == true,
-                    onClick = { callbacks.onFactorText(value) },
-                    label = { Text(label) },
-                )
-            }
-        }
-        OutlinedTextField(
-            value = state.inputs.factorText,
-            onValueChange = callbacks.onFactorText,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text(stringResource(R.string.scale_label_custom_factor)) },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            singleLine = true,
-        )
     }
 }
 
@@ -577,8 +443,4 @@ private fun ScaledRow(
 private fun messageText(message: ScaleMessage): String = when (message) {
     is ScaleMessage.CantRead -> stringResource(R.string.msg_cant_read, message.text)
     ScaleMessage.EnterAmountAboveZero -> stringResource(R.string.err_amount_above_zero)
-    ScaleMessage.IngredientNoQuantity -> stringResource(R.string.err_ingredient_no_qty)
-    is ScaleMessage.IncompatibleUnits ->
-        stringResource(R.string.err_incompatible_units, message.from, message.to)
-    ScaleMessage.SetYieldInEditor -> stringResource(R.string.scale_set_yield)
 }

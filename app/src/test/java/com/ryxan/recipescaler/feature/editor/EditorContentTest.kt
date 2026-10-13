@@ -2,6 +2,7 @@ package com.ryxan.recipescaler.feature.editor
 
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.hasAnyDescendant
@@ -99,6 +100,52 @@ class EditorContentTest {
         )
         composeRule.onNode(hasClickAction() and hasAnyDescendant(hasText("Scale")), useUnmergedTree = true).performClick()
         assertTrue(scaled)
+    }
+
+    @Test
+    fun `remove and reorder controls are hidden until edit mode`() {
+        content(state())
+        composeRule.onAllNodesWithContentDescription("Remove ingredient").assertCountEquals(0)
+        composeRule.onAllNodesWithContentDescription("Reorder").assertCountEquals(0)
+    }
+
+    @Test
+    fun `edit ingredients shows the remove and reorder controls`() {
+        var removed: Long? = null
+        content(
+            state(),
+            EditorCallbacks(onRemoveRow = { removed = it }),
+        )
+        composeRule.onNodeWithContentDescription("Edit ingredients").performClick()
+        composeRule.onAllNodesWithContentDescription("Reorder").assertCountEquals(1)
+        composeRule.onNodeWithContentDescription("Remove ingredient").performClick()
+        assertEquals(1L, removed)
+    }
+
+    @Test
+    fun `done editing hides the remove and reorder controls`() {
+        content(state())
+        composeRule.onNodeWithContentDescription("Edit ingredients").performClick()
+        composeRule.onNodeWithContentDescription("Done editing").performClick()
+        composeRule.onAllNodesWithContentDescription("Remove ingredient").assertCountEquals(0)
+        composeRule.onAllNodesWithContentDescription("Reorder").assertCountEquals(0)
+        composeRule.onAllNodesWithContentDescription("Edit ingredients").assertCountEquals(1)
+    }
+
+    @Test
+    fun `scan icon in the top bar calls onScanClick`() {
+        var scanned = false
+        content(state(), EditorCallbacks(onScanClick = { scanned = true }))
+        composeRule.onNodeWithContentDescription("Scan recipe").performClick()
+        assertTrue(scanned)
+    }
+
+    @Test
+    fun `overflow menu no longer contains scan recipe`() {
+        content(state())
+        composeRule.onNodeWithContentDescription("More options").performClick()
+        composeRule.onAllNodesWithText("Scan recipe").assertCountEquals(0)
+        composeRule.onAllNodesWithText("Paste recipe text").assertCountEquals(1)
     }
 
     @Test

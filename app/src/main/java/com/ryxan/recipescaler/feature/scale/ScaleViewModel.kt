@@ -4,11 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ryxan.recipescaler.core.domain.formatting.DisplayPrefs
-import com.ryxan.recipescaler.core.domain.model.IngredientItem
-import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import com.ryxan.recipescaler.core.domain.model.Recipe
 import com.ryxan.recipescaler.core.domain.model.ScaledIngredient
-import com.ryxan.recipescaler.core.domain.model.UnitFamily
 import com.ryxan.recipescaler.core.domain.model.formatYield
 import com.ryxan.recipescaler.core.domain.model.toScaleItem
 import com.ryxan.recipescaler.core.domain.parsing.QuantityParser
@@ -31,31 +28,15 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 
-enum class ScaleTab { SERVINGS, INGREDIENT, FACTOR }
-
 data class ScaleInputs(
-    val tab: ScaleTab = ScaleTab.SERVINGS,
-    val targetYieldText: String = "",
-    val ingredientId: String? = null,
-    val ingredientAmountText: String = "",
-    val ingredientUnit: KitchenUnit? = null,
-    val factorText: String = "1",
-)
-
-data class IngredientChoice(
-    val id: String,
-    val label: String,
-    val qtyText: String,
-    val unit: KitchenUnit?,
+    val servesText: String = "",
+    val scaleToText: String = "",
 )
 
 /** User-mappable errors/messages; the UI renders each to a string resource. */
 sealed interface ScaleMessage {
     data class CantRead(val text: String) : ScaleMessage
     data object EnterAmountAboveZero : ScaleMessage
-    data object IngredientNoQuantity : ScaleMessage
-    data class IncompatibleUnits(val from: String, val to: String) : ScaleMessage
-    data object SetYieldInEditor : ScaleMessage
 }
 
 data class ScaleUiState(
@@ -75,8 +56,6 @@ data class ScaleUiState(
     val checkedIds: Set<String> = emptySet(),
     /** True when the recipe is gone (deleted) — the screen shows an empty state. */
     val recipeMissing: Boolean = false,
-    val ingredientChoices: List<IngredientChoice> = emptyList(),
-    val unitChoices: List<KitchenUnit> = emptyList(),
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -113,19 +92,17 @@ class ScaleViewModel @Inject constructor(
         inputs.value = transform(current)
     }
 
-    fun setTab(tab: ScaleTab) = updateInputs { it.copy(tab = tab) }
-    fun setTargetYield(text: String) = updateInputs { it.copy(targetYieldText = text) }
-    fun setIngredientAmount(text: String) = updateInputs { it.copy(ingredientAmountText = text) }
-    fun setIngredientUnit(unit: KitchenUnit) = updateInputs { it.copy(ingredientUnit = unit) }
-    fun setFactorText(text: String) = updateInputs { it.copy(factorText = text) }
+    fun setServes(text: String) = updateInputs { it.copy(servesText = text) }
+    fun setScaleTo(text: String) = updateInputs { it.copy(scaleToText = text) }
 
-    fun selectIngredient(id: String) = updateInputs { inp ->
-        val choice = uiState.value.ingredientChoices.find { it.id == id }
-        inp.copy(
-            ingredientId = id,
-            ingredientAmountText = choice?.qtyText ?: inp.ingredientAmountText,
-            ingredientUnit = choice?.unit ?: inp.ingredientUnit,
-        )
+    /** Multiplies the current serves value by [n] and writes it into "Scale to". */
+    fun applyMultiplier(n: Int) = updateInputs { inp ->
+        val serves = QuantityParser.parse(inp.servesText)
+        if (serves != null && serves > 0) {
+            inp.copy(scaleToText = formatYield(serves * n))
+        } else {
+            inp.copy(servesText = "1", scaleToText = n.toString())
+        }
     }
 
     fun setShowOriginal(v: Boolean) {
@@ -166,31 +143,11 @@ class ScaleViewModel @Inject constructor(
         }
 
         val items = recipe.ingredients.map { it.toScaleItem() }
-        val choices = items
-            .filter { (QuantityParser.parse(it.qtyString) ?: 0.0) > 0.0 }
-            .map {
-                IngredientChoice(
-                    id = it.id,
-                    label = choiceLabel(it),
-                    qtyText = it.qtyString,
-                    unit = KitchenUnit.fromKey(it.unit),
-                )
-            }
+        val inp = rawInputs ?: defaultInputs(recipe)
 
-        var inp = rawInputs ?: defaultInputs(recipe, choices)
-
-        var (mode, message) = modeFor(inp, recipe, items, choices)
-        var outcome = ScaleRecipe.scale(items, mode, prefs)
-
-        // A stale selection should snap back to the default ingredient.
-        if (outcome is ScaleOutcome.Failure && outcome.error is ScaleError.IngredientNotFound) {
-            inp = defaultIngredient(choices, inp)
-            val retry = modeFor(inp, recipe, items, choices)
-            mode = retry.first
-            message = retry.second
-            outcome = ScaleRecipe.scale(items, mode, prefs)
-            inputs.value = inp
-        }
+        val (mode, firstMessage) = modeFor(inp)
+        var message = firstMessage
+        val outcome = ScaleRecipe.scale(items, mode, prefs)
 
         val factor: Double
         val rows: List<ScaledIngredient>
@@ -206,16 +163,15 @@ class ScaleViewModel @Inject constructor(
                 rows = (ScaleRecipe.scale(items, ScaleMode.ByFactor(1.0), prefs)
                         as ScaleOutcome.Success).ingredients
                 warning = false
-                message = message ?: when (val e = outcome.error) {
+                message = message ?: when (outcome.error) {
                     ScaleError.InvalidYield, ScaleError.InvalidFactor ->
                         ScaleMessage.EnterAmountAboveZero
-                    ScaleError.IngredientHasNoQuantity -> ScaleMessage.IngredientNoQuantity
-                    is ScaleError.IncompatibleUnits ->
-                        ScaleMessage.IncompatibleUnits(e.from, e.to)
-                    ScaleError.IngredientNotFound -> null
+                    else -> null
                 }
             }
         }
+
+        val serves = QuantityParser.parse(inp.servesText)
 
         return ScaleUiState(
             isLoading = false,
@@ -226,118 +182,31 @@ class ScaleViewModel @Inject constructor(
             inputs = inp,
             message = message,
             factor = factor,
-            derivedYieldAmount = if (recipe.yieldAmount > 0) recipe.yieldAmount * factor else null,
+            derivedYieldAmount = if (serves != null && serves > 0) serves * factor else null,
             showScaleWarning = warning,
             rows = rows,
             showOriginal = original,
             cookMode = cook,
             checkedIds = checked,
-            ingredientChoices = choices,
-            unitChoices = unitChoicesFor(inp, items),
         )
     }
 
-    private fun defaultInputs(recipe: Recipe, choices: List<IngredientChoice>): ScaleInputs {
-        val base = ScaleInputs(
-            tab = if (recipe.yieldAmount > 0) ScaleTab.SERVINGS else ScaleTab.FACTOR,
-            targetYieldText = formatYield(recipe.yieldAmount),
-            factorText = "1",
-        )
-        return defaultIngredient(choices, base)
+    private fun defaultInputs(recipe: Recipe): ScaleInputs {
+        val base = if (recipe.yieldAmount > 0) formatYield(recipe.yieldAmount) else "1"
+        return ScaleInputs(servesText = base, scaleToText = base)
     }
 
-    private fun defaultIngredient(choices: List<IngredientChoice>, inp: ScaleInputs): ScaleInputs {
-        val first = choices.firstOrNull() ?: return inp
-        return inp.copy(
-            ingredientId = first.id,
-            ingredientAmountText = first.qtyText,
-            ingredientUnit = first.unit,
-        )
-    }
-
-    private fun modeFor(
-        inp: ScaleInputs,
-        recipe: Recipe,
-        items: List<IngredientItem>,
-        choices: List<IngredientChoice>,
-    ): Pair<ScaleMode, ScaleMessage?> = when (inp.tab) {
-        ScaleTab.SERVINGS -> {
-            when {
-                recipe.yieldAmount <= 0 ->
-                    ScaleMode.ByFactor(1.0) to ScaleMessage.SetYieldInEditor
-                inp.targetYieldText.isBlank() -> ScaleMode.ByFactor(1.0) to null
-                else -> {
-                    val target = QuantityParser.parse(inp.targetYieldText)
-                    when {
-                        target == null ->
-                            ScaleMode.ByFactor(1.0) to ScaleMessage.CantRead(inp.targetYieldText)
-                        target <= 0 ->
-                            ScaleMode.ByFactor(1.0) to ScaleMessage.EnterAmountAboveZero
-                        else -> ScaleMode.ByYield(recipe.yieldAmount, target) to null
-                    }
-                }
-            }
+    private fun modeFor(inp: ScaleInputs): Pair<ScaleMode, ScaleMessage?> {
+        if (inp.servesText.isBlank() || inp.scaleToText.isBlank()) {
+            return ScaleMode.ByFactor(1.0) to null
         }
-        ScaleTab.INGREDIENT -> {
-            val id = inp.ingredientId ?: choices.firstOrNull()?.id
-            val selected = items.find { it.id == id }
-            when {
-                id == null -> ScaleMode.ByFactor(1.0) to null
-                inp.ingredientAmountText.isBlank() -> ScaleMode.ByFactor(1.0) to null
-                else -> {
-                    val amount = QuantityParser.parse(inp.ingredientAmountText)
-                    when {
-                        amount == null ->
-                            ScaleMode.ByFactor(1.0) to
-                                ScaleMessage.CantRead(inp.ingredientAmountText)
-                        amount <= 0 ->
-                            ScaleMode.ByFactor(1.0) to ScaleMessage.EnterAmountAboveZero
-                        else -> ScaleMode.ByIngredient(
-                            ingredientId = id,
-                            targetAmount = amount,
-                            targetUnit = (inp.ingredientUnit
-                                ?: KitchenUnit.fromKey(selected?.unit ?: "")
-                                ?: KitchenUnit.NONE).key,
-                        ) to null
-                    }
-                }
-            }
-        }
-        ScaleTab.FACTOR -> {
-            when {
-                inp.factorText.isBlank() -> ScaleMode.ByFactor(1.0) to null
-                else -> {
-                    val factor = QuantityParser.parse(inp.factorText)
-                    when {
-                        factor == null ->
-                            ScaleMode.ByFactor(1.0) to ScaleMessage.CantRead(inp.factorText)
-                        factor <= 0 ->
-                            ScaleMode.ByFactor(1.0) to ScaleMessage.EnterAmountAboveZero
-                        else -> ScaleMode.ByFactor(factor) to null
-                    }
-                }
-            }
-        }
-    }
-
-    private fun choiceLabel(item: IngredientItem): String {
-        val unit = KitchenUnit.fromKey(item.unit)
-        return listOfNotNull(
-            item.qtyString.ifBlank { null },
-            unit?.takeIf { it != KitchenUnit.NONE }?.label,
-            item.name.ifBlank { null },
-        ).joinToString(" ")
-    }
-
-    private fun unitChoicesFor(inp: ScaleInputs, items: List<IngredientItem>): List<KitchenUnit> {
-        val id = inp.ingredientId ?: return emptyList()
-        val item = items.find { it.id == id } ?: return emptyList()
-        val unit = KitchenUnit.fromKey(item.unit) ?: return emptyList()
-        return if (unit.family == UnitFamily.COUNT) {
-            listOf(unit)
-        } else {
-            KitchenUnit.entries.filter { it.family == unit.family }
-        }
+        val serves = QuantityParser.parse(inp.servesText)
+            ?: return ScaleMode.ByFactor(1.0) to ScaleMessage.CantRead(inp.servesText)
+        if (serves <= 0) return ScaleMode.ByFactor(1.0) to ScaleMessage.EnterAmountAboveZero
+        val target = QuantityParser.parse(inp.scaleToText)
+            ?: return ScaleMode.ByFactor(1.0) to ScaleMessage.CantRead(inp.scaleToText)
+        if (target <= 0) return ScaleMode.ByFactor(1.0) to ScaleMessage.EnterAmountAboveZero
+        return ScaleMode.ByYield(serves, target) to null
     }
 
     // ── Copy / share ──────────────────────────────────────────────────────────

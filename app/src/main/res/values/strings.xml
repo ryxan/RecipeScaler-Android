@@ -21,6 +21,8 @@
     <string name="action_clear">Clear</string>
     <string name="action_add_ingredient">Add ingredient</string>
     <string name="action_remove_ingredient">Remove ingredient</string>
+    <string name="action_edit_ingredients">Edit ingredients</string>
+    <string name="action_done_editing">Done editing</string>
     <string name="action_next">Next</string>
     <string name="hint_recipe_title">Recipe title</string>
     <string name="hint_yield_label">servings</string>
@@ -55,7 +57,7 @@
     <string name="action_choose_gallery">Choose from gallery</string>
     <string name="scan_use_ai">Use AI import</string>
     <string name="scan_ai_pro">Best for handwriting</string>
-    <string name="scan_ai_free_left">Best for handwriting · %1$d free left</string>
+    <string name="scan_ai_free_left">Best for handwriting · %1$d left</string>
     <string name="scan_ai_pro_feature">Pro feature</string>
     <string name="scan_reading">Reading recipe…</string>
     <string name="scan_reading_ai">Reading with AI…</string>
@@ -74,8 +76,24 @@
     <string name="scan_no_scanner">Scanner isn\'t available on this device</string>
     <string name="scan_no_camera">No camera app available</string>
     <string name="row_needs_review">Check this line</string>
-    <string name="ai_paywall_title">AI import is a Pro feature</string>
-    <string name="ai_paywall_body">You\'ve used your 2 free AI imports. Upgrade to Pro for unlimited imports.</string>
+    <string name="ai_paywall_title">You\'re out of AI scans</string>
+    <string name="ai_paywall_subtitle">Top up to keep importing recipes with AI — or keep scanning on-device for free, anytime.</string>
+    <string name="ai_paywall_pack_title">100 AI scans</string>
+    <string name="ai_paywall_pack_subtitle">One-time top-up · never expires</string>
+    <string name="ai_paywall_best_value">Best value</string>
+    <string name="ai_paywall_pro_title">Rescale Pro</string>
+    <string name="ai_paywall_pro_subtitle">Unlimited AI scans, forever</string>
+    <string name="ai_paywall_free_option">or earn scans for free</string>
+    <string name="ai_paywall_ad_title">Watch a short ad</string>
+    <string name="ai_paywall_soon">Soon</string>
+    <plurals name="ai_paywall_ad_reward">
+        <item quantity="one">Get %d AI scan</item>
+        <item quantity="other">Get %d AI scans</item>
+    </plurals>
+    <plurals name="ai_scans_granted">
+        <item quantity="one">+%d AI scan added</item>
+        <item quantity="other">+%d AI scans added</item>
+    </plurals>
     <string name="action_see_pro">See Pro</string>
     <string name="action_not_now">Not now</string>
 
@@ -101,10 +119,6 @@
     <string name="copy_format_markdown">Markdown</string>
     <string name="copy_format_shopping">Shopping list</string>
     <string name="msg_copied">Copied</string>
-    <string name="scale_tab_servings">Servings</string>
-    <string name="scale_tab_ingredient">Ingredient</string>
-    <string name="scale_tab_factor">×Factor</string>
-    <string name="scale_original_yield">Original: %1$s %2$s</string>
     <string name="scale_factor_prefix">×%1$s</string>
     <string name="scale_makes">Makes %1$s %2$s</string>
     <string name="scale_warning_big">×%1$s is a big jump. Large batches don\'t scale perfectly: split across pans or use bigger ones, check doneness early, and taste before adding all the salt and spices.</string>
@@ -113,15 +127,9 @@
     <string name="scale_was">was %1$s</string>
     <string name="scale_from_range">Scaled from the low end of a range</string>
     <string name="scale_not_scaled">Not scaled</string>
-    <string name="scale_set_yield">Set the recipe\'s yield in the editor to scale by servings.</string>
     <string name="err_amount_above_zero">Enter an amount above 0</string>
-    <string name="err_ingredient_no_qty">That ingredient has no amount</string>
-    <string name="err_incompatible_units">Can\'t convert %1$s to %2$s for this ingredient</string>
-    <string name="scale_label_target">Target</string>
-    <string name="scale_label_ingredient">Ingredient</string>
-    <string name="scale_label_amount">Amount</string>
-    <string name="scale_label_unit">Unit</string>
-    <string name="scale_label_custom_factor">Custom multiplier</string>
+    <string name="scale_label_serves">Serves</string>
+    <string name="scale_label_scale_to">Scale to</string>
     <string name="action_cook_mode">Cook mode</string>
     <string name="action_exit_cook_mode">Exit cook mode</string>
     <string name="cook_mode_hint">Tap an ingredient to check it off. The screen stays on.</string>

@@ -2,6 +2,7 @@ package com.ryxan.recipescaler.feature.editor
 
 import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
+import com.ryxan.recipescaler.core.data.ads.NoopRewardedAds
 import com.ryxan.recipescaler.core.data.importer.AiImportResult
 import com.ryxan.recipescaler.core.data.importer.OcrText
 import com.ryxan.recipescaler.core.domain.importer.AiImportConfig
@@ -59,6 +60,8 @@ class EditorViewModelScanTest {
         UndoDeleteController(f.repo, scope),
         testScanImporter(f.ocr, f.images, f.importer, f.quota, f.pro, aiAvailable),
         scope,
+        f.pro,
+        NoopRewardedAds(),
     )
 
     @Test

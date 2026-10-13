@@ -167,3 +167,42 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso)
     androidTestImplementation(libs.compose.ui.test.junit4)
 }
+
+// Rewrites version.properties with VERSION_CODE + 1. Wired to run only after successful bundleRelease,
+// so the bundle that was just built keeps the code it was configured with and the *next* build gets a
+// fresh one. Bumping before/during the build would not work: the version is read at configuration time.
+val bumpVersionCode = tasks.register("bumpVersionCode") {
+    group = "release"
+    description = "Increments VERSION_CODE in version.properties so the next release bundle is uploadable."
+    val propsFile = versionPropsFile
+    val current = appVersionCode
+    val name = appVersionName
+    doLast {
+        val next = current + 1
+        propsFile.writeText(
+            """
+            # Single source of truth for the app version. Read by app/build.gradle.kts.
+            # VERSION_CODE is bumped automatically after every successful :app:bundleRelease
+            # (see the bumpVersionCode task), so each uploadable bundle gets a fresh, higher code.
+            # Play permanently consumes a versionCode once uploaded and never allows reuse.
+            # VERSION_NAME is the user-visible string and is bumped by hand per release.
+            VERSION_CODE=$next
+            VERSION_NAME=$name
+            """.trimIndent() + "\n"
+        )
+        logger.lifecycle("versionCode $current -> $next (next bundleRelease will use $next)")
+    }
+}
+
+// Only bundleRelease gets version-bumped, and only when it actually produces a bundle. Debug builds and
+// assembleRelease leave the counter alone, since neither produces something uploaded to Play.
+tasks.matching { it.name == "bundleRelease" }.configureEach {
+    finalizedBy(bumpVersionCode)
+}
+
+bumpVersionCode.configure {
+    onlyIf {
+        val bundleTask = tasks.findByName("bundleRelease")
+        bundleTask != null && bundleTask.state.executed && !bundleTask.state.upToDate && bundleTask.state.failure == null
+    }
+}

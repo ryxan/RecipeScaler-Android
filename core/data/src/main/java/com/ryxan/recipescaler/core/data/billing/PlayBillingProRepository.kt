@@ -17,6 +17,7 @@ import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
 import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.ConsumeParams
 import com.android.billingclient.api.PendingPurchasesParams
 import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
@@ -27,6 +28,8 @@ import com.android.billingclient.api.queryProductDetails
 import com.android.billingclient.api.queryPurchasesAsync
 import com.ryxan.recipescaler.core.data.BuildConfig
 import com.ryxan.recipescaler.core.data.di.ApplicationScope
+import com.ryxan.recipescaler.core.data.importer.AiImportQuota
+import com.ryxan.recipescaler.core.domain.importer.AiImportConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -34,8 +37,11 @@ import kotlin.coroutines.resume
 import kotlin.jvm.Volatile
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -61,6 +67,7 @@ class PlayBillingProRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val dataStore: DataStore<Preferences>,
     @ApplicationScope private val appScope: CoroutineScope,
+    private val aiQuota: AiImportQuota,
 ) : ProRepository, PurchasesUpdatedListener {
 
     private val billingClient: BillingClient by lazy {
@@ -83,6 +90,9 @@ class PlayBillingProRepository @Inject constructor(
 
     private val _products = MutableStateFlow<List<ProProduct>>(emptyList())
     override val products: StateFlow<List<ProProduct>> = _products.asStateFlow()
+
+    private val _creditsGranted = MutableSharedFlow<Int>(extraBufferCapacity = 1)
+    override val creditsGranted: Flow<Int> = _creditsGranted.asSharedFlow()
 
     /** Play-side details for [products], needed to build the purchase flow params. */
     @Volatile
@@ -202,7 +212,7 @@ class PlayBillingProRepository @Inject constructor(
         val details = mutableMapOf<String, ProductDetails>()
         var ok = true
 
-        suspend fun query(productId: String, productType: String) {
+        suspend fun query(productId: String, productType: String, essential: Boolean = true) {
             try {
                 val params = QueryProductDetailsParams.newBuilder()
                     .setProductList(
@@ -222,17 +232,20 @@ class PlayBillingProRepository @Inject constructor(
                     }
                 } else {
                     Log.e(TAG, "Product query failed for $productId: ${result.billingResult.debugMessage}")
-                    ok = false
+                    if (essential) ok = false
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
                 Log.e(TAG, "Exception querying product $productId", e)
-                ok = false
+                if (essential) ok = false
             }
         }
 
         query(ProProductIds.MONTHLY, BillingClient.ProductType.SUBS)
         query(ProProductIds.LIFETIME, BillingClient.ProductType.INAPP)
+        // Optional consumable — the app must keep working before it exists
+        // in Play Console, so a failure here never fails the refresh.
+        query(ProProductIds.AI_SCANS_100, BillingClient.ProductType.INAPP, essential = false)
 
         _products.value = found
         productDetails = details
@@ -316,6 +329,15 @@ class PlayBillingProRepository @Inject constructor(
                     return false
                 }
                 result.purchasesList.orEmpty().forEach { purchase ->
+                    if (purchase.products.contains(ProProductIds.AI_SCANS_100)) {
+                        // Consumables are consumed, never acknowledged — Play
+                        // stops returning them once consumed, so recovery here
+                        // can't double-grant.
+                        if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
+                            consumeScanPack(purchase)
+                        }
+                        return@forEach
+                    }
                     snapshots += PurchaseSnapshot(
                         products = purchase.products,
                         state = when (purchase.purchaseState) {
@@ -340,6 +362,10 @@ class PlayBillingProRepository @Inject constructor(
     private fun handlePurchase(purchase: Purchase) {
         when (purchase.purchaseState) {
             Purchase.PurchaseState.PURCHASED -> {
+                if (purchase.products.contains(ProProductIds.AI_SCANS_100)) {
+                    appScope.launch { consumeScanPack(purchase) }
+                    return
+                }
                 acknowledgePurchaseIfNeeded(purchase)
                 if (purchase.products.any {
                         it == ProProductIds.MONTHLY || it == ProProductIds.LIFETIME
@@ -353,6 +379,31 @@ class PlayBillingProRepository @Inject constructor(
                 Log.d(TAG, "Purchase pending")
             }
             else -> Log.w(TAG, "Purchase in state ${purchase.purchaseState}")
+        }
+    }
+
+    /**
+     * Consume an AI scan pack purchase and credit the bonus balance.
+     *
+     * Consume-then-grant means a crash in between can lose a pack (Play stops
+     * reporting the purchase) — the inverse order could double-grant on the
+     * recovery query, which is the worse failure.
+     */
+    private suspend fun consumeScanPack(purchase: Purchase) {
+        val params = ConsumeParams.newBuilder()
+            .setPurchaseToken(purchase.purchaseToken)
+            .build()
+        val result = suspendCancellableCoroutine<BillingResult> { continuation ->
+            billingClient.consumeAsync(params) { billingResult, _ ->
+                continuation.resume(billingResult)
+            }
+        }
+        if (result.responseCode == BillingClient.BillingResponseCode.OK) {
+            aiQuota.grantCredits(AiImportConfig.SCANS_PER_PACK)
+            _creditsGranted.emit(AiImportConfig.SCANS_PER_PACK)
+            Log.d(TAG, "AI scan pack consumed and credited")
+        } else {
+            Log.e(TAG, "Failed to consume AI scan pack: ${result.debugMessage}")
         }
     }
 

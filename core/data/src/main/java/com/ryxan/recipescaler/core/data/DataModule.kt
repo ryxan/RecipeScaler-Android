@@ -14,6 +14,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import com.ryxan.recipescaler.core.data.ads.NoopRewardedAds
+import com.ryxan.recipescaler.core.data.ads.RewardedAds
 import com.ryxan.recipescaler.core.data.billing.PlayBillingProRepository
 import com.ryxan.recipescaler.core.data.billing.ProRepository
 import com.ryxan.recipescaler.core.data.di.ApplicationScope
@@ -109,4 +111,8 @@ abstract class RepositoryBindingsModule {
     @Binds
     @Singleton
     abstract fun bindProRepository(impl: PlayBillingProRepository): ProRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindRewardedAds(impl: NoopRewardedAds): RewardedAds
 }

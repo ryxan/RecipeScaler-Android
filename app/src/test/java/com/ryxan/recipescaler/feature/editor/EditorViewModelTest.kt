@@ -1,10 +1,12 @@
 package com.ryxan.recipescaler.feature.editor
 
 import androidx.lifecycle.SavedStateHandle
+import com.ryxan.recipescaler.core.data.ads.NoopRewardedAds
 import com.ryxan.recipescaler.core.domain.model.Ingredient
 import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import com.ryxan.recipescaler.core.domain.model.Recipe
 import com.ryxan.recipescaler.feature.recipes.UndoDeleteController
+import com.ryxan.recipescaler.testing.FakeProRepository
 import com.ryxan.recipescaler.testing.FakeRecipeRepository
 import com.ryxan.recipescaler.testing.MainDispatcherRule
 import com.ryxan.recipescaler.testing.testScanImporter
@@ -39,7 +41,7 @@ class EditorViewModelTest {
     fun `a new empty recipe is never inserted`() = runTest {
         val repo = FakeRecipeRepository()
         val handle = SavedStateHandle()
-        val vm = EditorViewModel(handle, repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope)
+        val vm = EditorViewModel(handle, repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope, FakeProRepository(), NoopRewardedAds())
 
         advanceTimeBy(1_000)
         assertTrue(repo.observeSummaries("").first().isEmpty())
@@ -53,7 +55,7 @@ class EditorViewModelTest {
     fun `typing a title inserts once after debounce then updates the same id`() = runTest {
         val repo = FakeRecipeRepository()
         val handle = SavedStateHandle()
-        val vm = EditorViewModel(handle, repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope)
+        val vm = EditorViewModel(handle, repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope, FakeProRepository(), NoopRewardedAds())
 
         vm.onTitleChange("Bread")
         advanceTimeBy(600)
@@ -73,7 +75,7 @@ class EditorViewModelTest {
     @Test
     fun `yield text persists via QuantityParser`() = runTest {
         val repo = FakeRecipeRepository()
-        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope)
+        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope, FakeProRepository(), NoopRewardedAds())
         // Yield alone doesn't make a recipe non-empty; give a row a qty first.
         vm.onRowQtyChange(vm.uiState.value.rows[0].key, "1")
 
@@ -103,7 +105,7 @@ class EditorViewModelTest {
                 ),
             ),
         )
-        val vm = EditorViewModel(SavedStateHandle(mapOf("recipeId" to id)), repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope)
+        val vm = EditorViewModel(SavedStateHandle(mapOf("recipeId" to id)), repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope, FakeProRepository(), NoopRewardedAds())
 
         val state = vm.uiState.value
         assertEquals("Cookies", state.title)
@@ -119,7 +121,7 @@ class EditorViewModelTest {
     @Test
     fun `paste into blank rows replaces silently`() = runTest {
         val repo = FakeRecipeRepository()
-        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope)
+        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope, FakeProRepository(), NoopRewardedAds())
 
         vm.importText("1 cup flour\n2 eggs")
         val s = vm.uiState.value
@@ -131,7 +133,7 @@ class EditorViewModelTest {
     @Test
     fun `paste into non-blank rows confirms then replaces or appends`() = runTest {
         val repo = FakeRecipeRepository()
-        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope)
+        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope, FakeProRepository(), NoopRewardedAds())
 
         vm.importText("1 cup flour")            // silent: rows were blank
         vm.importText("2 eggs\n1 tsp salt")     // now non-blank → confirm dialog
@@ -149,7 +151,7 @@ class EditorViewModelTest {
     @Test
     fun `append truncates at the cap and reports dropped rows`() = runTest {
         val repo = FakeRecipeRepository()
-        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope)
+        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope, FakeProRepository(), NoopRewardedAds())
 
         val first = (1..48).joinToString("\n") { "1 cup ingredient$it" }
         vm.importText(first)
@@ -169,7 +171,7 @@ class EditorViewModelTest {
         val repo = FakeRecipeRepository()
 
         // Created in session, then emptied → deleted.
-        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope)
+        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope, FakeProRepository(), NoopRewardedAds())
         vm.onTitleChange("Temp")
         advanceTimeBy(600)
         val id = repo.observeSummaries("").first()[0].id
@@ -186,6 +188,8 @@ class EditorViewModelTest {
             UndoDeleteController(repo, backgroundScope),
             testScanImporter(),
             backgroundScope,
+            FakeProRepository(),
+            NoopRewardedAds(),
         )
         val key = vm2.uiState.value.rows[0].key
         vm2.onTitleChange("")
@@ -199,7 +203,7 @@ class EditorViewModelTest {
     @Test
     fun `delete removes the recipe and navigates up`() = runTest {
         val repo = FakeRecipeRepository()
-        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope)
+        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope, FakeProRepository(), NoopRewardedAds())
         vm.onTitleChange("Gone")
         advanceTimeBy(600)
         val id = repo.observeSummaries("").first()[0].id
@@ -213,7 +217,7 @@ class EditorViewModelTest {
     @Test
     fun `flush after delete does not resurrect the recipe or crash`() = runTest {
         val repo = FakeRecipeRepository()
-        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope)
+        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope, FakeProRepository(), NoopRewardedAds())
         vm.onTitleChange("Gone")
         advanceTimeBy(600)
         val id = repo.observeSummaries("").first()[0].id
@@ -238,6 +242,8 @@ class EditorViewModelTest {
             UndoDeleteController(repo, backgroundScope),
             testScanImporter(),
             backgroundScope,
+            FakeProRepository(),
+            NoopRewardedAds(),
         )
 
         repo.delete(existingId)
@@ -254,7 +260,7 @@ class EditorViewModelTest {
     @Test
     fun `prepareToScale flushes and returns the id or null when empty`() = runTest {
         val repo = FakeRecipeRepository()
-        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope)
+        val vm = EditorViewModel(SavedStateHandle(), repo, UndoDeleteController(repo, backgroundScope), testScanImporter(), backgroundScope, FakeProRepository(), NoopRewardedAds())
         assertNull(vm.prepareToScale())
 
         vm.onTitleChange("Bread")
@@ -274,6 +280,8 @@ class EditorViewModelTest {
             undo,
             testScanImporter(),
             backgroundScope,
+            FakeProRepository(),
+            NoopRewardedAds(),
         )
 
         vm.onTitleChange("Cookies v2")
@@ -298,6 +306,8 @@ class EditorViewModelTest {
             UndoDeleteController(repo, backgroundScope),
             testScanImporter(),
             backgroundScope,
+            FakeProRepository(),
+            NoopRewardedAds(),
         )
         vm.importText("1 cup flour\n2 eggs\n1 tsp salt")
         val keys = vm.uiState.value.rows.map { it.key }
@@ -318,6 +328,8 @@ class EditorViewModelTest {
             UndoDeleteController(repo, backgroundScope),
             testScanImporter(),
             backgroundScope,
+            FakeProRepository(),
+            NoopRewardedAds(),
         )
         val key = vm.uiState.value.rows[0].key
         vm.onRowNameChange(key, "2 cups flour")
@@ -339,6 +351,8 @@ class EditorViewModelTest {
             UndoDeleteController(repo, backgroundScope),
             testScanImporter(),
             backgroundScope,
+            FakeProRepository(),
+            NoopRewardedAds(),
         )
         val k1 = vm.uiState.value.rows[0].key
         vm.onRowNameChange(k1, "1 1/2 tsp salt")
@@ -365,6 +379,8 @@ class EditorViewModelTest {
             UndoDeleteController(repo, backgroundScope),
             testScanImporter(),
             backgroundScope,
+            FakeProRepository(),
+            NoopRewardedAds(),
         )
         val key = vm.uiState.value.rows[0].key
         vm.onRowNameChange(key, "flour")
@@ -400,6 +416,8 @@ class EditorViewModelTest {
             UndoDeleteController(repo, backgroundScope),
             testScanImporter(),
             backgroundScope,
+            FakeProRepository(),
+            NoopRewardedAds(),
         )
 
         val s = vm.uiState.value

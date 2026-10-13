@@ -87,6 +87,38 @@ class DataStoreAiImportQuotaTest {
     }
 
     @Test
+    fun `bonus credits are spent only after the free allowance`() = runTest {
+        val quota = newQuota(backgroundScope)
+        quota.grantCredits(5)
+
+        repeat(AiImportConfig.FREE_LIFETIME_LIMIT) {
+            assertTrue(quota.tryReserve(isPro = false))
+        }
+        // Free allowance spent — the bonus balance is untouched so far.
+        assertEquals(5, quota.bonusCredits.first())
+
+        repeat(5) { assertTrue(quota.tryReserve(isPro = false)) }
+        assertFalse(quota.tryReserve(isPro = false))
+        assertEquals(0, quota.bonusCredits.first())
+    }
+
+    @Test
+    fun `refund restores a bonus credit when the last debit was bonus`() = runTest {
+        val quota = newQuota(backgroundScope)
+        quota.grantCredits(2)
+        repeat(AiImportConfig.FREE_LIFETIME_LIMIT) {
+            assertTrue(quota.tryReserve(isPro = false))
+        }
+
+        assertTrue(quota.tryReserve(isPro = false)) // spends a bonus credit
+        assertEquals(1, quota.bonusCredits.first())
+        quota.refund(isPro = false)
+
+        assertEquals(2, quota.bonusCredits.first())
+        assertEquals(0, quota.remainingFree.first())
+    }
+
+    @Test
     fun `pro user reserves up to the daily cap`() = runTest {
         val quota = newQuota(backgroundScope)
 

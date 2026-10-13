@@ -33,10 +33,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Scale
+import androidx.compose.material.icons.outlined.DocumentScanner
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -183,6 +186,14 @@ fun EditorScreen(
                         viewModel.retryAiImport()
                     }
                 }
+                is EditorEvent.CreditsGranted -> snackbarHostState.showSnackbar(
+                    context.resources.getQuantityString(
+                        R.plurals.ai_scans_granted,
+                        event.count,
+                        event.count,
+                    ),
+                )
+                is EditorEvent.PurchaseError -> snackbarHostState.showSnackbar(event.message)
             }
         }
     }
@@ -258,6 +269,12 @@ fun EditorScreen(
                 viewModel.dismissDialog()
                 onNavigateToPro()
             },
+            onBuyProduct = { productId ->
+                (context as? Activity)?.let { viewModel.purchaseProduct(it, productId) }
+            },
+            onWatchAd = {
+                (context as? Activity)?.let(viewModel::watchAdForScans)
+            },
         ),
     )
 }
@@ -292,6 +309,8 @@ data class EditorCallbacks(
     val onRetryAi: () -> Unit = {},
     val onUseOnDevice: () -> Unit = {},
     val onSeePro: () -> Unit = {},
+    val onBuyProduct: (String) -> Unit = {},
+    val onWatchAd: () -> Unit = {},
 )
 
 private enum class RowField { QTY, NAME }
@@ -314,6 +333,7 @@ fun EditorContent(
     var unitPickerRowKey by remember { mutableStateOf<Long?>(null) }
     var menuExpanded by remember { mutableStateOf(false) }
     var autoFocusHandled by rememberSaveable { mutableStateOf(false) }
+    var editMode by rememberSaveable { mutableStateOf(false) }
     val qtyValues = remember { mutableStateMapOf<Long, androidx.compose.runtime.MutableState<TextFieldValue>>() }
     val lazyListState = rememberLazyListState()
     val reorderableState = rememberReorderableLazyListState(lazyListState) { from, to ->
@@ -327,6 +347,10 @@ fun EditorContent(
             pendingFocusKey = state.autoFocusKey
             autoFocusHandled = true
         }
+    }
+
+    LaunchedEffect(state.rows.isEmpty()) {
+        if (state.rows.isEmpty()) editMode = false
     }
 
     fun goNext() {
@@ -374,6 +398,27 @@ fun EditorContent(
                     }
                 },
                 actions = {
+                    IconButton(onClick = callbacks.onScanClick) {
+                        Icon(
+                            Icons.Outlined.DocumentScanner,
+                            contentDescription = stringResource(R.string.action_scan_recipe),
+                        )
+                    }
+                    if (state.rows.isNotEmpty()) {
+                        IconButton(onClick = { editMode = !editMode }) {
+                            if (editMode) {
+                                Icon(
+                                    Icons.Filled.Check,
+                                    contentDescription = stringResource(R.string.action_done_editing),
+                                )
+                            } else {
+                                Icon(
+                                    Icons.Outlined.Edit,
+                                    contentDescription = stringResource(R.string.action_edit_ingredients),
+                                )
+                            }
+                        }
+                    }
                     Box {
                         IconButton(onClick = { menuExpanded = true }) {
                             Icon(
@@ -385,13 +430,6 @@ fun EditorContent(
                             expanded = menuExpanded,
                             onDismissRequest = { menuExpanded = false },
                         ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.action_scan_recipe)) },
-                                onClick = {
-                                    menuExpanded = false
-                                    callbacks.onScanClick()
-                                },
-                            )
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.action_paste_text)) },
                                 onClick = {
@@ -551,7 +589,8 @@ fun EditorContent(
                                     ),
                                 )
                             },
-                            dragModifier = Modifier.draggableHandle(),
+                            dragModifier = if (editMode) Modifier.draggableHandle() else Modifier,
+                            editing = editMode,
                             requestFocus = pendingFocusKey == row.key,
                             onFocusedHandled = { pendingFocusKey = null },
                             onFocusChanged = { hasFocus, field ->
@@ -618,6 +657,7 @@ private fun IngredientRow(
     qtyValue: androidx.compose.runtime.MutableState<TextFieldValue>,
     modifier: Modifier = Modifier,
     dragModifier: Modifier = Modifier,
+    editing: Boolean = false,
     requestFocus: Boolean,
     onFocusedHandled: () -> Unit,
     onFocusChanged: (hasFocus: Boolean, field: RowField) -> Unit,
@@ -636,15 +676,17 @@ private fun IngredientRow(
     }
     Row(
         modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Icon(
-            Icons.Filled.DragHandle,
-            contentDescription = stringResource(R.string.action_reorder),
-            modifier = dragModifier,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        if (editing) {
+            Icon(
+                Icons.Filled.DragHandle,
+                contentDescription = stringResource(R.string.action_reorder),
+                modifier = Modifier.padding(top = 16.dp).then(dragModifier),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         OutlinedTextField(
             value = qtyValue.value,
             onValueChange = { v ->
@@ -662,6 +704,7 @@ private fun IngredientRow(
         )
         OutlinedButton(
             onClick = onUnitClick,
+            modifier = Modifier.height(56.dp),
             contentPadding = PaddingValues(horizontal = 8.dp),
         ) {
             Text(row.unit.label)
@@ -685,11 +728,16 @@ private fun IngredientRow(
             keyboardActions = KeyboardActions(onNext = { onNext() }),
             singleLine = true,
         )
-        IconButton(onClick = onRemove) {
-            Icon(
-                Icons.Filled.Close,
-                contentDescription = stringResource(R.string.action_remove_ingredient),
-            )
+        if (editing) {
+            IconButton(
+                onClick = onRemove,
+                modifier = Modifier.padding(top = 4.dp),
+            ) {
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = stringResource(R.string.action_remove_ingredient),
+                )
+            }
         }
     }
 }
@@ -857,20 +905,17 @@ private fun EditorDialogs(state: EditorUiState, callbacks: EditorCallbacks) {
                 }
             },
         )
-        EditorDialog.AiPaywall -> AlertDialog(
-            onDismissRequest = callbacks.onDismissDialog,
-            title = { Text(stringResource(R.string.ai_paywall_title)) },
-            text = { Text(stringResource(R.string.ai_paywall_body)) },
-            confirmButton = {
-                TextButton(onClick = callbacks.onSeePro) {
-                    Text(stringResource(R.string.action_see_pro))
-                }
+        EditorDialog.AiPaywall -> AiPaywallDialog(
+            products = state.paywallProducts,
+            rewardedAdAvailable = state.rewardedAdAvailable,
+            isAdLoading = state.isAdLoading,
+            onDismiss = callbacks.onDismissDialog,
+            onBuyProduct = { productId ->
+                callbacks.onDismissDialog()
+                callbacks.onBuyProduct(productId)
             },
-            dismissButton = {
-                TextButton(onClick = callbacks.onDismissDialog) {
-                    Text(stringResource(R.string.action_not_now))
-                }
-            },
+            onWatchAd = callbacks.onWatchAd,
+            onSeePro = callbacks.onSeePro,
         )
         EditorDialog.ConfirmClear -> AlertDialog(
             onDismissRequest = callbacks.onDismissDialog,
@@ -933,9 +978,9 @@ internal fun ScanSourceSheet(
                         Text(
                             when {
                                 state.isPro -> stringResource(R.string.scan_ai_pro)
-                                state.aiFreeRemaining > 0 -> stringResource(
+                                state.aiScansRemaining > 0 -> stringResource(
                                     R.string.scan_ai_free_left,
-                                    state.aiFreeRemaining,
+                                    state.aiScansRemaining,
                                 )
                                 else -> stringResource(R.string.scan_ai_pro_feature)
                             },

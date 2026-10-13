@@ -34,6 +34,8 @@ How to pull the Recipe Scaler out of ToolStack-Android and turn it into its own 
 - **Cook mode** (Scale View) hides the inputs, lets you tap rows to strike them through, and keeps the screen on. Checks survive process death and are cleared when you leave cook mode.
 - **Unit inference** runs when the name field loses focus or on IME Next, and only when the row's qty is blank. "2 cups flour" becomes `2` / `cup` / `flour`. Lines with no quantity are left alone.
 - Drag-to-reorder uses `sh.calvin.reorderable` 2.4.3, plus "Move up/Move down" accessibility actions.
+- **Editor edit mode:** "Scan recipe" is a top-bar `DocumentScanner` icon (not an overflow item; the overflow keeps Paste text / Clear / Delete). A top-bar "Edit ingredients"/"Done editing" toggle, shown only when rows exist, reveals per-row ✕ remove buttons and drag handles; drag reorder is enabled only in edit mode, while the "Move up/Move down" accessibility actions stay available in both modes. Edit mode auto-exits when the last row is removed. Rows are top-aligned so the 56 dp unit button and the icons line up with the text fields regardless of `needsReview` supporting text.
+- **Scale View inputs are Serves + Scale to** (no tab row). Scaling-by-ingredient and the free-form factor field were removed from the UI; the domain's `ScaleMode.ByIngredient` stays for the iOS port. A `1×`–`10×` chip writes `serves × n` into Scale to (or `1`/`n` when serves isn't parseable). Serves edits are session-only — the recipe's yield is never rewritten from this screen.
 
 **Carried forward:**
 - Splitting `lowConfidence` out of `IngredientItem` moved from Phase 1 to Phase 3, where the editor model is designed.
@@ -219,7 +221,7 @@ class ScaleRecipe(private val formatter: KitchenFormatter) {
 - **By key ingredient:** `factor = convert(targetAmount, targetUnit → ingredient.unit) / ingredient.quantity`.
   - Error if the ingredient quantity is null/0, or if the units are in **different families** (e.g. the user types grams for an ingredient entered in cups; you can't convert without density, so show "Can't convert cups to grams for this ingredient").
   - Same-family conversion (g↔oz, cup↔mL) is allowed.
-- **By factor:** quick chips `½× 1× 2× 3×` plus a custom value.
+- **By factor:** driven by multiplier chips `1×`–`10×` (horizontally scrollable). A chip multiplies the current **Serves** value into the **Scale to** field.
 - After scaling: also show the derived yield ("Makes 18 cookies") and the multiplier. Warn above 4× and below ¼×.
 - Unparseable rows pass through unscaled and get a visual flag (never silently zero).
 - Keep `generateFormattedRecipe` / `generateShoppingList`; feed them the new display text.
@@ -333,8 +335,8 @@ These existing tests in `RecipeScalerUiStateTest` encode the old behavior. Rewri
 | Screen | Contents |
 | --- | --- |
 | **Recipe List** | Saved recipes (title, yield, ingredient count), search, FAB "New recipe", empty state with "Quick scale" (unsaved scratch recipe). Swipe to delete with Undo snackbar. |
-| **Recipe Editor** | Title, yield amount + label, ingredient rows (drag to reorder), accessory bar, overflow: Paste text / Scan (Phase 5) / Clear. Autosave a draft (no Save dialog dance). |
-| **Scale View** | Single-choice `SegmentedButton`: **Servings · Ingredient · ×Factor**. Big target input plus quick chips. Live scaled list (original value caption optional). Warning banner over 4×. Actions: Copy / Share / Checklist mode (tap rows to strike through, keep screen on). |
+| **Recipe Editor** | Title, yield amount + label, ingredient rows (drag to reorder in edit mode), accessory bar, top-bar "Scan recipe" icon (Phase 5) and an "Edit ingredients" toggle that reveals per-row ✕ remove buttons and drag handles, overflow: Paste text / Clear / Delete recipe. Autosave a draft (no Save dialog dance). |
+| **Scale View** | **Serves** and **Scale to** fields side by side, with multiplier chips `1×`–`10×` in a horizontally scrollable row beneath them. Live scaled list (original value caption optional). Warning banner over 4×. Actions: Copy / Share / Checklist mode (tap rows to strike through, keep screen on). |
 | **Settings** | Measurement system (US / Metric / Match recipe), display (Fractions / Decimals), theme (System / Light / Dark), Dynamic color toggle, about/licenses/privacy. |
 
 On **expanded widths** (tablets, foldables, landscape) use `NavigableListDetailPaneScaffold` (`material3-adaptive`). List and Editor/Scale go side by side, and Editor plus Scale View can share one screen (input left, live results right).
@@ -478,11 +480,12 @@ Each phase has exit criteria. Don't start the next phase until they're met.
 - **Exit:** scan and AI paths tested with fakes; credits refunded on every non-success (same rule as today). ✅ met 2026-10-12.
 
 **Phase 5 implementation notes (2026-10-12):**
-- Scan entry points: ML Kit Document Scanner, camera (`TakePicture` + FileProvider, no CAMERA permission), gallery (`PickVisualMedia`). Editor overflow → "Scan recipe" → source sheet with an AI-import toggle.
+- Scan entry points: ML Kit Document Scanner, camera (`TakePicture` + FileProvider, no CAMERA permission), gallery (`PickVisualMedia`). Editor top-bar "Scan recipe" icon → source sheet with an AI-import toggle.
 - `ScanImporter` orchestrates: on-device OCR first, AI retry on poor results, on-device fallback on AI network errors, paywall when free credits are gone. Credit is reserved before the AI call and refunded (once, `NonCancellable`) on every non-success.
-- Quota: 2 free lifetime imports; Pro gets a hidden 30/day cap (`DataStoreAiImportQuota`).
+- Quota: 10 free lifetime imports plus a separate bonus-credit bucket spent only after the free allowance; Pro gets a hidden 30/day cap (`DataStoreAiImportQuota`). Bonus credits come from the `ai_scans_100` consumable (+100) and rewarded ads (+5); refunds restore whichever bucket was debited.
 - Pro: monthly subscription + lifetime one-time purchase via Play Billing 8 (`PlayBillingProRepository`); entitlement re-queried on every process resume and persisted so Pro users don't flash free UI. Debug-only "Pretend Pro" switch in Settings (no-op in release).
-- **Firebase:** `google-services.json` is git-ignored and the google-services plugin applies only when the file is present, so clones still build (`AI_IMPORT_ENABLED` BuildConfig flag hides the AI toggle). `com.ryxan.recipescaler[.debug]` are registered in the shared **toolstack-ai** Firebase project (done 2026-10-12; debug App Check token still needs registering after first run).
+- **AI paywall (2026-10-13):** exhausted-quota dialog offers the `ai_scans_100` consumable (+100 scans, ~$5 — Play Console product still needs creating), monthly/lifetime Pro, "watch a rewarded ad for +5 scans", and on-device scanning as the free fallback. The ad path sits behind `RewardedAds` — a `NoopRewardedAds` stub until AdMob lands — so the button renders but can't earn yet. Consumable purchases are consumed and `creditsGranted` emits once per purchase token (double-grant safe).
+- **Firebase:** `google-services.json` is git-ignored and the google-services plugin applies only when the file is present, so clones still build (`AI_IMPORT_ENABLED` BuildConfig flag hides the AI toggle). `com.ryxan.recipescaler[.debug]` are registered in the shared **toolstack-ai** Firebase project (done 2026-10-12; debug App Check token still needs registering after first run). Explicitly configured `Firebase.ai(backend = GenerativeBackend.googleAI())` in `FirebaseAiRecipeImporter` to use the Gemini Developer API backend instead of defaulting to Vertex AI, preventing `GLVM` consent state / `Cannot get auth token for account id` errors.
 - **Untested on device:** real Play Billing (needs a Play Console test track + products `pro_monthly`/`pro_lifetime`), document-scanner/camera flows, App Check attestation.
 - Build env: `gradle/gradle-daemon-jvm.properties` pins the daemon to JDK 21 and `kotlin.compiler.execution.strategy=in-process` — JAVA_HOME points at JDK 25, which Kotlin 2.0.21 can't run on.
 

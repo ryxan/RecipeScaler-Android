@@ -40,14 +40,14 @@ class ScanSourceSheetTest {
 
     @Test
     fun `free user with credits left sees the remaining count`() {
-        sheet(EditorUiState(aiAvailable = true, isPro = false, aiFreeRemaining = 2))
+        sheet(EditorUiState(aiAvailable = true, isPro = false, aiScansRemaining = 2))
 
-        composeRule.onNodeWithText("Best for handwriting · 2 free left").assertExists()
+        composeRule.onNodeWithText("Best for handwriting · 2 left").assertExists()
     }
 
     @Test
     fun `free user with no credits sees the Pro upsell`() {
-        sheet(EditorUiState(aiAvailable = true, isPro = false, aiFreeRemaining = 0))
+        sheet(EditorUiState(aiAvailable = true, isPro = false, aiScansRemaining = 0))
 
         composeRule.onNodeWithText("Pro feature").assertExists()
     }

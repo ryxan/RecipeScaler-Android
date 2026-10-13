@@ -2,10 +2,14 @@ package com.ryxan.recipescaler.feature.scale
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.hasScrollToIndexAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.hasAnyAncestor
 import com.ryxan.recipescaler.core.designsystem.RescaleTheme
 import com.ryxan.recipescaler.core.domain.model.ScaleStatus
 import com.ryxan.recipescaler.core.domain.model.ScaledIngredient
@@ -36,7 +40,6 @@ class ScaleContentTest {
         )
 
     private fun state(
-        tab: ScaleTab = ScaleTab.FACTOR,
         factor: Double = 2.0,
         showWarning: Boolean = false,
         cookMode: Boolean = false,
@@ -47,7 +50,7 @@ class ScaleContentTest {
         title = "Bread",
         yieldAmount = 4.0,
         yieldLabel = "servings",
-        inputs = ScaleInputs(tab = tab, factorText = "2"),
+        inputs = ScaleInputs(servesText = "4", scaleToText = "8"),
         factor = factor,
         derivedYieldAmount = 8.0,
         showScaleWarning = showWarning,
@@ -75,14 +78,38 @@ class ScaleContentTest {
     }
 
     @Test
-    fun `tapping the 2x chip fires the factor callback`() {
-        var factor = ""
+    fun `shows the serves and scale to fields`() {
+        content(state())
+        composeRule.onNodeWithText("Serves").assertIsDisplayed()
+        composeRule.onNodeWithText("Scale to").assertIsDisplayed()
+    }
+
+    @Test
+    fun `the tab row is gone`() {
+        content(state())
+        composeRule.onAllNodesWithText("Servings").assertCountEquals(0)
+        composeRule.onAllNodesWithText("Ingredient").assertCountEquals(0)
+        composeRule.onAllNodesWithText("×Factor").assertCountEquals(0)
+    }
+
+    @Test
+    fun `the 10x chip is reachable by scrolling`() {
+        content(state())
+        composeRule.onNode(
+            hasScrollToIndexAction() and hasAnyAncestor(hasScrollToIndexAction()),
+        ).performScrollToNode(hasText("10×"))
+        composeRule.onNodeWithText("10×").assertIsDisplayed()
+    }
+
+    @Test
+    fun `tapping the 3x chip fires the multiplier callback`() {
+        var multiplier = 0
         content(
             state(factor = 1.0),
-            ScaleCallbacks(onFactorText = { factor = it }),
+            ScaleCallbacks(onMultiplier = { multiplier = it }),
         )
-        composeRule.onNodeWithText("2×").performClick()
-        assertEquals("2", factor)
+        composeRule.onNodeWithText("3×").performClick()
+        assertEquals(3, multiplier)
     }
 
     @Test
@@ -109,9 +136,10 @@ class ScaleContentTest {
         composeRule.onNodeWithText(
             "Tap an ingredient to check it off. The screen stays on.",
         ).assertIsDisplayed()
-        composeRule.onAllNodesWithText("Custom multiplier").assertCountEquals(0)
+        composeRule.onAllNodesWithText("Serves").assertCountEquals(0)
+        composeRule.onAllNodesWithText("Scale to").assertCountEquals(0)
+        composeRule.onAllNodesWithText("3×").assertCountEquals(0)
         composeRule.onAllNodesWithText("Show original amounts").assertCountEquals(0)
-        composeRule.onAllNodesWithText("×Factor").assertCountEquals(0)
         // Summary and rows still visible.
         composeRule.onNodeWithText("×2 · Makes 8 servings").assertIsDisplayed()
         composeRule.onNodeWithText("Flour").assertIsDisplayed()

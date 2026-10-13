@@ -14,6 +14,7 @@ import javax.inject.Inject
 import javax.inject.Named
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.withContext
 
 sealed interface ScanOutcome {
@@ -64,7 +65,10 @@ class ScanImporter @Inject constructor(
     private val proRepository: ProRepository,
     @param:Named("aiImportAvailable") val aiAvailable: Boolean,
 ) {
-    val remainingFree get() = quota.remainingFree
+    /** Imports a free user can still run — free allowance plus bonus credits. */
+    val remainingImports = combine(quota.remainingFree, quota.bonusCredits) { free, bonus ->
+        free + bonus
+    }
     val isPro get() = proRepository.isPro
 
     /** JPEG prepared for the AI importer, cached for retries; cleared per scan. */

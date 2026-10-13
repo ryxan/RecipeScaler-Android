@@ -1,9 +1,14 @@
 package com.ryxan.recipescaler.feature.editor
 
+import android.app.Activity
 import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ryxan.recipescaler.core.data.ads.RewardedAds
+import com.ryxan.recipescaler.core.data.billing.ProProduct
+import com.ryxan.recipescaler.core.data.billing.ProRepository
+import com.ryxan.recipescaler.core.data.billing.PurchaseLaunch
 import com.ryxan.recipescaler.core.domain.importer.splitYield
 import com.ryxan.recipescaler.core.domain.model.Ingredient
 import com.ryxan.recipescaler.core.domain.model.KitchenUnit
@@ -85,7 +90,14 @@ data class EditorUiState(
     val useAiImport: Boolean = false,
     val aiAvailable: Boolean = false,
     val isPro: Boolean = false,
-    val aiFreeRemaining: Int = 0,
+    /** Imports a free user can still run — free allowance plus bonus credits. */
+    val aiScansRemaining: Int = 0,
+    /** Products shown on the AI paywall (scan pack + Pro options). */
+    val paywallProducts: List<ProProduct> = emptyList(),
+    /** True while a rewarded ad can be shown (see [RewardedAds]). */
+    val rewardedAdAvailable: Boolean = false,
+    /** True while a rewarded ad is being loaded/shown. */
+    val isAdLoading: Boolean = false,
 ) {
     val yieldError: Boolean
         get() = yieldText.isNotBlank() && QuantityParser.parse(yieldText) == null
@@ -100,6 +112,12 @@ sealed interface EditorEvent {
     data object NavigateUp : EditorEvent
     /** A scan applied but looked poor — the UI offers "Try AI import". */
     data object ScanLooksPoor : EditorEvent
+
+    /** Bonus AI scans just landed (scan pack purchase or rewarded ad). */
+    data class CreditsGranted(val count: Int) : EditorEvent
+
+    /** A purchase-launch or billing failure worth a snackbar. */
+    data class PurchaseError(val message: String) : EditorEvent
 }
 
 @HiltViewModel
@@ -109,6 +127,8 @@ class EditorViewModel @Inject constructor(
     private val undoController: UndoDeleteController,
     private val scanImporter: ScanImporter,
     @ApplicationScope private val appScope: CoroutineScope,
+    private val proRepository: ProRepository,
+    private val rewardedAds: RewardedAds,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(EditorUiState())
@@ -139,13 +159,29 @@ class EditorViewModel @Inject constructor(
     init {
         _uiState.update { it.copy(aiAvailable = scanImporter.aiAvailable) }
         viewModelScope.launch {
-            scanImporter.remainingFree.collect { remaining ->
-                _uiState.update { it.copy(aiFreeRemaining = remaining) }
+            scanImporter.remainingImports.collect { remaining ->
+                _uiState.update { it.copy(aiScansRemaining = remaining) }
             }
         }
         viewModelScope.launch {
             scanImporter.isPro.collect { pro ->
                 _uiState.update { it.copy(isPro = pro) }
+            }
+        }
+        viewModelScope.launch {
+            proRepository.products.collect { products ->
+                _uiState.update { it.copy(paywallProducts = products) }
+            }
+        }
+        viewModelScope.launch {
+            proRepository.creditsGranted.collect { credits ->
+                _uiState.update { it.copy(dialog = null) }
+                _events.trySend(EditorEvent.CreditsGranted(credits))
+            }
+        }
+        viewModelScope.launch {
+            rewardedAds.isAvailable.collect { available ->
+                _uiState.update { it.copy(rewardedAdAvailable = available) }
             }
         }
         viewModelScope.launch {
@@ -441,8 +477,41 @@ class EditorViewModel @Inject constructor(
                     ),
                 )
             }
-            ScanOutcome.PaywallRequired -> _uiState.update {
-                it.copy(importBusy = null, dialog = EditorDialog.AiPaywall)
+            ScanOutcome.PaywallRequired -> {
+                _uiState.update {
+                    it.copy(importBusy = null, dialog = EditorDialog.AiPaywall)
+                }
+                viewModelScope.launch { proRepository.refreshProducts() }
+            }
+        }
+    }
+
+    // ── AI paywall purchases / rewarded ads ──────────────────────────────────
+
+    /** Launch the Play purchase flow for a paywall product (pack or Pro). */
+    fun purchaseProduct(activity: Activity, productId: String) {
+        viewModelScope.launch {
+            when (val result = proRepository.launchPurchase(activity, productId)) {
+                is PurchaseLaunch.Error ->
+                    _events.trySend(EditorEvent.PurchaseError(result.message))
+                else -> Unit // Launched / Cancelled — nothing to report
+            }
+        }
+    }
+
+    /**
+     * "Watch ad for +5 scans" on the AI paywall. The provider grants the
+     * credits; a reward closes the dialog and surfaces the new balance.
+     */
+    fun watchAdForScans(activity: Activity) {
+        if (_uiState.value.isAdLoading) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isAdLoading = true) }
+            val earned = rewardedAds.showForScans(activity)
+            _uiState.update { it.copy(isAdLoading = false) }
+            if (earned > 0) {
+                _uiState.update { it.copy(dialog = null) }
+                _events.trySend(EditorEvent.CreditsGranted(earned))
             }
         }
     }

@@ -17,6 +17,7 @@ import com.ryxan.recipescaler.core.domain.importer.AiIngredient
 import com.ryxan.recipescaler.core.domain.importer.AiRecipeMapper
 import com.ryxan.recipescaler.feature.importer.ScanImporter
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -95,15 +96,19 @@ class FakeAiRecipeImporter : AiRecipeImporter {
     }
 }
 
-/** In-memory quota honouring the same free-lifetime / Pro-daily rules. */
+/** In-memory quota honouring the same free-lifetime / bonus / Pro-daily rules. */
 class FakeAiImportQuota : AiImportQuota {
     private val _remainingFree = MutableStateFlow(AiImportConfig.FREE_LIFETIME_LIMIT)
     override val remainingFree: Flow<Int> = _remainingFree
+
+    private val _bonusCredits = MutableStateFlow(0)
+    override val bonusCredits: Flow<Int> = _bonusCredits
 
     var freeUsed = 0
     var proUsed = 0
     var reserveCalls = 0
     var refundCalls = 0
+    private var lastDebitBonus = false
 
     override suspend fun tryReserve(isPro: Boolean): Boolean {
         reserveCalls++
@@ -115,12 +120,19 @@ class FakeAiImportQuota : AiImportQuota {
                 false
             }
         } else {
-            if (freeUsed < AiImportConfig.FREE_LIFETIME_LIMIT) {
-                freeUsed++
-                _remainingFree.value = AiImportConfig.FREE_LIFETIME_LIMIT - freeUsed
-                true
-            } else {
-                false
+            when {
+                freeUsed < AiImportConfig.FREE_LIFETIME_LIMIT -> {
+                    freeUsed++
+                    _remainingFree.value = AiImportConfig.FREE_LIFETIME_LIMIT - freeUsed
+                    lastDebitBonus = false
+                    true
+                }
+                _bonusCredits.value > 0 -> {
+                    _bonusCredits.value--
+                    lastDebitBonus = true
+                    true
+                }
+                else -> false
             }
         }
     }
@@ -129,10 +141,16 @@ class FakeAiImportQuota : AiImportQuota {
         refundCalls++
         if (isPro) {
             proUsed = (proUsed - 1).coerceAtLeast(0)
+        } else if (lastDebitBonus) {
+            _bonusCredits.value++
         } else {
             freeUsed = (freeUsed - 1).coerceAtLeast(0)
             _remainingFree.value = AiImportConfig.FREE_LIFETIME_LIMIT - freeUsed
         }
+    }
+
+    override suspend fun grantCredits(count: Int) {
+        _bonusCredits.value += count
     }
 }
 
@@ -142,6 +160,11 @@ class FakeProRepository(pro: Boolean = false) : ProRepository {
     override val isPending: StateFlow<Boolean> = MutableStateFlow(false)
     override val products: StateFlow<List<ProProduct>> =
         MutableStateFlow(emptyList())
+
+    private val _creditsGranted = MutableSharedFlow<Int>(extraBufferCapacity = 1)
+    override val creditsGranted: Flow<Int> = _creditsGranted
+
+    suspend fun emitCreditsGranted(count: Int) = _creditsGranted.emit(count)
 
     var refreshResult = true
     var restoreResult = true

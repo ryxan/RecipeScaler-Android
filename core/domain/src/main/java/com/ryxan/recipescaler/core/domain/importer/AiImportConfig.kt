@@ -14,7 +14,13 @@ object AiImportConfig {
     const val MODEL = "gemini-3.5-flash"
 
     /** Lifetime AI imports granted to a free user. */
-    const val FREE_LIFETIME_LIMIT = 2
+    const val FREE_LIFETIME_LIMIT = 10
+
+    /** Credits granted by a single `rescale_ai_scans_100` consumable purchase. */
+    const val SCANS_PER_PACK = 100
+
+    /** Credits granted per completed rewarded ad. */
+    const val SCANS_PER_REWARDED_AD = 5
 
     /** Hidden per-day cap for Pro users — cost guardrail, not advertised. */
     const val PREMIUM_DAILY_CAP = 30
