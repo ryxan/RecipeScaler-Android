@@ -10,8 +10,12 @@ import com.ryxan.recipescaler.core.domain.model.KitchenUnit
  */
 object AiImportConfig {
 
-    /** Gemini model used for imports; a stable version with long availability. */
-    const val MODEL = "gemini-3.5-flash"
+    /**
+     * Gemini model used for imports. `gemini-3.5-flash-lite` is the stable
+     * high-volume lite version (shutdown no earlier than 2027-07) with a
+     * separate — and typically larger — free-tier quota than the flash models.
+     */
+    const val MODEL = "gemini-3.5-flash-lite"
 
     /** Lifetime AI imports granted to a free user. */
     const val FREE_LIFETIME_LIMIT = 10
