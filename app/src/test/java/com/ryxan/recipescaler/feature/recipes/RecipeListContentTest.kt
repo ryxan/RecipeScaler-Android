@@ -99,6 +99,17 @@ class RecipeListContentTest {
     }
 
     @Test
+    fun `avatar shows first letter of title`() {
+        content(
+            RecipeListUiState(
+                isLoading = false,
+                recipes = listOf(summary(1, "100 Good Cookies")),
+            ),
+        )
+        composeRule.onNodeWithText("G").assertExists()
+    }
+
+    @Test
     fun `tapping a row calls onOpenRecipe with its id`() {
         var opened = -1L
         content(

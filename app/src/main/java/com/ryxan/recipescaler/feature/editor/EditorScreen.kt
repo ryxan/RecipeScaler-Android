@@ -65,6 +65,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -345,6 +346,9 @@ fun EditorContent(
         val toKey = to.key
         if (fromKey is Long && toKey is Long) callbacks.onMoveRow(fromKey, toKey)
     }
+    val fabExpanded by remember {
+        derivedStateOf { lazyListState.firstVisibleItemIndex == 0 }
+    }
 
     LaunchedEffect(state.autoFocusKey) {
         if (!autoFocusHandled && state.autoFocusKey != null) {
@@ -466,6 +470,7 @@ fun EditorContent(
             val canScale = state.canScale
             GradientExtendedFab(
                 onClick = { if (canScale) callbacks.onScale() },
+                expanded = fabExpanded,
                 modifier = Modifier
                     .semantics { if (!canScale) disabled() }
                     .alpha(if (canScale) 1f else 0.5f),

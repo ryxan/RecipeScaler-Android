@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Debug builds install alongside release via the .debug applicationId
+         suffix; a distinct label keeps the two icons distinguishable. -->
+    <string name="app_name">Rescale Dev</string>
+</resources>

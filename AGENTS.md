@@ -7,7 +7,7 @@ Rescale — a standalone Android recipe scaler. `applicationId`: `com.ryxan.reci
 ## Build & verify
 
 - Tests: `.\gradlew.bat test`
-- Current test baseline (0 failures, 0 skipped): **273** `:core:domain`, **40** per variant `:core:data`, **119** `:app` (debug only — release unit tests are disabled in `:app`)
+- Current test baseline (0 failures, 0 skipped): **273** `:core:domain`, **40** per variant `:core:data`, **120** `:app` (debug only — release unit tests are disabled in `:app`)
 - `:app` UI tests are Robolectric Compose tests against stateless `*Content` composables; VM tests use `app/src/test/.../testing` fakes (`FakeRecipeRepository`, `FakeSettingsRepository`, `MainDispatcherRule`).
 - Debug APK: `.\gradlew.bat assembleDebug`
 - Lint: `.\gradlew.bat lint`

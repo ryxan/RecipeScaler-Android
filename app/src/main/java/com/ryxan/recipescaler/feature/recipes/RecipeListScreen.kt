@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bolt
@@ -39,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -101,6 +103,10 @@ fun RecipeListContent(
     onNavigateToSettings: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
+    val listState = rememberLazyListState()
+    val fabExpanded by remember {
+        derivedStateOf { listState.firstVisibleItemIndex == 0 }
+    }
     val undoLabel = stringResource(R.string.action_undo)
     val deletedMessage = state.pendingUndo?.let {
         if (it.title.isBlank()) stringResource(R.string.snackbar_recipe_deleted)
@@ -145,6 +151,7 @@ fun RecipeListContent(
         floatingActionButton = {
             GradientExtendedFab(
                 onClick = onNewRecipe,
+                expanded = fabExpanded,
                 icon = { Icon(Icons.Filled.Add, contentDescription = null) },
                 text = { Text(stringResource(R.string.action_new_recipe)) },
             )
@@ -203,6 +210,7 @@ fun RecipeListContent(
                 }
                 else -> {
                     LazyColumn(
+                        state = listState,
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(bottom = 88.dp),
                     ) {
@@ -296,8 +304,10 @@ private fun RecipeRow(
                     .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center,
             ) {
-                val trimmedTitle = summary.title.trim()
-                if (trimmedTitle.isEmpty()) {
+                val letter = summary.title.trim()
+                    .firstOrNull { it.isLetter() }
+                    ?.uppercaseChar()
+                if (letter == null) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Outlined.MenuBook,
                         contentDescription = null,
@@ -305,7 +315,7 @@ private fun RecipeRow(
                     )
                 } else {
                     Text(
-                        text = trimmedTitle.first().uppercase(),
+                        text = letter.toString(),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
