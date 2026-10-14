@@ -40,6 +40,12 @@ class AdConsentManager @Inject constructor(
             activity,
             ConsentRequestParameters.Builder().build(),
             {
+                // The activity may have been relaunched (e.g. rotation) while
+                // the request was in flight — don't show a form on it.
+                if (activity.isFinishing || activity.isDestroyed) {
+                    maybeInitAds()
+                    return@requestConsentInfoUpdate
+                }
                 UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity) {
                     maybeInitAds()
                 }
