@@ -26,7 +26,7 @@ How to pull the Recipe Scaler out of ToolStack-Android and turn it into its own 
 - Ranges (`2-3`) scale the low end, and the row is marked `RANGE_LOW_END` so the UI can flag it.
 - **Editor autosaves straight to Room** (500 ms debounce, on an app-scoped coroutine so it survives leaving the screen). There's no Save button and no draft table. A new recipe isn't inserted until it has a title or an ingredient. A recipe created in the current session and then emptied is deleted on exit; a pre-existing one is never auto-deleted.
 - Yield is stored as the parsed low end (`½` → 0.5, `4-6` → 4). The raw text isn't kept, so `4-6` reopens as `4`.
-- First-run measurement system follows the device locale (US/LR/MM → US, everywhere else → Metric).
+- First-run measurement system defaults to Match recipe — each recipe displays in the units it was written in.
 - Scale inputs that are blank or can't be read show an inline error, and the list falls back to 1× (never zero).
 - `:app` unit tests run on the debug variant only. Release unit tests are disabled so the Compose test manifest never ships in release.
 - **Delete is undoable instead of confirmed.** Swipe (list) or overflow Delete (editor) removes the recipe right away and shows an Undo snackbar on the list. Undo calls `RecipeRepository.restore`, which brings the recipe back with its original id and timestamps, so it lands in the same list position. The editor saves pending edits before deleting, so Undo restores the latest version.
@@ -518,7 +518,7 @@ Decided on 2026-10-11:
 
 1. **Name (working):** launcher label `Rescale`, Play title `Rescale – Recipe Scaler`. **`applicationId`: `com.ryxan.recipescaler`** (brand-neutral, so a later rename of the app doesn't matter).
 2. **Monetization:** free with ads. **Pro** unlocks AI recipe import (accurate handwriting import) and **removes ads**. Ads, billing, and AI import are all **in v1**.
-3. **Measurement system:** user-selectable in Settings (US / Metric / Match recipe). First-run default follows the device locale (US locale → US, else Metric).
+3. **Measurement system:** user-selectable in Settings (US / Metric / Match recipe). First-run default is Match recipe (changed 2026-10-14; it originally followed the device locale — US locale → US, else Metric).
 4. **v1 scope:** a complete app at launch, with no rush to production. Photo scan (ML Kit) and AI import ship in v1, so Phase 5 is required.
 5. **Repo:** <https://github.com/ryxan/RecipeScaler-Android>, local at `C:\Users\ryxan\RecipeScaler-Android`. Code was extracted from ToolStack at tag `recipe-scaler-extract-base`.
 
