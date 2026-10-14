@@ -11,17 +11,6 @@ import kotlin.math.floor
 enum class MeasurementSystem { MATCH_RECIPE, US, METRIC }
 enum class DisplayMode { KITCHEN, KEEP_UNITS, DECIMAL }
 
-/**
- * First-run measurement-system default derived from the device's locale
- * country: the US, Liberia, and Myanmar use customary units; everywhere else
- * (including a blank/unknown country) defaults to metric.
- */
-fun defaultMeasurementSystemFor(countryCode: String): MeasurementSystem =
-    when (countryCode.uppercase()) {
-        "US", "LR", "MM" -> MeasurementSystem.US
-        else -> MeasurementSystem.METRIC
-    }
-
 data class DisplayPrefs(
     val system: MeasurementSystem = MeasurementSystem.MATCH_RECIPE,
     val mode: DisplayMode = DisplayMode.KITCHEN,

@@ -29,14 +29,12 @@ import com.ryxan.recipescaler.core.data.importer.MlKitOcrEngine
 import com.ryxan.recipescaler.core.data.importer.OcrEngine
 import com.ryxan.recipescaler.core.data.settings.DataStoreSettingsRepository
 import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
-import com.ryxan.recipescaler.core.domain.formatting.defaultMeasurementSystemFor
 import com.ryxan.recipescaler.core.domain.repository.RecipeRepository
 import com.ryxan.recipescaler.core.domain.repository.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import java.io.File
-import java.util.Locale
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
@@ -70,8 +68,7 @@ object DataModule {
     @Provides
     @Singleton
     @DefaultMeasurementSystem
-    fun provideDefaultMeasurementSystem(): MeasurementSystem =
-        defaultMeasurementSystemFor(Locale.getDefault().country)
+    fun provideDefaultMeasurementSystem(): MeasurementSystem = MeasurementSystem.MATCH_RECIPE
 
     @Provides
     @Singleton
