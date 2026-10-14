@@ -15,9 +15,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -26,12 +33,14 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.Checklist
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -40,6 +49,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -64,8 +74,11 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.LocalContext
@@ -81,6 +94,7 @@ import com.ryxan.recipescaler.core.designsystem.GradientTopAppBar
 import com.ryxan.recipescaler.core.designsystem.QuantityText
 import com.ryxan.recipescaler.core.designsystem.RescaleCard
 import com.ryxan.recipescaler.core.designsystem.Spacing
+import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
 import com.ryxan.recipescaler.core.domain.model.ScaleStatus
 import com.ryxan.recipescaler.core.domain.model.ScaledIngredient
 import com.ryxan.recipescaler.core.domain.model.formatYield
@@ -95,6 +109,7 @@ private val servingChips = listOf(1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24)
 @Composable
 fun ScaleScreen(
     onNavigateUp: () -> Unit,
+    onEdit: (Long) -> Unit,
     viewModel: ScaleViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -109,12 +124,15 @@ fun ScaleScreen(
         snackbarHostState = snackbarHostState,
         callbacks = ScaleCallbacks(
             onNavigateUp = onNavigateUp,
+            onEdit = onEdit,
             onServes = viewModel::setServes,
             onScaleTo = viewModel::setScaleTo,
             onServings = viewModel::applyServings,
+            onStep = viewModel::stepFactor,
             onShowOriginal = viewModel::setShowOriginal,
             onCookMode = viewModel::toggleCookMode,
             onToggleChecked = viewModel::toggleChecked,
+            onMeasurementSystem = viewModel::setMeasurementSystem,
             onCopy = { format ->
                 scope.launch {
                     clipboard.setClipEntry(
@@ -135,14 +153,17 @@ fun ScaleScreen(
 
 data class ScaleCallbacks(
     val onNavigateUp: () -> Unit = {},
+    val onEdit: (Long) -> Unit = {},
     val onServes: (String) -> Unit = {},
     val onScaleTo: (String) -> Unit = {},
     val onServings: (Int) -> Unit = {},
+    val onStep: (Int) -> Unit = {},
     val onShowOriginal: (Boolean) -> Unit = {},
     val onCookMode: () -> Unit = {},
     val onToggleChecked: (String) -> Unit = {},
     val onCopy: (CopyFormat) -> Unit = {},
     val onShare: () -> Unit = {},
+    val onMeasurementSystem: (MeasurementSystem) -> Unit = {},
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -152,7 +173,6 @@ fun ScaleContent(
     callbacks: ScaleCallbacks,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-    var copyMenuExpanded by remember { mutableStateOf(false) }
     var overflowExpanded by remember { mutableStateOf(false) }
     var warningDismissed by rememberSaveable { mutableStateOf(false) }
     var warningExpanded by rememberSaveable { mutableStateOf(false) }
@@ -182,45 +202,33 @@ fun ScaleContent(
                     }
                 },
                 actions = {
-                    IconButton(onClick = callbacks.onCookMode) {
-                        Icon(
-                            Icons.Outlined.Checklist,
-                            contentDescription = stringResource(
-                                if (state.cookMode) R.string.action_exit_cook_mode
-                                else R.string.action_cook_mode,
-                            ),
-                        )
-                    }
-                    Box {
-                        IconButton(onClick = { copyMenuExpanded = true }) {
+                    if (!state.cookMode && !state.isLoading && !state.recipeMissing) {
+                        IconButton(onClick = { callbacks.onEdit(state.recipeId) }) {
                             Icon(
-                                Icons.Filled.ContentCopy,
-                                contentDescription = stringResource(R.string.action_copy),
+                                Icons.Outlined.Edit,
+                                contentDescription = stringResource(R.string.action_edit),
                             )
                         }
-                        DropdownMenu(
-                            expanded = copyMenuExpanded,
-                            onDismissRequest = { copyMenuExpanded = false },
-                        ) {
-                            listOf(
-                                CopyFormat.PLAIN to R.string.copy_format_plain,
-                                CopyFormat.MARKDOWN to R.string.copy_format_markdown,
-                                CopyFormat.SHOPPING_LIST to R.string.copy_format_shopping,
-                            ).forEach { (format, labelRes) ->
-                                DropdownMenuItem(
-                                    text = { Text(stringResource(labelRes)) },
-                                    onClick = {
-                                        copyMenuExpanded = false
-                                        callbacks.onCopy(format)
-                                    },
-                                )
-                            }
-                        }
                     }
-                    IconButton(onClick = callbacks.onShare) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .heightIn(min = 48.dp)
+                            .clip(RoundedCornerShape(24.dp))
+                            .clickable(onClick = callbacks.onCookMode)
+                            .padding(horizontal = 12.dp),
+                    ) {
                         Icon(
-                            Icons.Filled.Share,
-                            contentDescription = stringResource(R.string.action_share),
+                            Icons.Outlined.Checklist,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            stringResource(
+                                if (state.cookMode) R.string.action_cook_done
+                                else R.string.action_cook,
+                            ),
                         )
                     }
                     if (!state.cookMode) {
@@ -235,6 +243,35 @@ fun ScaleContent(
                                 expanded = overflowExpanded,
                                 onDismissRequest = { overflowExpanded = false },
                             ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(stringResource(R.string.action_share_send))
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Filled.Share,
+                                            contentDescription = null,
+                                        )
+                                    },
+                                    onClick = {
+                                        overflowExpanded = false
+                                        callbacks.onShare()
+                                    },
+                                )
+                                listOf(
+                                    CopyFormat.PLAIN to R.string.copy_format_plain,
+                                    CopyFormat.MARKDOWN to R.string.copy_format_markdown,
+                                    CopyFormat.SHOPPING_LIST to R.string.copy_format_shopping,
+                                ).forEach { (format, labelRes) ->
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(labelRes)) },
+                                        onClick = {
+                                            overflowExpanded = false
+                                            callbacks.onCopy(format)
+                                        },
+                                    )
+                                }
+                                HorizontalDivider()
                                 DropdownMenuItem(
                                     text = {
                                         Text(stringResource(R.string.scale_show_original))
@@ -252,6 +289,34 @@ fun ScaleContent(
                                         callbacks.onShowOriginal(!state.showOriginal)
                                     },
                                 )
+                                if (state.unitsSelectable) {
+                                    HorizontalDivider()
+                                    listOf(
+                                        MeasurementSystem.MATCH_RECIPE to
+                                            R.string.settings_system_match,
+                                        MeasurementSystem.US to R.string.settings_system_us,
+                                        MeasurementSystem.METRIC to
+                                            R.string.settings_system_metric,
+                                    ).forEach { (system, labelRes) ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(stringResource(labelRes))
+                                            },
+                                            trailingIcon = {
+                                                if (state.measurementSystem == system) {
+                                                    Icon(
+                                                        Icons.Filled.Check,
+                                                        contentDescription = null,
+                                                    )
+                                                }
+                                            },
+                                            onClick = {
+                                                overflowExpanded = false
+                                                callbacks.onMeasurementSystem(system)
+                                            },
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -321,21 +386,66 @@ fun ScaleContent(
                     }
                 }
 
-                item(key = "multipliers") {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.selectableGroup(),
-                    ) {
-                        items(servingChips, key = { it }) { n ->
-                            FilterChip(
-                                selected = state.message == null &&
-                                    QuantityParser.parse(state.inputs.scaleToText)
-                                        ?.let { abs(it - n.toDouble()) < 1e-9 } == true,
-                                onClick = { callbacks.onServings(n) },
-                                label = { Text("$n") },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor =
-                                        MaterialTheme.colorScheme.primaryContainer,
+                item(key = "controls") {
+                    val currentScale = stringResource(
+                        R.string.cd_current_scale,
+                        formatYield(state.factor),
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .selectableGroup(),
+                        ) {
+                            items(servingChips, key = { it }) { n ->
+                                FilterChip(
+                                    selected = state.message == null &&
+                                        QuantityParser.parse(state.inputs.scaleToText)
+                                            ?.let { abs(it - n.toDouble()) < 1e-9 } == true,
+                                    onClick = { callbacks.onServings(n) },
+                                    label = { Text("$n") },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor =
+                                            MaterialTheme.colorScheme.primaryContainer,
+                                    ),
+                                )
+                            }
+                        }
+                        IconButton(
+                            onClick = { callbacks.onStep(-1) },
+                            enabled = state.factor >
+                                ScaleViewModel.MIN_FACTOR + 1e-9,
+                        ) {
+                            Icon(
+                                Icons.Filled.Remove,
+                                contentDescription = stringResource(
+                                    R.string.action_decrease_scale,
+                                ),
+                            )
+                        }
+                        Text(
+                            text = stringResource(
+                                R.string.scale_factor_prefix,
+                                formatYield(state.factor),
+                            ),
+                            style = MaterialTheme.typography.titleMedium,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .widthIn(min = 40.dp)
+                                .clearAndSetSemantics {
+                                    contentDescription = currentScale
+                                },
+                        )
+                        IconButton(
+                            onClick = { callbacks.onStep(1) },
+                            enabled = state.factor <
+                                ScaleViewModel.MAX_FACTOR - 1e-9,
+                        ) {
+                            Icon(
+                                Icons.Filled.Add,
+                                contentDescription = stringResource(
+                                    R.string.action_increase_scale,
                                 ),
                             )
                         }
@@ -446,12 +556,13 @@ private fun SummaryLine(state: ScaleUiState) {
     ) {
         Text(
             text = listOfNotNull(factorText, derived).joinToString(" · "),
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         if (state.message != null) {
             Text(
                 text = stringResource(R.string.scale_input_not_read),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }

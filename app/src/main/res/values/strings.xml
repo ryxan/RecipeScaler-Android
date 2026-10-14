@@ -118,11 +118,16 @@
     <string name="settings_debug_ai_scans_reset">Reset</string>
 
     <!-- Scale view -->
+    <string name="action_edit">Edit</string>
     <string name="action_copy">Copy</string>
     <string name="action_share">Share</string>
-    <string name="copy_format_plain">Plain</string>
-    <string name="copy_format_markdown">Markdown</string>
-    <string name="copy_format_shopping">Shopping list</string>
+    <string name="action_share_send">Share…</string>
+    <string name="action_decrease_scale">Decrease scale</string>
+    <string name="action_increase_scale">Increase scale</string>
+    <string name="cd_current_scale">Current scale ×%1$s</string>
+    <string name="copy_format_plain">Copy plain</string>
+    <string name="copy_format_markdown">Copy Markdown</string>
+    <string name="copy_format_shopping">Copy shopping list</string>
     <string name="msg_copied">Copied</string>
     <string name="scale_factor_prefix">×%1$s</string>
     <string name="scale_makes">Makes %1$s %2$s</string>
@@ -140,6 +145,8 @@
     <string name="scale_label_scale_to">Scale to (servings)</string>
     <string name="action_cook_mode">Cook mode</string>
     <string name="action_exit_cook_mode">Exit cook mode</string>
+    <string name="action_cook">Cook</string>
+    <string name="action_cook_done">Done</string>
     <string name="cook_mode_hint">Tap an ingredient to check it off. The screen stays on.</string>
     <string name="scale_recipe_missing">This recipe no longer exists</string>
 

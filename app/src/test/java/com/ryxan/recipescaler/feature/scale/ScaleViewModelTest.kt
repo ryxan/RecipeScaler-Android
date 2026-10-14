@@ -3,6 +3,7 @@ package com.ryxan.recipescaler.feature.scale
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.ryxan.recipescaler.core.domain.formatting.DisplayMode
+import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
 import com.ryxan.recipescaler.core.domain.model.Ingredient
 import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import com.ryxan.recipescaler.core.domain.model.Recipe
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlin.math.abs
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -255,6 +257,126 @@ class ScaleViewModelTest {
             s.rows, "4", CopyFormat.PLAIN,
         )
         assertEquals(expected, vm.copyText(CopyFormat.PLAIN))
+    }
+
+    @Test
+    fun `the stepper steps the factor on the half grid`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.stepFactor(1)
+        var s = vm.uiState.filter { !it.isLoading && it.factor == 1.5 }.first()
+        assertEquals("6", s.inputs.scaleToText)
+
+        vm.stepFactor(-1)
+        s = vm.uiState.filter { !it.isLoading && it.factor == 1.0 }.first()
+        assertEquals("4", s.inputs.scaleToText)
+    }
+
+    @Test
+    fun `the stepper snaps an off-grid factor`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo, yieldAmount = 15.0)
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.setScaleTo("16")
+        vm.uiState.filter { abs(it.factor - 16.0 / 15) < 1e-9 }.first()
+
+        vm.stepFactor(1)
+        val s = vm.uiState.filter { !it.isLoading && it.factor == 1.5 }.first()
+        assertEquals("22.5", s.inputs.scaleToText)
+    }
+
+    @Test
+    fun `the stepper clamps at the minimum and maximum`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.stepFactor(-1)
+        var s = vm.uiState.filter { !it.isLoading && it.factor == 0.5 }.first()
+        assertEquals("2", s.inputs.scaleToText)
+
+        // Already at the minimum — no input write.
+        vm.stepFactor(-1)
+        s = vm.uiState.filter { !it.isLoading }.first()
+        assertEquals(0.5, s.factor, 0.001)
+        assertEquals("2", s.inputs.scaleToText)
+
+        vm.setScaleTo("80")
+        vm.uiState.filter { it.factor == 20.0 }.first()
+        vm.stepFactor(1)
+        s = vm.uiState.filter { !it.isLoading }.first()
+        assertEquals(20.0, s.factor, 0.001)
+        assertEquals("80", s.inputs.scaleToText)
+    }
+
+    @Test
+    fun `the stepper resets an unreadable serves to 1`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.setServes("abc")
+        vm.uiState.filter { it.message is ScaleMessage.CantRead }.first()
+
+        vm.stepFactor(1)
+        val s = vm.uiState.filter { !it.isLoading && it.factor == 1.5 }.first()
+        assertEquals("1", s.inputs.servesText)
+        assertEquals("1.5", s.inputs.scaleToText)
+    }
+
+    @Test
+    fun `inputs persist through the saved state handle`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val settings = FakeSettingsRepository()
+        val handle = SavedStateHandle(mapOf("recipeId" to id))
+        val vm = ScaleViewModel(handle, repo, settings)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.setScaleTo("8")
+        vm.uiState.filter { it.factor == 2.0 }.first()
+
+        // A new VM over the same handle restores the in-session factor.
+        val vm2 = ScaleViewModel(handle, repo, settings)
+        val s = vm2.uiState
+            .filter { !it.isLoading && it.inputs.scaleToText == "8" }
+            .first()
+        assertEquals(2.0, s.factor, 0.001)
+    }
+
+    @Test
+    fun `measurement system changes flow into the state`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val settings = FakeSettingsRepository()
+        val vm = vm(repo, settings, id)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.setMeasurementSystem(MeasurementSystem.METRIC)
+        val s = vm.uiState
+            .filter { it.measurementSystem == MeasurementSystem.METRIC }
+            .first()
+        assertTrue(s.unitsSelectable)
+    }
+
+    @Test
+    fun `units are not selectable outside kitchen mode`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val settings = FakeSettingsRepository()
+        val vm = vm(repo, settings, id)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        settings.setDisplayMode(DisplayMode.DECIMAL)
+        val s = vm.uiState.filter { !it.isLoading && !it.unitsSelectable }.first()
+        assertFalse(s.unitsSelectable)
     }
 
     @Test

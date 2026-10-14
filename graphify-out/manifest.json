@@ -1,0 +1,728 @@
+{
+  "app/build.gradle.kts": {
+    "mtime": 1791873979.0384288,
+    "seen": 1791944836.8959062,
+    "ast_hash": "873084b68d9ecf29fc5ee55b6d76309e",
+    "semantic_hash": "873084b68d9ecf29fc5ee55b6d76309e"
+  },
+  "app/src/debug/java/com/ryxan/recipescaler/AppCheckProviders.kt": {
+    "mtime": 1791773154.6151898,
+    "seen": 1791944836.895912,
+    "ast_hash": "d7f81d6794c2d0fd546a2801e0038566",
+    "semantic_hash": "d7f81d6794c2d0fd546a2801e0038566"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/MainActivity.kt": {
+    "mtime": 1791873988.8669453,
+    "seen": 1791944836.8959143,
+    "ast_hash": "dba30c6d682db8b21cb8b0023c0858d4",
+    "semantic_hash": "dba30c6d682db8b21cb8b0023c0858d4"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/MainViewModel.kt": {
+    "mtime": 1791752654.3746183,
+    "seen": 1791944836.8959155,
+    "ast_hash": "553b942b10edd784acd33177e9c5b6d1",
+    "semantic_hash": "553b942b10edd784acd33177e9c5b6d1"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/RescaleApplication.kt": {
+    "mtime": 1791773165.2697375,
+    "seen": 1791944836.8959167,
+    "ast_hash": "c764e021d4cd973d209f114d8c47d06c",
+    "semantic_hash": "c764e021d4cd973d209f114d8c47d06c"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/di/AdsModule.kt": {
+    "mtime": 1791873979.3473155,
+    "seen": 1791944836.8959177,
+    "ast_hash": "9f24c7480352fa9e2daf3755a95d236d",
+    "semantic_hash": "9f24c7480352fa9e2daf3755a95d236d"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/di/CoroutineScopesModule.kt": {
+    "mtime": 1791752645.7964926,
+    "seen": 1791944836.895919,
+    "ast_hash": "67057a13205f4136a6b551752503a061",
+    "semantic_hash": "67057a13205f4136a6b551752503a061"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/di/FeatureFlagsModule.kt": {
+    "mtime": 1791773321.2176168,
+    "seen": 1791944836.89592,
+    "ast_hash": "466b43693082f7bb5a46834ba999cbdb",
+    "semantic_hash": "466b43693082f7bb5a46834ba999cbdb"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/feature/editor/AiPaywallDialog.kt": {
+    "mtime": 1791873989.1071765,
+    "seen": 1791944836.895921,
+    "ast_hash": "815ede4d6ebfa65214bac9e1c29c50f8",
+    "semantic_hash": "815ede4d6ebfa65214bac9e1c29c50f8"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/feature/editor/EditorScreen.kt": {
+    "mtime": 1791941850.2942617,
+    "seen": 1791944836.895922,
+    "ast_hash": "ef28e77bfd030e2d350527b120a0952f",
+    "semantic_hash": "ef28e77bfd030e2d350527b120a0952f"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/feature/editor/EditorViewModel.kt": {
+    "mtime": 1791866820.253875,
+    "seen": 1791944836.8959227,
+    "ast_hash": "8ac402eb6db0226341a045eb1f1a94a8",
+    "semantic_hash": "8ac402eb6db0226341a045eb1f1a94a8"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/feature/importer/ScanImporter.kt": {
+    "mtime": 1791855229.6600335,
+    "seen": 1791944836.8959239,
+    "ast_hash": "916ea55a3d32c598813bfc3a45788dec",
+    "semantic_hash": "916ea55a3d32c598813bfc3a45788dec"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/feature/pro/ProScreen.kt": {
+    "mtime": 1791863643.213978,
+    "seen": 1791944836.895925,
+    "ast_hash": "5493314a8a9da337511f418acd4f1f78",
+    "semantic_hash": "5493314a8a9da337511f418acd4f1f78"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/feature/pro/ProViewModel.kt": {
+    "mtime": 1791773494.7471907,
+    "seen": 1791944836.895926,
+    "ast_hash": "a0af77163438e2eb3f082c5cc23eaeaa",
+    "semantic_hash": "a0af77163438e2eb3f082c5cc23eaeaa"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/feature/recipes/RecipeListScreen.kt": {
+    "mtime": 1791865575.7526748,
+    "seen": 1791944836.8959267,
+    "ast_hash": "9f054b6457400e2d67491bf3ceb2a9f8",
+    "semantic_hash": "9f054b6457400e2d67491bf3ceb2a9f8"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/feature/recipes/RecipeListViewModel.kt": {
+    "mtime": 1791769691.6265137,
+    "seen": 1791944836.895928,
+    "ast_hash": "c9780874141730a0f7dd715a161786e1",
+    "semantic_hash": "c9780874141730a0f7dd715a161786e1"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/feature/recipes/UndoDeleteController.kt": {
+    "mtime": 1791769685.9095013,
+    "seen": 1791944836.8959286,
+    "ast_hash": "5195996b0b088014eeae543259e69019",
+    "semantic_hash": "5195996b0b088014eeae543259e69019"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/feature/scale/ScaleScreen.kt": {
+    "mtime": 1791941977.0185678,
+    "seen": 1791944836.8959296,
+    "ast_hash": "e796f36851e78ca99f63080fd9090ae3",
+    "semantic_hash": "e796f36851e78ca99f63080fd9090ae3"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/feature/scale/ScaleViewModel.kt": {
+    "mtime": 1791941788.5639071,
+    "seen": 1791944836.8959305,
+    "ast_hash": "e7123bcd7a9321c3357c619ec4377a82",
+    "semantic_hash": "e7123bcd7a9321c3357c619ec4377a82"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/feature/settings/SettingsScreen.kt": {
+    "mtime": 1791896962.6085763,
+    "seen": 1791944836.8959315,
+    "ast_hash": "133b78aed5ffc8d830ab8e6009eea298",
+    "semantic_hash": "133b78aed5ffc8d830ab8e6009eea298"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/feature/settings/SettingsViewModel.kt": {
+    "mtime": 1791896565.762037,
+    "seen": 1791944836.8959324,
+    "ast_hash": "bad7fd8d10441e6e8ced7b5764854b61",
+    "semantic_hash": "bad7fd8d10441e6e8ced7b5764854b61"
+  },
+  "app/src/main/java/com/ryxan/recipescaler/navigation/RescaleNavHost.kt": {
+    "mtime": 1791862286.5381494,
+    "seen": 1791944836.8959332,
+    "ast_hash": "6d41360e6864e59bfc1b5b53d1f06009",
+    "semantic_hash": "6d41360e6864e59bfc1b5b53d1f06009"
+  },
+  "app/src/release/java/com/ryxan/recipescaler/AppCheckProviders.kt": {
+    "mtime": 1791773154.6436563,
+    "seen": 1791944836.8959348,
+    "ast_hash": "30b9c5009d3fa14c34d572b740355373",
+    "semantic_hash": "30b9c5009d3fa14c34d572b740355373"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/MainViewModelTest.kt": {
+    "mtime": 1791752707.8105807,
+    "seen": 1791944836.8959355,
+    "ast_hash": "aaaa2a6d727dc5bb51c6c3b364d2872c",
+    "semantic_hash": "aaaa2a6d727dc5bb51c6c3b364d2872c"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/feature/editor/EditorContentTest.kt": {
+    "mtime": 1791941893.7919366,
+    "seen": 1791944836.8959365,
+    "ast_hash": "ae33273327e0f1874b3fe89ffc715bb0",
+    "semantic_hash": "ae33273327e0f1874b3fe89ffc715bb0"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/feature/editor/EditorViewModelScanTest.kt": {
+    "mtime": 1791866846.9540973,
+    "seen": 1791944836.8959372,
+    "ast_hash": "bb0205120a6881c4ffbd2664689c5014",
+    "semantic_hash": "bb0205120a6881c4ffbd2664689c5014"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/feature/editor/EditorViewModelTest.kt": {
+    "mtime": 1791855367.5772653,
+    "seen": 1791944836.8959384,
+    "ast_hash": "6de06835443de49d7c18b6a6c9f65b4b",
+    "semantic_hash": "6de06835443de49d7c18b6a6c9f65b4b"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/feature/editor/ScanSourceSheetTest.kt": {
+    "mtime": 1791855599.5624206,
+    "seen": 1791944836.895939,
+    "ast_hash": "0d733da08754cee0180e2cece106b3d1",
+    "semantic_hash": "0d733da08754cee0180e2cece106b3d1"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/feature/importer/ScanImporterTest.kt": {
+    "mtime": 1791780659.4501376,
+    "seen": 1791944836.89594,
+    "ast_hash": "c87de92dec7ec9470308c1bfc884538b",
+    "semantic_hash": "c87de92dec7ec9470308c1bfc884538b"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/feature/pro/ProContentTest.kt": {
+    "mtime": 1791775648.1087294,
+    "seen": 1791944836.895941,
+    "ast_hash": "cf8f67a5f2256abec5f82aaf686c9462",
+    "semantic_hash": "cf8f67a5f2256abec5f82aaf686c9462"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/feature/pro/ProViewModelTest.kt": {
+    "mtime": 1791775697.1084433,
+    "seen": 1791944836.895942,
+    "ast_hash": "e81d11412e58999b73275bcc2ba3649a",
+    "semantic_hash": "e81d11412e58999b73275bcc2ba3649a"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/feature/recipes/RecipeListContentTest.kt": {
+    "mtime": 1791865598.7099109,
+    "seen": 1791944836.895943,
+    "ast_hash": "da19259d6b743ffea90e59cb093609d0",
+    "semantic_hash": "da19259d6b743ffea90e59cb093609d0"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/feature/recipes/RecipeListViewModelTest.kt": {
+    "mtime": 1791770115.2281046,
+    "seen": 1791944836.8959436,
+    "ast_hash": "76c76639fb0902987157de8db8367b94",
+    "semantic_hash": "76c76639fb0902987157de8db8367b94"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/feature/recipes/UndoDeleteControllerTest.kt": {
+    "mtime": 1791771412.132764,
+    "seen": 1791944836.8959444,
+    "ast_hash": "9e09d0cc20fdf982f9001c3dfe80feb3",
+    "semantic_hash": "9e09d0cc20fdf982f9001c3dfe80feb3"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/feature/scale/ScaleContentTest.kt": {
+    "mtime": 1791941882.7892756,
+    "seen": 1791944836.8959455,
+    "ast_hash": "1fc84a034f0838af63ca06b986fae823",
+    "semantic_hash": "1fc84a034f0838af63ca06b986fae823"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/feature/scale/ScaleViewModelTest.kt": {
+    "mtime": 1791941870.8971596,
+    "seen": 1791944836.8959463,
+    "ast_hash": "8aad4cfe43b0094e0141886708149d3d",
+    "semantic_hash": "8aad4cfe43b0094e0141886708149d3d"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/feature/settings/SettingsContentTest.kt": {
+    "mtime": 1791896759.2794328,
+    "seen": 1791944836.8959472,
+    "ast_hash": "ed9baef49051e7560aa1626d3d652150",
+    "semantic_hash": "ed9baef49051e7560aa1626d3d652150"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/feature/settings/SettingsViewModelTest.kt": {
+    "mtime": 1791896572.988241,
+    "seen": 1791944836.895948,
+    "ast_hash": "3fe45882eb34f3e4813cd1230a040953",
+    "semantic_hash": "3fe45882eb34f3e4813cd1230a040953"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/testing/FakeRecipeRepository.kt": {
+    "mtime": 1791769673.29093,
+    "seen": 1791944836.8959491,
+    "ast_hash": "37004178f1714cfdc01db05a61827bd1",
+    "semantic_hash": "37004178f1714cfdc01db05a61827bd1"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/testing/FakeSettingsRepository.kt": {
+    "mtime": 1791752698.198109,
+    "seen": 1791944836.8959498,
+    "ast_hash": "055cf44b298fb67b60a1ae2aa65f7df0",
+    "semantic_hash": "055cf44b298fb67b60a1ae2aa65f7df0"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/testing/MainDispatcherRule.kt": {
+    "mtime": 1791752697.9430158,
+    "seen": 1791944836.8959508,
+    "ast_hash": "6a3bde8c7a59f0cd76c11d3e6bbb6d7f",
+    "semantic_hash": "6a3bde8c7a59f0cd76c11d3e6bbb6d7f"
+  },
+  "app/src/test/java/com/ryxan/recipescaler/testing/ScanFakes.kt": {
+    "mtime": 1791896552.0965402,
+    "seen": 1791944836.8959515,
+    "ast_hash": "60e494dd7722a61f30d36ae2737687c3",
+    "semantic_hash": "60e494dd7722a61f30d36ae2737687c3"
+  },
+  "build.gradle.kts": {
+    "mtime": 1791779702.1753156,
+    "seen": 1791944836.8959527,
+    "ast_hash": "4c423987dca93f54d43a9bfed37deea5",
+    "semantic_hash": "4c423987dca93f54d43a9bfed37deea5"
+  },
+  "core/data/build.gradle.kts": {
+    "mtime": 1791873884.72357,
+    "seen": 1791944836.895954,
+    "ast_hash": "1ed3a2ef8f626bd6439d6956d9944529",
+    "semantic_hash": "1ed3a2ef8f626bd6439d6956d9944529"
+  },
+  "core/data/schemas/com.ryxan.recipescaler.core.data.db.RecipeDatabase/1.json": {
+    "mtime": 1791749919.1673927,
+    "seen": 1791944836.8959548,
+    "ast_hash": "96ead6a65f6863662fa58cf18dba3338",
+    "semantic_hash": "96ead6a65f6863662fa58cf18dba3338"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/DataModule.kt": {
+    "mtime": 1791873962.590371,
+    "seen": 1791944836.895956,
+    "ast_hash": "3abc397d0ae80ea257ec9379b47ab2b4",
+    "semantic_hash": "3abc397d0ae80ea257ec9379b47ab2b4"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/RoomRecipeRepository.kt": {
+    "mtime": 1791769673.2058704,
+    "seen": 1791944836.895957,
+    "ast_hash": "71b325cb4d2e1fe19eb2b49066424eaa",
+    "semantic_hash": "71b325cb4d2e1fe19eb2b49066424eaa"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/ads/AdConfig.kt": {
+    "mtime": 1791873953.8738413,
+    "seen": 1791944836.895958,
+    "ast_hash": "2c97fea34ba4f7721f61926811add35a",
+    "semantic_hash": "2c97fea34ba4f7721f61926811add35a"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/ads/AdConsentManager.kt": {
+    "mtime": 1791873954.1164825,
+    "seen": 1791944836.895959,
+    "ast_hash": "0ab416c30ef2c3f4eebad89fca91a383",
+    "semantic_hash": "0ab416c30ef2c3f4eebad89fca91a383"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/ads/AdMobRewardedAds.kt": {
+    "mtime": 1791874011.673136,
+    "seen": 1791944836.8959599,
+    "ast_hash": "55749684a3eacc06c5fb1831cb06df45",
+    "semantic_hash": "55749684a3eacc06c5fb1831cb06df45"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/ads/RewardedAds.kt": {
+    "mtime": 1791873962.361278,
+    "seen": 1791944836.8959606,
+    "ast_hash": "6dfab6ea7366a2be2267532d64281326",
+    "semantic_hash": "6dfab6ea7366a2be2267532d64281326"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/billing/Entitlement.kt": {
+    "mtime": 1791773266.052695,
+    "seen": 1791944836.8959613,
+    "ast_hash": "6b7bd0473fb82c5872250493f4eb0add",
+    "semantic_hash": "6b7bd0473fb82c5872250493f4eb0add"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/billing/PlayBillingProRepository.kt": {
+    "mtime": 1791855218.6748645,
+    "seen": 1791944836.8959627,
+    "ast_hash": "fed1f46e249a5f586d5cbd2e64ff5c1e",
+    "semantic_hash": "fed1f46e249a5f586d5cbd2e64ff5c1e"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/billing/ProRepository.kt": {
+    "mtime": 1791855193.527408,
+    "seen": 1791944836.8959634,
+    "ast_hash": "6388333faa979ef12a853f630da858e3",
+    "semantic_hash": "6388333faa979ef12a853f630da858e3"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/db/Entities.kt": {
+    "mtime": 1791749822.013532,
+    "seen": 1791944836.8959644,
+    "ast_hash": "bf1a5822d44c57aece7ddfc2bad9312a",
+    "semantic_hash": "bf1a5822d44c57aece7ddfc2bad9312a"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/db/Mappers.kt": {
+    "mtime": 1791749822.364924,
+    "seen": 1791944836.895965,
+    "ast_hash": "68aeec182649c7597c4993d4e73d0b3c",
+    "semantic_hash": "68aeec182649c7597c4993d4e73d0b3c"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/db/RecipeDao.kt": {
+    "mtime": 1791749822.1468072,
+    "seen": 1791944836.8959663,
+    "ast_hash": "c2b45213f9aaf27197b5f63c73698f40",
+    "semantic_hash": "c2b45213f9aaf27197b5f63c73698f40"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/db/RecipeDatabase.kt": {
+    "mtime": 1791749822.2495928,
+    "seen": 1791944836.895967,
+    "ast_hash": "a9551ee88b81f8dd2bcbe37d3c8f60f3",
+    "semantic_hash": "a9551ee88b81f8dd2bcbe37d3c8f60f3"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/di/Qualifiers.kt": {
+    "mtime": 1791773299.7181559,
+    "seen": 1791944836.895968,
+    "ast_hash": "8ad656a74bd54d3c911a43cc6a0d9fe1",
+    "semantic_hash": "8ad656a74bd54d3c911a43cc6a0d9fe1"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/importer/AiImportQuota.kt": {
+    "mtime": 1791896548.9753935,
+    "seen": 1791944836.8959687,
+    "ast_hash": "9d47c7317fc7223da476aa992bcb495f",
+    "semantic_hash": "9d47c7317fc7223da476aa992bcb495f"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/importer/AiRecipeImporter.kt": {
+    "mtime": 1791773252.9069507,
+    "seen": 1791944836.8959699,
+    "ast_hash": "501b5222f98e58ea637a01f91e76ac1e",
+    "semantic_hash": "501b5222f98e58ea637a01f91e76ac1e"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/importer/FirebaseAiRecipeImporter.kt": {
+    "mtime": 1791858983.0806384,
+    "seen": 1791944836.8959706,
+    "ast_hash": "402cf524114690625e2498e28edaea4b",
+    "semantic_hash": "402cf524114690625e2498e28edaea4b"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/importer/ImagePreprocessor.kt": {
+    "mtime": 1791780972.660384,
+    "seen": 1791944836.8959715,
+    "ast_hash": "39f69892b152d80af5415e06ab61ca8e",
+    "semantic_hash": "39f69892b152d80af5415e06ab61ca8e"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/importer/OcrEngine.kt": {
+    "mtime": 1791773252.804489,
+    "seen": 1791944836.8959723,
+    "ast_hash": "c5e72332d77530375c47a02191906b1e",
+    "semantic_hash": "c5e72332d77530375c47a02191906b1e"
+  },
+  "core/data/src/main/java/com/ryxan/recipescaler/core/data/settings/DataStoreSettingsRepository.kt": {
+    "mtime": 1791752576.8092926,
+    "seen": 1791944836.8959732,
+    "ast_hash": "9205d4ce49f2079543e5f2bc1738782c",
+    "semantic_hash": "9205d4ce49f2079543e5f2bc1738782c"
+  },
+  "core/data/src/test/java/com/ryxan/recipescaler/core/data/RoomRecipeRepositoryTest.kt": {
+    "mtime": 1791769685.8263795,
+    "seen": 1791944836.8959742,
+    "ast_hash": "fd010b8e7871b660f7af6eb5b86bb3ab",
+    "semantic_hash": "fd010b8e7871b660f7af6eb5b86bb3ab"
+  },
+  "core/data/src/test/java/com/ryxan/recipescaler/core/data/ads/AdMobRewardedAdsLogicTest.kt": {
+    "mtime": 1791873995.803254,
+    "seen": 1791944836.8959749,
+    "ast_hash": "028e6bc716bb1dbaf084a026c36b071c",
+    "semantic_hash": "028e6bc716bb1dbaf084a026c36b071c"
+  },
+  "core/data/src/test/java/com/ryxan/recipescaler/core/data/billing/EntitlementTest.kt": {
+    "mtime": 1791773655.6718838,
+    "seen": 1791944836.8959758,
+    "ast_hash": "fbd1bbe5cfd8b9b7f501c3dae060db4e",
+    "semantic_hash": "fbd1bbe5cfd8b9b7f501c3dae060db4e"
+  },
+  "core/data/src/test/java/com/ryxan/recipescaler/core/data/db/RecipeDatabaseMigrationTest.kt": {
+    "mtime": 1791749866.060497,
+    "seen": 1791944836.8959768,
+    "ast_hash": "15b499535c81dc8341094ad6d712f055",
+    "semantic_hash": "15b499535c81dc8341094ad6d712f055"
+  },
+  "core/data/src/test/java/com/ryxan/recipescaler/core/data/importer/AiRecipeDtoTest.kt": {
+    "mtime": 1791773655.780636,
+    "seen": 1791944836.8959777,
+    "ast_hash": "8e2a0bd2c0ec13974cf2cd1d916b6bc8",
+    "semantic_hash": "8e2a0bd2c0ec13974cf2cd1d916b6bc8"
+  },
+  "core/data/src/test/java/com/ryxan/recipescaler/core/data/importer/AndroidImagePreprocessorTest.kt": {
+    "mtime": 1791781338.0569236,
+    "seen": 1791944836.8959785,
+    "ast_hash": "82cb682ff4b743b42a8bf1b478f0c804",
+    "semantic_hash": "82cb682ff4b743b42a8bf1b478f0c804"
+  },
+  "core/data/src/test/java/com/ryxan/recipescaler/core/data/importer/DataStoreAiImportQuotaTest.kt": {
+    "mtime": 1791896598.3657446,
+    "seen": 1791944836.8959794,
+    "ast_hash": "3dd03375fb45978861ffc51641f23760",
+    "semantic_hash": "3dd03375fb45978861ffc51641f23760"
+  },
+  "core/data/src/test/java/com/ryxan/recipescaler/core/data/settings/DataStoreSettingsRepositoryTest.kt": {
+    "mtime": 1791752638.4378808,
+    "seen": 1791944836.8959837,
+    "ast_hash": "7f3cf852a2153d22de85cfa7326c829b",
+    "semantic_hash": "7f3cf852a2153d22de85cfa7326c829b"
+  },
+  "core/designsystem/build.gradle.kts": {
+    "mtime": 1791746986.6909192,
+    "seen": 1791944836.8959844,
+    "ast_hash": "cda16e8048e99a1931a81ffe6a2dcfee",
+    "semantic_hash": "cda16e8048e99a1931a81ffe6a2dcfee"
+  },
+  "core/designsystem/src/main/java/com/ryxan/recipescaler/core/designsystem/Color.kt": {
+    "mtime": 1791862246.8023617,
+    "seen": 1791944836.8959854,
+    "ast_hash": "9dd04d5ed94b6aeb127b0f8ff4c543e5",
+    "semantic_hash": "9dd04d5ed94b6aeb127b0f8ff4c543e5"
+  },
+  "core/designsystem/src/main/java/com/ryxan/recipescaler/core/designsystem/Components.kt": {
+    "mtime": 1791862285.9575255,
+    "seen": 1791944836.895986,
+    "ast_hash": "9aaa6c7593da4bbc23c0991b8b6a8c4d",
+    "semantic_hash": "9aaa6c7593da4bbc23c0991b8b6a8c4d"
+  },
+  "core/designsystem/src/main/java/com/ryxan/recipescaler/core/designsystem/Motion.kt": {
+    "mtime": 1791862247.0212936,
+    "seen": 1791944836.8959873,
+    "ast_hash": "46401367e30b8d62f3206fe94110e256",
+    "semantic_hash": "46401367e30b8d62f3206fe94110e256"
+  },
+  "core/designsystem/src/main/java/com/ryxan/recipescaler/core/designsystem/QuantityText.kt": {
+    "mtime": 1791752647.0492103,
+    "seen": 1791944836.895988,
+    "ast_hash": "c871b72a82e77350ea85236de0f29fba",
+    "semantic_hash": "c871b72a82e77350ea85236de0f29fba"
+  },
+  "core/designsystem/src/main/java/com/ryxan/recipescaler/core/designsystem/Shapes.kt": {
+    "mtime": 1791862246.8588674,
+    "seen": 1791944836.895989,
+    "ast_hash": "454daf1a451e15b30934734bf12a8cae",
+    "semantic_hash": "454daf1a451e15b30934734bf12a8cae"
+  },
+  "core/designsystem/src/main/java/com/ryxan/recipescaler/core/designsystem/Spacing.kt": {
+    "mtime": 1791862246.9430053,
+    "seen": 1791944836.8959901,
+    "ast_hash": "ceff79fea778861936afd8fb4fb1cdb4",
+    "semantic_hash": "ceff79fea778861936afd8fb4fb1cdb4"
+  },
+  "core/designsystem/src/main/java/com/ryxan/recipescaler/core/designsystem/Theme.kt": {
+    "mtime": 1791862274.7136912,
+    "seen": 1791944836.8959908,
+    "ast_hash": "33d86b6fb1bbab69cd47808abb6fe40a",
+    "semantic_hash": "33d86b6fb1bbab69cd47808abb6fe40a"
+  },
+  "core/designsystem/src/main/java/com/ryxan/recipescaler/core/designsystem/Typography.kt": {
+    "mtime": 1791862247.1890159,
+    "seen": 1791944836.8959918,
+    "ast_hash": "ea4a3d7c1eb5bfa6fbd58e746dbad91a",
+    "semantic_hash": "ea4a3d7c1eb5bfa6fbd58e746dbad91a"
+  },
+  "core/domain/build.gradle.kts": {
+    "mtime": 1791749777.6378298,
+    "seen": 1791944836.8959925,
+    "ast_hash": "967b3ec0f2050ace6af70b56603f1a48",
+    "semantic_hash": "967b3ec0f2050ace6af70b56603f1a48"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/formatting/KitchenFormatter.kt": {
+    "mtime": 1791752568.98518,
+    "seen": 1791944836.8959937,
+    "ast_hash": "dca8c293722bf839b1537a604499d29f",
+    "semantic_hash": "dca8c293722bf839b1537a604499d29f"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/importer/AiImportConfig.kt": {
+    "mtime": 1791924083.7965448,
+    "seen": 1791944836.8959944,
+    "ast_hash": "fcfc7c84687de7979f93f50621d3e8ab",
+    "semantic_hash": "fcfc7c84687de7979f93f50621d3e8ab"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/importer/AiRecipe.kt": {
+    "mtime": 1791773188.3603718,
+    "seen": 1791944836.8959954,
+    "ast_hash": "0bebfd5ab82431fd2f89d55dac5e94c8",
+    "semantic_hash": "0bebfd5ab82431fd2f89d55dac5e94c8"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/importer/AiRecipeMapper.kt": {
+    "mtime": 1791773188.46209,
+    "seen": 1791944836.896,
+    "ast_hash": "0e3fb99cd0f58bd7de5eae3f63fbf6f9",
+    "semantic_hash": "0e3fb99cd0f58bd7de5eae3f63fbf6f9"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/importer/YieldSplit.kt": {
+    "mtime": 1791773188.5787964,
+    "seen": 1791944836.896001,
+    "ast_hash": "28b7a972c5252dc5a69cc99a0556cc04",
+    "semantic_hash": "28b7a972c5252dc5a69cc99a0556cc04"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/model/IngredientMappers.kt": {
+    "mtime": 1791752568.7325466,
+    "seen": 1791944836.8960018,
+    "ast_hash": "0f8041d6bcd1dfc258c91bf9d95c76ef",
+    "semantic_hash": "0f8041d6bcd1dfc258c91bf9d95c76ef"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/model/KitchenUnit.kt": {
+    "mtime": 1791748826.3460574,
+    "seen": 1791944836.8960028,
+    "ast_hash": "1b81de047a31a8879be79893c947e462",
+    "semantic_hash": "1b81de047a31a8879be79893c947e462"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/model/Recipe.kt": {
+    "mtime": 1791749791.701932,
+    "seen": 1791944836.8960035,
+    "ast_hash": "d057047e959a152b55658a1117b88d13",
+    "semantic_hash": "d057047e959a152b55658a1117b88d13"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/model/RecipeScalerModels.kt": {
+    "mtime": 1791752547.100946,
+    "seen": 1791944836.8960047,
+    "ast_hash": "429a1f0953ddb0227bc6cd824e7d6183",
+    "semantic_hash": "429a1f0953ddb0227bc6cd824e7d6183"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/model/Settings.kt": {
+    "mtime": 1791862286.079221,
+    "seen": 1791944836.8960056,
+    "ast_hash": "c99f3b9fda364eea6383b088550b285d",
+    "semantic_hash": "c99f3b9fda364eea6383b088550b285d"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/model/UnitConversions.kt": {
+    "mtime": 1791748826.5812442,
+    "seen": 1791944836.8960063,
+    "ast_hash": "463716a288a750d9ad234e80e8d4c8b5",
+    "semantic_hash": "463716a288a750d9ad234e80e8d4c8b5"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/parsing/IngredientNameCorrector.kt": {
+    "mtime": 1791748332.895264,
+    "seen": 1791944836.8960075,
+    "ast_hash": "db871ad185710462160e686790f67b15",
+    "semantic_hash": "db871ad185710462160e686790f67b15"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/parsing/QuantityParser.kt": {
+    "mtime": 1791749128.5288234,
+    "seen": 1791944836.8960085,
+    "ast_hash": "c0e742f78e33baad2be6123480cf3cd4",
+    "semantic_hash": "c0e742f78e33baad2be6123480cf3cd4"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/parsing/RecipeOcrParser.kt": {
+    "mtime": 1791752552.3569684,
+    "seen": 1791944836.8960092,
+    "ast_hash": "890a0022e76d01d8f65460137b84ea27",
+    "semantic_hash": "890a0022e76d01d8f65460137b84ea27"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/repository/RecipeRepository.kt": {
+    "mtime": 1791769673.0358021,
+    "seen": 1791944836.89601,
+    "ast_hash": "6f483bbca07ecc5dbaa5ad81cb3856d5",
+    "semantic_hash": "6f483bbca07ecc5dbaa5ad81cb3856d5"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/repository/SettingsRepository.kt": {
+    "mtime": 1791749792.1557176,
+    "seen": 1791944836.896011,
+    "ast_hash": "3f6deaec7e0613dc586f0fcef8c6ec4a",
+    "semantic_hash": "3f6deaec7e0613dc586f0fcef8c6ec4a"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/scaling/RecipeScalerCalculator.kt": {
+    "mtime": 1791748901.233546,
+    "seen": 1791944836.8960118,
+    "ast_hash": "4b14279cea58cbb3dc0ce29973f6605d",
+    "semantic_hash": "4b14279cea58cbb3dc0ce29973f6605d"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/scaling/ScaleRecipe.kt": {
+    "mtime": 1791748889.9192245,
+    "seen": 1791944836.896013,
+    "ast_hash": "12d340c3a8452e9de7b2d3fcffb69daa",
+    "semantic_hash": "12d340c3a8452e9de7b2d3fcffb69daa"
+  },
+  "core/domain/src/main/java/com/ryxan/recipescaler/core/domain/time/Clock.kt": {
+    "mtime": 1791749791.9405117,
+    "seen": 1791944836.896014,
+    "ast_hash": "542962a87265437e4283133bb02dddf0",
+    "semantic_hash": "542962a87265437e4283133bb02dddf0"
+  },
+  "core/domain/src/test/java/com/ryxan/recipescaler/core/domain/formatting/DefaultMeasurementSystemTest.kt": {
+    "mtime": 1791752572.398618,
+    "seen": 1791944836.8960152,
+    "ast_hash": "03eab42856bd0f492c3362e97640b910",
+    "semantic_hash": "03eab42856bd0f492c3362e97640b910"
+  },
+  "core/domain/src/test/java/com/ryxan/recipescaler/core/domain/formatting/KitchenFormatterTest.kt": {
+    "mtime": 1791749132.72293,
+    "seen": 1791944836.896016,
+    "ast_hash": "c07771c8e5a0da414360d74a3349c4d9",
+    "semantic_hash": "c07771c8e5a0da414360d74a3349c4d9"
+  },
+  "core/domain/src/test/java/com/ryxan/recipescaler/core/domain/importer/AiRecipeMapperTest.kt": {
+    "mtime": 1791773625.0613234,
+    "seen": 1791944836.8960168,
+    "ast_hash": "0853b3005ed8df600af01e8d5698f036",
+    "semantic_hash": "0853b3005ed8df600af01e8d5698f036"
+  },
+  "core/domain/src/test/java/com/ryxan/recipescaler/core/domain/importer/SplitYieldTest.kt": {
+    "mtime": 1791773625.178223,
+    "seen": 1791944836.8960176,
+    "ast_hash": "36f8c5dc7d62659bcdb3356c14c3b14d",
+    "semantic_hash": "36f8c5dc7d62659bcdb3356c14c3b14d"
+  },
+  "core/domain/src/test/java/com/ryxan/recipescaler/core/domain/model/IngredientMappersTest.kt": {
+    "mtime": 1791752572.2853587,
+    "seen": 1791944836.8960187,
+    "ast_hash": "6b7e378c7a3e8378f8c94626c57f3583",
+    "semantic_hash": "6b7e378c7a3e8378f8c94626c57f3583"
+  },
+  "core/domain/src/test/java/com/ryxan/recipescaler/core/domain/parsing/IngredientNameCorrectorTest.kt": {
+    "mtime": 1791748420.4184282,
+    "seen": 1791944836.8960197,
+    "ast_hash": "47d344f5198dda64c3dcf4cc8bbeea62",
+    "semantic_hash": "47d344f5198dda64c3dcf4cc8bbeea62"
+  },
+  "core/domain/src/test/java/com/ryxan/recipescaler/core/domain/parsing/QuantityParserTest.kt": {
+    "mtime": 1791749132.4475262,
+    "seen": 1791944836.8960204,
+    "ast_hash": "81e1e53986d0670462a2a486b246ac7d",
+    "semantic_hash": "81e1e53986d0670462a2a486b246ac7d"
+  },
+  "core/domain/src/test/java/com/ryxan/recipescaler/core/domain/parsing/RecipeOcrParserTest.kt": {
+    "mtime": 1791752565.1395981,
+    "seen": 1791944836.8960216,
+    "ast_hash": "5ff5df0d6bc9be9b914e61317ac9d412",
+    "semantic_hash": "5ff5df0d6bc9be9b914e61317ac9d412"
+  },
+  "core/domain/src/test/java/com/ryxan/recipescaler/core/domain/scaling/RecipeScalerCalculatorTest.kt": {
+    "mtime": 1791748987.4550352,
+    "seen": 1791944836.8960226,
+    "ast_hash": "9883f78f080ca9b8a1099fc2ad1c6e33",
+    "semantic_hash": "9883f78f080ca9b8a1099fc2ad1c6e33"
+  },
+  "core/domain/src/test/java/com/ryxan/recipescaler/core/domain/scaling/ScaleRecipeTest.kt": {
+    "mtime": 1791748986.9253669,
+    "seen": 1791944836.8960233,
+    "ast_hash": "bd3de89090f152a69ed28b7c0cb1f917",
+    "semantic_hash": "bd3de89090f152a69ed28b7c0cb1f917"
+  },
+  "gradlew": {
+    "mtime": 1791762038.3218346,
+    "seen": 1791944836.8960242,
+    "ast_hash": "a43be8432bac3ffd05b3769aa42fe996",
+    "semantic_hash": "a43be8432bac3ffd05b3769aa42fe996"
+  },
+  "settings.gradle.kts": {
+    "mtime": 1791779701.995499,
+    "seen": 1791944836.8960254,
+    "ast_hash": "335887eab5fc03b1f5747416033d2fbb",
+    "semantic_hash": "335887eab5fc03b1f5747416033d2fbb"
+  },
+  ".github/workflows/ci.yml": {
+    "mtime": 1791747064.2157247,
+    "seen": 1791944836.8960261,
+    "ast_hash": "f65fc03b544e5b404b50074a5332cdb2",
+    "semantic_hash": "f65fc03b544e5b404b50074a5332cdb2"
+  },
+  "AGENTS.md": {
+    "mtime": 1791865715.3225877,
+    "seen": 1791944836.896027,
+    "ast_hash": "7e8dd29df11afb373e2582f482a27fb8",
+    "semantic_hash": "7e8dd29df11afb373e2582f482a27fb8"
+  },
+  "README.md": {
+    "mtime": 1791747065.1293375,
+    "seen": 1791944836.896028,
+    "ast_hash": "89dabe51a5b552d902ad6986102f8f56",
+    "semantic_hash": "89dabe51a5b552d902ad6986102f8f56"
+  },
+  "docs/Rescale-UX-Review.md": {
+    "mtime": 1791940681.4183216,
+    "seen": 1791944836.8960292,
+    "ast_hash": "552c35339038191d7fb011c83a837fd5",
+    "semantic_hash": "552c35339038191d7fb011c83a837fd5"
+  },
+  "docs/plan.md": {
+    "mtime": 1791862399.2112608,
+    "seen": 1791944836.89603,
+    "ast_hash": "2ba48488308744ecfc9b674e105b2aed",
+    "semantic_hash": "2ba48488308744ecfc9b674e105b2aed"
+  },
+  "docs/privacy.md": {
+    "mtime": 1791870920.787777,
+    "seen": 1791944836.896031,
+    "ast_hash": "6da31ce4c5c9891b3fd3dade194ea1db",
+    "semantic_hash": "6da31ce4c5c9891b3fd3dade194ea1db"
+  },
+  "docs/ux-plan.md": {
+    "mtime": 1791944418.4288988,
+    "seen": 1791944836.896032,
+    "ast_hash": "0e284216b559e5102fa32364cae37fef",
+    "semantic_hash": "0e284216b559e5102fa32364cae37fef"
+  }
+}

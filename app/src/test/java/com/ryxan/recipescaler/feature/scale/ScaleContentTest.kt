@@ -1,6 +1,7 @@
 package com.ryxan.recipescaler.feature.scale
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasText
@@ -12,8 +13,10 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.onNodeWithContentDescription
 import com.ryxan.recipescaler.core.designsystem.RescaleTheme
+import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
 import com.ryxan.recipescaler.core.domain.model.ScaleStatus
 import com.ryxan.recipescaler.core.domain.model.ScaledIngredient
+import com.ryxan.recipescaler.core.domain.scaling.CopyFormat
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -46,8 +49,12 @@ class ScaleContentTest {
         cookMode: Boolean = false,
         checkedIds: Set<String> = emptySet(),
         recipeMissing: Boolean = false,
+        recipeId: Long = 7,
+        measurementSystem: MeasurementSystem = MeasurementSystem.MATCH_RECIPE,
+        unitsSelectable: Boolean = true,
     ) = ScaleUiState(
         isLoading = false,
+        recipeId = recipeId,
         title = "Bread",
         yieldAmount = 4.0,
         yieldLabel = "servings",
@@ -58,6 +65,8 @@ class ScaleContentTest {
         rows = listOf(row("2 cup", "Flour")),
         cookMode = cookMode,
         checkedIds = checkedIds,
+        measurementSystem = measurementSystem,
+        unitsSelectable = unitsSelectable,
         recipeMissing = recipeMissing,
     )
 
@@ -208,5 +217,93 @@ class ScaleContentTest {
         content(state(recipeMissing = true))
         composeRule.onNodeWithText("This recipe no longer exists").assertIsDisplayed()
         composeRule.onAllNodesWithText("Flour").assertCountEquals(0)
+    }
+
+    @Test
+    fun `the edit action fires with the recipe id`() {
+        var edited = 0L
+        content(
+            state(recipeId = 42),
+            ScaleCallbacks(onEdit = { edited = it }),
+        )
+        composeRule.onNodeWithContentDescription("Edit").performClick()
+        assertEquals(42L, edited)
+    }
+
+    @Test
+    fun `share and copy live in the overflow menu`() {
+        var copied: CopyFormat? = null
+        var shared = false
+        content(
+            state(),
+            ScaleCallbacks(onCopy = { copied = it }, onShare = { shared = true }),
+        )
+        composeRule.onNodeWithContentDescription("More options").performClick()
+        composeRule.onNodeWithText("Share…").assertIsDisplayed()
+        composeRule.onNodeWithText("Copy plain").assertIsDisplayed()
+        composeRule.onNodeWithText("Copy Markdown").assertIsDisplayed()
+        composeRule.onNodeWithText("Copy shopping list").performClick()
+        assertEquals(CopyFormat.SHOPPING_LIST, copied)
+
+        composeRule.onNodeWithContentDescription("More options").performClick()
+        composeRule.onNodeWithText("Share…").performClick()
+        assertEquals(true, shared)
+    }
+
+    @Test
+    fun `the cook entry shows a label`() {
+        content(state())
+        composeRule.onNodeWithText("Cook").assertIsDisplayed()
+    }
+
+    @Test
+    fun `the cook entry shows Done in cook mode`() {
+        content(state(cookMode = true))
+        composeRule.onNodeWithText("Done").assertIsDisplayed()
+    }
+
+    @Test
+    fun `the stepper fires step callbacks`() {
+        val steps = mutableListOf<Int>()
+        content(state(), ScaleCallbacks(onStep = { steps += it }))
+        composeRule.onNodeWithContentDescription("Increase scale").performClick()
+        composeRule.onNodeWithContentDescription("Decrease scale").performClick()
+        assertEquals(listOf(1, -1), steps)
+    }
+
+    @Test
+    fun `the stepper minus disables at the minimum factor`() {
+        content(state(factor = ScaleViewModel.MIN_FACTOR))
+        composeRule.onNodeWithContentDescription("Decrease scale").assertIsNotEnabled()
+        composeRule.onNodeWithContentDescription("Increase scale").assertIsDisplayed()
+    }
+
+    @Test
+    fun `the stepper plus disables at the maximum factor`() {
+        content(state(factor = ScaleViewModel.MAX_FACTOR))
+        composeRule.onNodeWithContentDescription("Increase scale").assertIsNotEnabled()
+    }
+
+    @Test
+    fun `the measurement system lives in the overflow menu`() {
+        var picked: MeasurementSystem? = null
+        content(
+            state(measurementSystem = MeasurementSystem.MATCH_RECIPE),
+            ScaleCallbacks(onMeasurementSystem = { picked = it }),
+        )
+        composeRule.onNodeWithContentDescription("More options").performClick()
+        composeRule.onNodeWithText("Match recipe").assertIsDisplayed()
+        composeRule.onNodeWithText("US customary").assertIsDisplayed()
+        composeRule.onNodeWithText("Metric").performClick()
+        assertEquals(MeasurementSystem.METRIC, picked)
+    }
+
+    @Test
+    fun `the measurement system is hidden when it has no effect`() {
+        content(state(unitsSelectable = false))
+        composeRule.onNodeWithContentDescription("More options").performClick()
+        composeRule.onAllNodesWithText("Match recipe").assertCountEquals(0)
+        composeRule.onAllNodesWithText("US customary").assertCountEquals(0)
+        composeRule.onAllNodesWithText("Metric").assertCountEquals(0)
     }
 }

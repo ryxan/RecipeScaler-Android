@@ -3,7 +3,9 @@ package com.ryxan.recipescaler.feature.scale
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ryxan.recipescaler.core.domain.formatting.DisplayMode
 import com.ryxan.recipescaler.core.domain.formatting.DisplayPrefs
+import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
 import com.ryxan.recipescaler.core.domain.model.Recipe
 import com.ryxan.recipescaler.core.domain.model.ScaledIngredient
 import com.ryxan.recipescaler.core.domain.model.formatYield
@@ -27,6 +29,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 data class ScaleInputs(
     val servesText: String = "",
@@ -58,6 +62,9 @@ data class ScaleUiState(
     val showOriginal: Boolean = false,
     val cookMode: Boolean = false,
     val checkedIds: Set<String> = emptySet(),
+    val measurementSystem: MeasurementSystem = MeasurementSystem.MATCH_RECIPE,
+    /** False in display modes that ignore the unit system (Decimals, Keep units). */
+    val unitsSelectable: Boolean = true,
     /** True when the recipe is gone (deleted) — the screen shows an empty state. */
     val recipeMissing: Boolean = false,
 )
@@ -67,13 +74,13 @@ data class ScaleUiState(
 class ScaleViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     repository: RecipeRepository,
-    settingsRepository: SettingsRepository,
+    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
     private val recipeId = savedStateHandle.get<Long>("recipeId") ?: 0L
 
     /** Null until the recipe first loads — defaults depend on its yield/ingredients. */
-    private val inputs = MutableStateFlow<ScaleInputs?>(null)
+    private val inputs = MutableStateFlow(restoredInputs())
     private val showOriginal = MutableStateFlow(false)
     private val cookMode = savedStateHandle.getStateFlow("cookMode", false)
     private val checkedIds =
@@ -91,9 +98,17 @@ class ScaleViewModel @Inject constructor(
 
     // ── Inputs ────────────────────────────────────────────────────────────────
 
+    private fun restoredInputs(): ScaleInputs? {
+        val serves = savedStateHandle.get<String>(KEY_SERVES) ?: return null
+        return ScaleInputs(serves, savedStateHandle.get<String>(KEY_SCALE_TO) ?: "")
+    }
+
     private fun updateInputs(transform: (ScaleInputs) -> ScaleInputs) {
         val current = inputs.value ?: uiState.value.inputs
-        inputs.value = transform(current)
+        val next = transform(current)
+        inputs.value = next
+        savedStateHandle[KEY_SERVES] = next.servesText
+        savedStateHandle[KEY_SCALE_TO] = next.scaleToText
     }
 
     fun setServes(text: String) = updateInputs { it.copy(servesText = text) }
@@ -109,8 +124,35 @@ class ScaleViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Steps the factor on a [FACTOR_STEP] grid, clamped to
+     * [MIN_FACTOR]..[MAX_FACTOR]. The new "Scale to" target is derived as
+     * serves × factor; an unreadable serves is reset to 1 (same as
+     * [applyServings]).
+     */
+    fun stepFactor(direction: Int) {
+        val state = uiState.value
+        if (state.isLoading || state.recipeMissing) return
+        val stepped = ((state.factor + direction * FACTOR_STEP) / FACTOR_STEP)
+            .roundToInt() * FACTOR_STEP
+        val next = stepped.coerceIn(MIN_FACTOR, MAX_FACTOR)
+        if (next == state.factor) return
+        updateInputs { inp ->
+            val serves = QuantityParser.parse(inp.servesText)
+            if (serves == null || serves <= 0.0) {
+                inp.copy(servesText = "1", scaleToText = formatYield(next))
+            } else {
+                inp.copy(scaleToText = formatYield(serves * next))
+            }
+        }
+    }
+
     fun setShowOriginal(v: Boolean) {
         showOriginal.value = v
+    }
+
+    fun setMeasurementSystem(system: MeasurementSystem) {
+        viewModelScope.launch { settingsRepository.setMeasurementSystem(system) }
     }
 
     /** Toggles cook/checklist mode; turning it off clears the checked rows. */
@@ -194,6 +236,8 @@ class ScaleViewModel @Inject constructor(
             showOriginal = original,
             cookMode = cook,
             checkedIds = checked,
+            measurementSystem = prefs.system,
+            unitsSelectable = prefs.mode == DisplayMode.KITCHEN,
         )
     }
 
@@ -230,5 +274,15 @@ class ScaleViewModel @Inject constructor(
         val servings = s.derivedYieldAmount?.let { formatYield(it) }
             ?: "${formatYield(s.factor)}×"
         return RecipeScalerCalculator.generateFormattedRecipe(s.rows, servings, format)
+    }
+
+    companion object {
+        /** Stepper grid and bounds for the scale factor. */
+        const val FACTOR_STEP = 0.5
+        const val MIN_FACTOR = 0.5
+        const val MAX_FACTOR = 20.0
+
+        private const val KEY_SERVES = "scaleServes"
+        private const val KEY_SCALE_TO = "scaleScaleTo"
     }
 }

@@ -9,7 +9,7 @@ Verify each phase with `.\gradlew.bat test assembleDebug lint`.
 | Phase | Scope | Status | Commits |
 |---|---|---|---|
 | 1 | Quick wins and release blockers | In progress (1.1, 1.2 skipped; 1.3–1.7 implemented) | |
-| 2 | Core flow: list to Scale View | Not started | |
+| 2 | Core flow: list to Scale View | Done | |
 | 3 | Editor rework | Not started | |
 | 4 | Cook mode and Settings | Not started | |
 | 5 | Larger features (list, Quick scale, persistence) | Not started | |
@@ -44,17 +44,17 @@ Tests: extend the `*Content` Robolectric tests for the new labels and errors.
 
 ## Phase 2: Core flow: list to Scale View (a few days)
 
-- [ ] 2.1 `RescaleNavHost`: `onOpenRecipe` goes to Scale View; add Edit (pencil) action to Scale View
-- [ ] 2.2 Scale View top bar
-  - [ ] Merge Copy and Share into one Share menu (Share, Copy plain, Copy Markdown, Copy shopping list)
-  - [ ] Label the Cook entry
-- [ ] 2.3 Scale controls
-  - [ ] Multiplier chips `½× 1× 2× 3× 4×`
-  - [ ] Stepper (−/+)
-  - [ ] "Multiply by" vs "Make N servings" mode; hide servings mode when no yield
-  - [ ] Summary styled as a caption, not `titleMedium`
-- [ ] 2.4 Compact input block so results start high; keep last factor in-session when returning from Editor
-- [ ] 2.5 US | Metric control in Scale View overflow
+- [x] 2.1 `RescaleNavHost`: `onOpenRecipe` goes to Scale View; add Edit (pencil) action to Scale View
+- [x] 2.2 Scale View top bar
+  - [x] Merge Copy and Share into one Share menu (Share, Copy plain, Copy Markdown, Copy shopping list)
+  - [x] Label the Cook entry
+- [x] 2.3 Scale controls
+  - [-] Multiplier chips `½× 1× 2× 3× 4×` **(skipped - not a priority)**
+  - [x] Stepper (−/+)
+  - [-] "Multiply by" vs "Make N servings" mode; hide servings mode when no yield **(skipped - not a priority)**
+  - [x] Summary styled as a caption, not `titleMedium`
+- [x] 2.4 Compact input block so results start high; keep last factor in-session when returning from Editor
+- [x] 2.5 US | Metric control in Scale View overflow
 
 Tests: nav and VM tests; chips set multiplier, stepper bounds, mode hiding.
 
@@ -125,3 +125,8 @@ Touches the data layer: needs a Room migration and a migration test.
 
 - 1.1 skipped: app is in closed testing and testers need the AI-scan presets (0/1/5/10/Reset) to test flows without burning the 10-scan lifetime limit. `showDebug` stays `true` for now — **must be revisited before public launch** ("Pretend Pro" and scan reset must not ship to production). Alternatives if needed later: tap-version-to-reveal, or a build flag enabled only for testing builds.
 - 1.2 skipped by owner choice.
+- 2.1: tapping a recipe now opens Scale View directly; the Editor is reached via a pencil action on Scale View. The Editor's Scale FAB pops back to the existing `Scale` entry when it's directly below (same recipe), so List → Scale → Editor → FAB doesn't stack duplicate Scale screens and the in-session factor is preserved.
+- 2.2: Copy and Share merged into the ⋮ overflow (Share…, Copy plain, Copy Markdown, Copy shopping list) alongside "Show original" and the unit system — frees two top-bar slots for Edit + the labeled Cook entry. Cook is a text-labeled pill ("Cook"/"Done") rather than a bare icon.
+- 2.3: the stepper steps the *factor* on a 0.5 grid clamped to [0.5, 20] (snaps off-grid values first), writes `serves × factor` back into "Scale to", and lives at the end of the servings-chip row so the block stays one line. An unreadable Serves resets to 1, matching the chips' behavior.
+- 2.4: inputs write through to `SavedStateHandle` (`scaleServes`/`scaleScaleTo`), so the last factor survives returning from the Editor and process death — session-only by design.
+- 2.5: overflow shows Match recipe / US / Metric only when `DisplayMode.KITCHEN` — in Decimals and Keep-units modes the setting has no effect (per review §4.2), so the control is hidden rather than silently inert.
