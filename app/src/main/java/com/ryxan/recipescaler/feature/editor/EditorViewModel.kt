@@ -64,7 +64,6 @@ sealed interface EditorDialog {
         val items: List<ParsedIngredient>,
         val prefill: ImportPrefill? = null,
     ) : EditorDialog
-    data object ConfirmClear : EditorDialog
     data object ScanSource : EditorDialog
     data class ScanFailed(
         val error: ScanError,
@@ -72,6 +71,12 @@ sealed interface EditorDialog {
         val canUseOnDevice: Boolean,
     ) : EditorDialog
     data object AiPaywall : EditorDialog
+}
+
+/** A reversible list edit shown as a snackbar with an Undo action. */
+sealed interface EditorUndo {
+    data class RowRemoved(val row: EditorRow, val index: Int) : EditorUndo
+    data class RowsCleared(val rows: List<EditorRow>) : EditorUndo
 }
 
 data class EditorUiState(
@@ -82,6 +87,10 @@ data class EditorUiState(
     val yieldLabel: String = "servings",
     val rows: List<EditorRow> = emptyList(),
     val dialog: EditorDialog? = null,
+    /** Most recent undoable row edit; replaced by the next one, cleared by Undo/dismiss. */
+    val pendingUndo: EditorUndo? = null,
+    /** Bumped on every [pendingUndo] change so equal edits still retrigger the snackbar. */
+    val undoToken: Int = 0,
     /** Row key that should grab qty focus once on open (Quick scale). */
     val autoFocusKey: Long? = null,
     /** Non-null while a scan/import is in flight — new scan requests are ignored. */
@@ -228,6 +237,7 @@ class EditorViewModel @Inject constructor(
 
     fun onTitleChange(v: String) = edit { it.copy(title = v) }
     fun onYieldTextChange(v: String) = edit { it.copy(yieldText = v) }
+    fun onYieldLabelChange(v: String) = edit { it.copy(yieldLabel = v) }
 
     fun onRowQtyChange(key: Long, v: String) = editRows(key) { it.copy(rawQuantity = v, needsReview = false) }
     fun onRowUnitChange(key: Long, v: KitchenUnit) = editRows(key) { it.copy(unit = v, needsReview = false) }
@@ -257,9 +267,57 @@ class EditorViewModel @Inject constructor(
         return row.key
     }
 
+    /** Removes a row and stashes it for Undo (snackbar). */
     fun removeRow(key: Long) {
-        _uiState.update { s -> s.copy(rows = s.rows.filterNot { it.key == key }) }
+        _uiState.update { s ->
+            val idx = s.rows.indexOfFirst { it.key == key }
+            if (idx < 0) return@update s
+            s.copy(
+                rows = s.rows.filterNot { it.key == key },
+                pendingUndo = EditorUndo.RowRemoved(s.rows[idx], idx),
+                undoToken = s.undoToken + 1,
+            )
+        }
         scheduleSave()
+    }
+
+    /** Removes every row (leaving one blank) and stashes them for Undo. */
+    fun clearIngredients() {
+        _uiState.update { s ->
+            s.copy(
+                rows = listOf(newRow()),
+                pendingUndo = EditorUndo.RowsCleared(s.rows),
+                undoToken = s.undoToken + 1,
+                dialog = null,
+            )
+        }
+        scheduleSave()
+    }
+
+    /** Restores the row(s) behind [EditorUiState.pendingUndo]. */
+    fun undoPendingEdit() {
+        _uiState.update { s ->
+            when (val u = s.pendingUndo) {
+                is EditorUndo.RowRemoved -> s.copy(
+                    rows = s.rows.toMutableList()
+                        .apply { add(u.index.coerceAtMost(size), u.row) },
+                    pendingUndo = null,
+                )
+                is EditorUndo.RowsCleared -> {
+                    // Keep any content typed since the clear.
+                    val current = s.rows.filter {
+                        it.rawQuantity.isNotBlank() || it.name.isNotBlank()
+                    }
+                    s.copy(rows = u.rows + current, pendingUndo = null)
+                }
+                null -> s
+            }
+        }
+        scheduleSave()
+    }
+
+    fun dismissPendingUndo() {
+        _uiState.update { it.copy(pendingUndo = null) }
     }
 
     /** Moves the row [fromKey] to the position of row [toKey]; unknown keys are ignored. */
@@ -408,9 +466,6 @@ class EditorViewModel @Inject constructor(
         _uiState.update { it.copy(useAiImport = enabled) }
     }
 
-    /** A FileProvider URI for TakePicture, or null when capture is impossible. */
-    fun newCameraUri(): Uri? = scanImporter.newCaptureUri()
-
     /**
      * Entry point for every image source (document scanner, camera, gallery).
      * [deleteWhenDone] is true for temp files we own (scanner output, camera
@@ -516,16 +571,7 @@ class EditorViewModel @Inject constructor(
         }
     }
 
-    // ── Clear / delete ────────────────────────────────────────────────────────
-
-    fun requestClear() {
-        _uiState.update { it.copy(dialog = EditorDialog.ConfirmClear) }
-    }
-
-    fun confirmClear() {
-        _uiState.update { it.copy(rows = listOf(newRow()), dialog = null) }
-        scheduleSave()
-    }
+    // ── Delete ────────────────────────────────────────────────────────────────
 
     /** Saves latest edits, deletes via [undoController] (undoable), then navigates up. */
     fun deleteRecipe() {

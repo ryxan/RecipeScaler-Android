@@ -260,59 +260,62 @@ class ScaleViewModelTest {
     }
 
     @Test
-    fun `the stepper steps the factor on the half grid`() = runTest {
+    fun `the stepper steps the target servings`() = runTest {
         val repo = FakeRecipeRepository()
         val id = seeded(repo)
         val vm = vm(repo, FakeSettingsRepository(), id)
 
         vm.uiState.filter { !it.isLoading }.first()
-        vm.stepFactor(1)
-        var s = vm.uiState.filter { !it.isLoading && it.factor == 1.5 }.first()
-        assertEquals("6", s.inputs.scaleToText)
+        vm.stepServings(1)
+        var s = vm.uiState.filter { !it.isLoading && it.inputs.scaleToText == "5" }.first()
+        assertEquals(1.25, s.factor, 0.001)
 
-        vm.stepFactor(-1)
-        s = vm.uiState.filter { !it.isLoading && it.factor == 1.0 }.first()
-        assertEquals("4", s.inputs.scaleToText)
+        vm.stepServings(-1)
+        s = vm.uiState.filter { !it.isLoading && it.inputs.scaleToText == "4" }.first()
+        assertEquals(1.0, s.factor, 0.001)
     }
 
     @Test
-    fun `the stepper snaps an off-grid factor`() = runTest {
-        val repo = FakeRecipeRepository()
-        val id = seeded(repo, yieldAmount = 15.0)
-        val vm = vm(repo, FakeSettingsRepository(), id)
-
-        vm.uiState.filter { !it.isLoading }.first()
-        vm.setScaleTo("16")
-        vm.uiState.filter { abs(it.factor - 16.0 / 15) < 1e-9 }.first()
-
-        vm.stepFactor(1)
-        val s = vm.uiState.filter { !it.isLoading && it.factor == 1.5 }.first()
-        assertEquals("22.5", s.inputs.scaleToText)
-    }
-
-    @Test
-    fun `the stepper clamps at the minimum and maximum`() = runTest {
+    fun `the stepper snaps a fractional target in the step direction`() = runTest {
         val repo = FakeRecipeRepository()
         val id = seeded(repo)
         val vm = vm(repo, FakeSettingsRepository(), id)
 
         vm.uiState.filter { !it.isLoading }.first()
-        vm.stepFactor(-1)
-        var s = vm.uiState.filter { !it.isLoading && it.factor == 0.5 }.first()
-        assertEquals("2", s.inputs.scaleToText)
+        vm.setScaleTo("4.5")
+        vm.uiState.filter { it.factor == 1.125 }.first()
+
+        vm.stepServings(1)
+        var s = vm.uiState.filter { it.inputs.scaleToText == "5" }.first()
+        assertEquals(1.25, s.factor, 0.001)
+
+        vm.setScaleTo("4.5")
+        vm.uiState.filter { it.inputs.scaleToText == "4.5" }.first()
+        vm.stepServings(-1)
+        s = vm.uiState.filter { it.inputs.scaleToText == "4" }.first()
+        assertEquals(1.0, s.factor, 0.001)
+    }
+
+    @Test
+    fun `the stepper clamps at the minimum and maximum servings`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.setScaleTo("1")
+        vm.uiState.filter { it.factor == 0.25 }.first()
 
         // Already at the minimum — no input write.
-        vm.stepFactor(-1)
-        s = vm.uiState.filter { !it.isLoading }.first()
-        assertEquals(0.5, s.factor, 0.001)
-        assertEquals("2", s.inputs.scaleToText)
+        vm.stepServings(-1)
+        var s = vm.uiState.filter { !it.isLoading }.first()
+        assertEquals("1", s.inputs.scaleToText)
 
-        vm.setScaleTo("80")
-        vm.uiState.filter { it.factor == 20.0 }.first()
-        vm.stepFactor(1)
+        vm.setScaleTo("99")
+        vm.uiState.filter { it.factor == 24.75 }.first()
+        vm.stepServings(1)
         s = vm.uiState.filter { !it.isLoading }.first()
-        assertEquals(20.0, s.factor, 0.001)
-        assertEquals("80", s.inputs.scaleToText)
+        assertEquals("99", s.inputs.scaleToText)
     }
 
     @Test
@@ -325,10 +328,26 @@ class ScaleViewModelTest {
         vm.setServes("abc")
         vm.uiState.filter { it.message is ScaleMessage.CantRead }.first()
 
-        vm.stepFactor(1)
-        val s = vm.uiState.filter { !it.isLoading && it.factor == 1.5 }.first()
-        assertEquals("1", s.inputs.servesText)
-        assertEquals("1.5", s.inputs.scaleToText)
+        vm.stepServings(1)
+        val s = vm.uiState.filter { it.inputs.servesText == "1" }.first()
+        assertEquals("5", s.inputs.scaleToText)
+        assertEquals(5.0, s.factor, 0.001)
+    }
+
+    @Test
+    fun `the stepper restarts from serves when the target is unreadable`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.setScaleTo("abc")
+        vm.uiState.filter { it.message is ScaleMessage.CantRead }.first()
+
+        vm.stepServings(1)
+        val s = vm.uiState.filter { it.inputs.scaleToText == "5" }.first()
+        assertNull(s.message)
+        assertEquals(1.25, s.factor, 0.001)
     }
 
     @Test

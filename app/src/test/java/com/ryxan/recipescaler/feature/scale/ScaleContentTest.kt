@@ -231,6 +231,26 @@ class ScaleContentTest {
     }
 
     @Test
+    fun `the edit fab fires with the recipe id`() {
+        var edited = 0L
+        content(
+            state(recipeId = 42),
+            ScaleCallbacks(onEdit = { edited = it }),
+        )
+        // The extended FAB merges its semantics — the label only exists in the
+        // unmerged tree, but clicking its bounds still hits the button.
+        composeRule.onNodeWithText("Edit", useUnmergedTree = true).performClick()
+        assertEquals(42L, edited)
+    }
+
+    @Test
+    fun `the edit fab hides in cook mode`() {
+        content(state(cookMode = true))
+        composeRule.onAllNodesWithText("Edit", useUnmergedTree = true)
+            .assertCountEquals(0)
+    }
+
+    @Test
     fun `share and copy live in the overflow menu`() {
         var copied: CopyFormat? = null
         var shared = false
@@ -266,22 +286,40 @@ class ScaleContentTest {
     fun `the stepper fires step callbacks`() {
         val steps = mutableListOf<Int>()
         content(state(), ScaleCallbacks(onStep = { steps += it }))
-        composeRule.onNodeWithContentDescription("Increase scale").performClick()
-        composeRule.onNodeWithContentDescription("Decrease scale").performClick()
+        composeRule.onNodeWithContentDescription("Increase servings").performClick()
+        composeRule.onNodeWithContentDescription("Decrease servings").performClick()
         assertEquals(listOf(1, -1), steps)
     }
 
     @Test
-    fun `the stepper minus disables at the minimum factor`() {
-        content(state(factor = ScaleViewModel.MIN_FACTOR))
-        composeRule.onNodeWithContentDescription("Decrease scale").assertIsNotEnabled()
-        composeRule.onNodeWithContentDescription("Increase scale").assertIsDisplayed()
+    fun `the stepper shows the target servings`() {
+        content(state())
+        composeRule.onNodeWithContentDescription("Makes 8 servings").assertIsDisplayed()
     }
 
     @Test
-    fun `the stepper plus disables at the maximum factor`() {
-        content(state(factor = ScaleViewModel.MAX_FACTOR))
-        composeRule.onNodeWithContentDescription("Increase scale").assertIsNotEnabled()
+    fun `the stepper minus disables at the minimum servings`() {
+        content(
+            state().copy(
+                inputs = ScaleInputs(servesText = "4", scaleToText = "1"),
+                factor = 0.25,
+                derivedYieldAmount = 1.0,
+            ),
+        )
+        composeRule.onNodeWithContentDescription("Decrease servings").assertIsNotEnabled()
+        composeRule.onNodeWithContentDescription("Increase servings").assertIsDisplayed()
+    }
+
+    @Test
+    fun `the stepper plus disables at the maximum servings`() {
+        content(
+            state().copy(
+                inputs = ScaleInputs(servesText = "4", scaleToText = "99"),
+                factor = 24.75,
+                derivedYieldAmount = 99.0,
+            ),
+        )
+        composeRule.onNodeWithContentDescription("Increase servings").assertIsNotEnabled()
     }
 
     @Test

@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
@@ -47,6 +48,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -60,6 +62,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -128,7 +131,7 @@ fun ScaleScreen(
             onServes = viewModel::setServes,
             onScaleTo = viewModel::setScaleTo,
             onServings = viewModel::applyServings,
-            onStep = viewModel::stepFactor,
+            onStep = viewModel::stepServings,
             onShowOriginal = viewModel::setShowOriginal,
             onCookMode = viewModel::toggleCookMode,
             onToggleChecked = viewModel::toggleChecked,
@@ -176,6 +179,11 @@ fun ScaleContent(
     var overflowExpanded by remember { mutableStateOf(false) }
     var warningDismissed by rememberSaveable { mutableStateOf(false) }
     var warningExpanded by rememberSaveable { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    val fabExpanded by remember {
+        derivedStateOf { listState.firstVisibleItemIndex == 0 }
+    }
+    val canEdit = !state.cookMode && !state.isLoading && !state.recipeMissing
     val view = LocalView.current
     DisposableEffect(state.cookMode) {
         view.keepScreenOn = state.cookMode
@@ -202,7 +210,7 @@ fun ScaleContent(
                     }
                 },
                 actions = {
-                    if (!state.cookMode && !state.isLoading && !state.recipeMissing) {
+                    if (canEdit) {
                         IconButton(onClick = { callbacks.onEdit(state.recipeId) }) {
                             Icon(
                                 Icons.Outlined.Edit,
@@ -323,14 +331,34 @@ fun ScaleContent(
                 },
             )
         },
+        floatingActionButton = {
+            if (canEdit) {
+                ExtendedFloatingActionButton(
+                    onClick = { callbacks.onEdit(state.recipeId) },
+                    expanded = fabExpanded,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    icon = {
+                        Icon(Icons.Outlined.Edit, contentDescription = null)
+                    },
+                    text = { Text(stringResource(R.string.action_edit)) },
+                )
+            }
+        },
     ) { innerPadding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .consumeWindowInsets(innerPadding)
                 .imePadding(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = 8.dp,
+                bottom = if (canEdit) 88.dp else 8.dp,
+            ),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             if (state.recipeMissing) {
@@ -387,9 +415,13 @@ fun ScaleContent(
                 }
 
                 item(key = "controls") {
-                    val currentScale = stringResource(
-                        R.string.cd_current_scale,
-                        formatYield(state.factor),
+                    val targetServings = state.derivedYieldAmount
+                        ?: QuantityParser.parse(state.inputs.scaleToText)
+                    val targetText = targetServings?.let { formatYield(it) } ?: "–"
+                    val currentTarget = stringResource(
+                        R.string.cd_target_servings,
+                        targetText,
+                        state.yieldLabel,
                     )
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         LazyRow(
@@ -414,38 +446,35 @@ fun ScaleContent(
                         }
                         IconButton(
                             onClick = { callbacks.onStep(-1) },
-                            enabled = state.factor >
-                                ScaleViewModel.MIN_FACTOR + 1e-9,
+                            enabled = targetServings == null || targetServings >
+                                ScaleViewModel.MIN_SERVINGS + 1e-9,
                         ) {
                             Icon(
                                 Icons.Filled.Remove,
                                 contentDescription = stringResource(
-                                    R.string.action_decrease_scale,
+                                    R.string.action_decrease_servings,
                                 ),
                             )
                         }
                         Text(
-                            text = stringResource(
-                                R.string.scale_factor_prefix,
-                                formatYield(state.factor),
-                            ),
+                            text = targetText,
                             style = MaterialTheme.typography.titleMedium,
                             textAlign = TextAlign.Center,
                             modifier = Modifier
                                 .widthIn(min = 40.dp)
                                 .clearAndSetSemantics {
-                                    contentDescription = currentScale
+                                    contentDescription = currentTarget
                                 },
                         )
                         IconButton(
                             onClick = { callbacks.onStep(1) },
-                            enabled = state.factor <
-                                ScaleViewModel.MAX_FACTOR - 1e-9,
+                            enabled = targetServings == null || targetServings <
+                                ScaleViewModel.MAX_SERVINGS - 1e-9,
                         ) {
                             Icon(
                                 Icons.Filled.Add,
                                 contentDescription = stringResource(
-                                    R.string.action_increase_scale,
+                                    R.string.action_increase_servings,
                                 ),
                             )
                         }

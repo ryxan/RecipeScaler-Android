@@ -30,7 +30,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
+import kotlin.math.ceil
+import kotlin.math.floor
 
 data class ScaleInputs(
     val servesText: String = "",
@@ -125,24 +126,31 @@ class ScaleViewModel @Inject constructor(
     }
 
     /**
-     * Steps the factor on a [FACTOR_STEP] grid, clamped to
-     * [MIN_FACTOR]..[MAX_FACTOR]. The new "Scale to" target is derived as
-     * serves × factor; an unreadable serves is reset to 1 (same as
+     * Steps the "Scale to" servings target by 1, clamped to
+     * [MIN_SERVINGS]..[MAX_SERVINGS]. A fractional target snaps to the next
+     * integer in the step direction; an unreadable target restarts from the
+     * serves count, and an unreadable serves resets to 1 (same as
      * [applyServings]).
      */
-    fun stepFactor(direction: Int) {
+    fun stepServings(direction: Int) {
         val state = uiState.value
         if (state.isLoading || state.recipeMissing) return
-        val stepped = ((state.factor + direction * FACTOR_STEP) / FACTOR_STEP)
-            .roundToInt() * FACTOR_STEP
-        val next = stepped.coerceIn(MIN_FACTOR, MAX_FACTOR)
-        if (next == state.factor) return
         updateInputs { inp ->
             val serves = QuantityParser.parse(inp.servesText)
-            if (serves == null || serves <= 0.0) {
-                inp.copy(servesText = "1", scaleToText = formatYield(next))
+            val current = QuantityParser.parse(inp.scaleToText)?.takeIf { it > 0 }
+                ?: serves?.takeIf { it > 0 }
+                ?: MIN_SERVINGS
+            val stepped = if (direction > 0) {
+                floor(current) + 1.0
             } else {
-                inp.copy(scaleToText = formatYield(serves * next))
+                ceil(current) - 1.0
+            }
+            val next = stepped.coerceIn(MIN_SERVINGS, MAX_SERVINGS)
+            when {
+                next == current -> inp
+                serves == null || serves <= 0.0 ->
+                    inp.copy(servesText = "1", scaleToText = formatYield(next))
+                else -> inp.copy(scaleToText = formatYield(next))
             }
         }
     }
@@ -277,10 +285,9 @@ class ScaleViewModel @Inject constructor(
     }
 
     companion object {
-        /** Stepper grid and bounds for the scale factor. */
-        const val FACTOR_STEP = 0.5
-        const val MIN_FACTOR = 0.5
-        const val MAX_FACTOR = 20.0
+        /** Stepper bounds for the "Scale to" servings target. */
+        const val MIN_SERVINGS = 1.0
+        const val MAX_SERVINGS = 99.0
 
         private const val KEY_SERVES = "scaleServes"
         private const val KEY_SCALE_TO = "scaleScaleTo"
