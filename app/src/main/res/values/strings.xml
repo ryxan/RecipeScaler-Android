@@ -179,5 +179,6 @@
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_dynamic_color">Dynamic color</string>
     <string name="settings_section_about">About</string>
+    <string name="settings_privacy">Privacy policy</string>
     <string name="settings_version">Version %1$s</string>
 </resources>
