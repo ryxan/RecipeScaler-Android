@@ -85,7 +85,7 @@
     <string name="ai_paywall_pack_subtitle">One-time top-up · never expires</string>
     <string name="ai_paywall_best_value">Best value</string>
     <string name="ai_paywall_pro_title">Rescale Pro</string>
-    <string name="ai_paywall_pro_subtitle">Unlimited AI scans, forever</string>
+    <string name="ai_paywall_pro_subtitle">AI scans every day, forever</string>
     <string name="ai_paywall_free_option">or earn scans for free</string>
     <string name="ai_paywall_ad_title">Watch a short ad</string>
     <string name="ai_paywall_soon">Soon</string>
@@ -102,14 +102,31 @@
 
     <!-- Pro -->
     <string name="title_pro">Rescale Pro</string>
-    <string name="pro_benefit_ai">Unlimited AI recipe import</string>
+    <string name="pro_hero_subtitle">Import any recipe card with AI — handwriting included.</string>
+    <string name="pro_hero_title_active">You\'re Pro</string>
+    <string name="pro_hero_subtitle_active">Thanks for supporting Rescale.</string>
+    <string name="pro_benefit_ai">AI recipe import, every day</string>
     <string name="pro_benefit_handwriting">Reads handwritten and printed recipe cards</string>
+    <plurals name="pro_scans_left">
+        <item quantity="one">%d AI scan left</item>
+        <item quantity="other">%d AI scans left</item>
+    </plurals>
+    <string name="pro_scans_none">No AI scans left. On-device scanning is always free.</string>
+    <string name="pro_plan_lifetime">Lifetime</string>
+    <string name="pro_plan_lifetime_detail">Pay once, keep it forever</string>
+    <string name="pro_plan_monthly">Monthly</string>
+    <string name="pro_plan_monthly_detail">Billed monthly</string>
     <string name="pro_price_monthly">%1$s / month</string>
     <string name="pro_price_lifetime">%1$s · lifetime</string>
+    <string name="pro_cta_lifetime">Unlock for %1$s</string>
+    <string name="pro_cta_monthly">Subscribe for %1$s / month</string>
+    <string name="pro_fine_lifetime">One-time payment. No subscription.</string>
+    <string name="pro_fine_monthly">Renews monthly. Cancel anytime in Google Play.</string>
     <string name="pro_unavailable">Purchases aren\'t available right now</string>
+    <string name="action_retry">Try again</string>
     <string name="action_restore_purchases">Restore purchases</string>
-    <string name="pro_active">You\'re Pro — thank you!</string>
     <string name="pro_pending">Purchase pending</string>
+    <string name="pro_pending_detail">Pro unlocks as soon as Google Play confirms the payment.</string>
     <string name="pro_state_active">Active</string>
     <string name="pro_refresh_failed">Couldn\'t check purchases. Try again later.</string>
     <string name="settings_section_debug">Debug</string>
