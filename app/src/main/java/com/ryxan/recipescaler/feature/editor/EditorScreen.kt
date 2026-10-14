@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -44,6 +45,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material.icons.outlined.DocumentScanner
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -84,6 +86,7 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
@@ -347,6 +350,7 @@ fun EditorContent(
     val fabExpanded by remember {
         derivedStateOf { lazyListState.firstVisibleItemIndex == 0 }
     }
+    val titleCd = stringResource(R.string.cd_recipe_title)
 
     LaunchedEffect(state.autoFocusKey) {
         if (!autoFocusHandled && state.autoFocusKey != null) {
@@ -520,8 +524,11 @@ fun EditorContent(
                     OutlinedTextField(
                         value = state.title,
                         onValueChange = callbacks.onTitleChange,
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text(stringResource(R.string.hint_recipe_title)) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics {
+                                contentDescription = titleCd
+                            },
                         singleLine = true,
                     )
                 }
@@ -570,6 +577,7 @@ fun EditorContent(
                         val moveDown = stringResource(R.string.action_move_down)
                         IngredientRow(
                             row = row,
+                            position = idx + 1,
                             modifier = Modifier.semantics {
                                 customActions = buildList {
                                     if (prev != null) {
@@ -663,6 +671,7 @@ fun EditorContent(
 @Composable
 private fun IngredientRow(
     row: EditorRow,
+    position: Int,
     qtyValue: androidx.compose.runtime.MutableState<TextFieldValue>,
     modifier: Modifier = Modifier,
     dragModifier: Modifier = Modifier,
@@ -677,6 +686,9 @@ private fun IngredientRow(
     onRemove: () -> Unit,
 ) {
     val qtyFocusRequester = remember { FocusRequester() }
+    val nameFocusRequester = remember { FocusRequester() }
+    val qtyCd = stringResource(R.string.cd_quantity_field, position)
+    val nameCd = stringResource(R.string.cd_ingredient_name_field, position)
     if (requestFocus) {
         LaunchedEffect(Unit) {
             qtyFocusRequester.requestFocus()
@@ -709,10 +721,19 @@ private fun IngredientRow(
             modifier = Modifier
                 .width(88.dp)
                 .focusRequester(qtyFocusRequester)
-                .onFocusChanged { onFocusChanged(it.hasFocus, RowField.QTY) },
+                .onFocusChanged { onFocusChanged(it.hasFocus, RowField.QTY) }
+                .semantics {
+                    contentDescription = qtyCd
+                },
             placeholder = { Text(stringResource(R.string.hint_quantity)) },
             isError = row.qtyError,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Decimal,
+                imeAction = ImeAction.Next,
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { nameFocusRequester.requestFocus() },
+            ),
             singleLine = true,
         )
         OutlinedButton(
@@ -727,14 +748,30 @@ private fun IngredientRow(
             onValueChange = onNameChange,
             modifier = Modifier
                 .weight(1f)
-                .onFocusChanged { onFocusChanged(it.hasFocus, RowField.NAME) },
+                .focusRequester(nameFocusRequester)
+                .onFocusChanged { onFocusChanged(it.hasFocus, RowField.NAME) }
+                .semantics {
+                    contentDescription = nameCd
+                },
             placeholder = { Text(stringResource(R.string.hint_ingredient_name)) },
             supportingText = {
                 if (row.needsReview) {
-                    Text(
-                        text = stringResource(R.string.row_needs_review),
-                        color = MaterialTheme.colorScheme.tertiary,
-                    )
+                    Row(
+                        modifier = Modifier.semantics(mergeDescendants = true) {},
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.Outlined.WarningAmber,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.tertiary,
+                        )
+                        Text(
+                            text = stringResource(R.string.row_needs_review),
+                            color = MaterialTheme.colorScheme.tertiary,
+                        )
+                    }
                 }
             },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -771,25 +808,32 @@ private fun AccessoryBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
                 .padding(horizontal = 8.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            FRACTION_INSERTS.forEach { ch ->
-                FilterChip(
-                    selected = false,
-                    enabled = qtyFocused,
-                    onClick = { onFraction(ch) },
-                    label = { Text(ch) },
-                )
-            }
-            BAR_UNITS.forEach { unit ->
-                FilterChip(
-                    selected = false,
-                    onClick = { onUnit(unit) },
-                    label = { Text(unit.label) },
-                )
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (qtyFocused) {
+                    FRACTION_INSERTS.forEach { ch ->
+                        FilterChip(
+                            selected = false,
+                            onClick = { onFraction(ch) },
+                            label = { Text(ch) },
+                        )
+                    }
+                }
+                BAR_UNITS.forEach { unit ->
+                    FilterChip(
+                        selected = false,
+                        onClick = { onUnit(unit) },
+                        label = { Text(unit.label) },
+                    )
+                }
             }
             TextButton(onClick = onNext) {
                 Text(stringResource(R.string.action_next))

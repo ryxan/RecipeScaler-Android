@@ -24,10 +24,13 @@
     <string name="action_edit_ingredients">Edit ingredients</string>
     <string name="action_done_editing">Done editing</string>
     <string name="action_next">Next</string>
-    <string name="hint_recipe_title">Recipe title</string>
+    <string name="action_dismiss">Dismiss</string>
+    <string name="cd_recipe_title">Recipe title</string>
+    <string name="cd_quantity_field">Quantity, ingredient %1$d</string>
+    <string name="cd_ingredient_name_field">Ingredient name, row %1$d</string>
     <string name="hint_quantity">Qty</string>
     <string name="hint_ingredient_name">Ingredient</string>
-    <string name="header_name">Name</string>
+    <string name="header_name">Recipe title</string>
     <string name="header_ingredients">Ingredients</string>
     <string name="unit_picker_title">Unit</string>
     <string name="unit_group_volume">Volume</string>
@@ -125,6 +128,9 @@
     <string name="scale_makes">Makes %1$s %2$s</string>
     <string name="scale_warning_big">×%1$s is a big jump. Large batches don\'t scale perfectly: split across pans or use bigger ones, check doneness early, and taste before adding all the salt and spices.</string>
     <string name="scale_warning_small">×%1$s makes a very small batch. Tiny amounts are hard to measure — a kitchen scale helps, and cooking times will be shorter.</string>
+    <string name="scale_warning_big_short">×%1$s is a big jump — baking doesn\'t scale linearly</string>
+    <string name="scale_warning_small_short">×%1$s makes a very small batch</string>
+    <string name="scale_input_not_read">(input not read)</string>
     <string name="scale_show_original">Show original amounts</string>
     <string name="scale_was">was %1$s</string>
     <string name="scale_from_range">Scaled from the low end of a range</string>

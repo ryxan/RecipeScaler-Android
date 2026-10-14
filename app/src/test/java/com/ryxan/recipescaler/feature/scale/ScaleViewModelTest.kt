@@ -149,7 +149,7 @@ class ScaleViewModelTest {
         vm.uiState.filter { !it.isLoading }.first()
         vm.setScaleTo("0")
         val s = vm.uiState.filter {
-            it.message == ScaleMessage.EnterAmountAboveZero
+            it.message == ScaleMessage.EnterAmountAboveZero(ScaleField.SCALE_TO)
         }.first()
         assertEquals(1.0, s.factor, 0.001)
     }

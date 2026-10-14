@@ -1,6 +1,10 @@
 package com.ryxan.recipescaler.feature.editor
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
@@ -12,6 +16,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.text.input.ImeAction
 import com.ryxan.recipescaler.core.designsystem.RescaleTheme
 import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import org.junit.Assert.assertEquals
@@ -54,8 +59,64 @@ class EditorContentTest {
             state(),
             EditorCallbacks(onTitleChange = { typed = it }),
         )
-        composeRule.onNodeWithText("Recipe title").performTextInput("Soup")
+        composeRule.onNodeWithContentDescription("Recipe title")
+            .performTextInput("Soup")
         assertEquals("Soup", typed)
+    }
+
+    @Test
+    fun `header says recipe title`() {
+        content(state())
+        composeRule.onNodeWithText("Recipe title").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Name").assertCountEquals(0)
+    }
+
+    @Test
+    fun `ingredient fields expose position content descriptions`() {
+        content(state())
+        composeRule.onNodeWithContentDescription("Quantity, ingredient 1")
+            .assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Ingredient name, row 1")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun `qty field offers a next ime action`() {
+        content(state())
+        composeRule.onNodeWithContentDescription("Quantity, ingredient 1")
+            .assert(
+                SemanticsMatcher.expectValue(
+                    SemanticsProperties.ImeAction,
+                    ImeAction.Next,
+                ),
+            )
+    }
+
+    @Test
+    fun `fraction chips hide when the name field is focused`() {
+        content(state())
+        composeRule.onNodeWithContentDescription("Quantity, ingredient 1")
+            .performClick()
+        composeRule.onNodeWithText("½").assertIsDisplayed()
+
+        composeRule.onNodeWithContentDescription("Ingredient name, row 1")
+            .performClick()
+        composeRule.onAllNodesWithText("½").assertCountEquals(0)
+        // Units and the pinned Next action stay available either way.
+        composeRule.onNodeWithText("cup").assertIsDisplayed()
+        composeRule.onNodeWithText("Next").assertIsDisplayed()
+    }
+
+    @Test
+    fun `needs review rows show the warning caption`() {
+        content(
+            state(
+                rows = listOf(
+                    EditorRow(key = 1, rawQuantity = "abc", needsReview = true),
+                ),
+            ),
+        )
+        composeRule.onNodeWithText("Check this line").assertIsDisplayed()
     }
 
     @Test

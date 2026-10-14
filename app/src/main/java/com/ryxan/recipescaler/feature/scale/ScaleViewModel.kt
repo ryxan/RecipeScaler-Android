@@ -33,10 +33,14 @@ data class ScaleInputs(
     val scaleToText: String = "",
 )
 
+/** Which text field a [ScaleMessage] belongs to. */
+enum class ScaleField { SERVES, SCALE_TO }
+
 /** User-mappable errors/messages; the UI renders each to a string resource. */
 sealed interface ScaleMessage {
-    data class CantRead(val text: String) : ScaleMessage
-    data object EnterAmountAboveZero : ScaleMessage
+    val field: ScaleField
+    data class CantRead(val text: String, override val field: ScaleField) : ScaleMessage
+    data class EnterAmountAboveZero(override val field: ScaleField) : ScaleMessage
 }
 
 data class ScaleUiState(
@@ -164,8 +168,10 @@ class ScaleViewModel @Inject constructor(
                         as ScaleOutcome.Success).ingredients
                 warning = false
                 message = message ?: when (outcome.error) {
-                    ScaleError.InvalidYield, ScaleError.InvalidFactor ->
-                        ScaleMessage.EnterAmountAboveZero
+                    ScaleError.InvalidYield ->
+                        ScaleMessage.EnterAmountAboveZero(ScaleField.SERVES)
+                    ScaleError.InvalidFactor ->
+                        ScaleMessage.EnterAmountAboveZero(ScaleField.SCALE_TO)
                     else -> null
                 }
             }
@@ -201,11 +207,19 @@ class ScaleViewModel @Inject constructor(
             return ScaleMode.ByFactor(1.0) to null
         }
         val serves = QuantityParser.parse(inp.servesText)
-            ?: return ScaleMode.ByFactor(1.0) to ScaleMessage.CantRead(inp.servesText)
-        if (serves <= 0) return ScaleMode.ByFactor(1.0) to ScaleMessage.EnterAmountAboveZero
+            ?: return ScaleMode.ByFactor(1.0) to
+                ScaleMessage.CantRead(inp.servesText, ScaleField.SERVES)
+        if (serves <= 0) {
+            return ScaleMode.ByFactor(1.0) to
+                ScaleMessage.EnterAmountAboveZero(ScaleField.SERVES)
+        }
         val target = QuantityParser.parse(inp.scaleToText)
-            ?: return ScaleMode.ByFactor(1.0) to ScaleMessage.CantRead(inp.scaleToText)
-        if (target <= 0) return ScaleMode.ByFactor(1.0) to ScaleMessage.EnterAmountAboveZero
+            ?: return ScaleMode.ByFactor(1.0) to
+                ScaleMessage.CantRead(inp.scaleToText, ScaleField.SCALE_TO)
+        if (target <= 0) {
+            return ScaleMode.ByFactor(1.0) to
+                ScaleMessage.EnterAmountAboveZero(ScaleField.SCALE_TO)
+        }
         return ScaleMode.ByYield(serves, target) to null
     }
 

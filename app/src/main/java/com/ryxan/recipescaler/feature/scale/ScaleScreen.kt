@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -25,7 +26,10 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.WarningAmber
@@ -43,7 +47,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -51,6 +54,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.animation.animateContentSize
 import androidx.compose.ui.Alignment
@@ -58,8 +62,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import android.content.ClipData
@@ -145,6 +153,9 @@ fun ScaleContent(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     var copyMenuExpanded by remember { mutableStateOf(false) }
+    var overflowExpanded by remember { mutableStateOf(false) }
+    var warningDismissed by rememberSaveable { mutableStateOf(false) }
+    var warningExpanded by rememberSaveable { mutableStateOf(false) }
     val view = LocalView.current
     DisposableEffect(state.cookMode) {
         view.keepScreenOn = state.cookMode
@@ -212,6 +223,38 @@ fun ScaleContent(
                             contentDescription = stringResource(R.string.action_share),
                         )
                     }
+                    if (!state.cookMode) {
+                        Box {
+                            IconButton(onClick = { overflowExpanded = true }) {
+                                Icon(
+                                    Icons.Filled.MoreVert,
+                                    contentDescription = stringResource(R.string.action_more),
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = overflowExpanded,
+                                onDismissRequest = { overflowExpanded = false },
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(stringResource(R.string.scale_show_original))
+                                    },
+                                    trailingIcon = {
+                                        if (state.showOriginal) {
+                                            Icon(
+                                                Icons.Filled.Check,
+                                                contentDescription = null,
+                                            )
+                                        }
+                                    },
+                                    onClick = {
+                                        overflowExpanded = false
+                                        callbacks.onShowOriginal(!state.showOriginal)
+                                    },
+                                )
+                            }
+                        }
+                    }
                 },
             )
         },
@@ -242,6 +285,7 @@ fun ScaleContent(
             if (!state.cookMode) {
                 item(key = "inputs") {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        val message = state.message
                         OutlinedTextField(
                             value = state.inputs.servesText,
                             onValueChange = callbacks.onServes,
@@ -250,6 +294,12 @@ fun ScaleContent(
                                 keyboardType = KeyboardType.Decimal,
                             ),
                             label = { Text(stringResource(R.string.scale_label_serves)) },
+                            isError = message?.field == ScaleField.SERVES,
+                            supportingText = {
+                                if (message?.field == ScaleField.SERVES) {
+                                    Text(messageText(message))
+                                }
+                            },
                             singleLine = true,
                         )
                         OutlinedTextField(
@@ -260,6 +310,12 @@ fun ScaleContent(
                                 keyboardType = KeyboardType.Decimal,
                             ),
                             label = { Text(stringResource(R.string.scale_label_scale_to)) },
+                            isError = message?.field == ScaleField.SCALE_TO,
+                            supportingText = {
+                                if (message?.field == ScaleField.SCALE_TO) {
+                                    Text(messageText(message))
+                                }
+                            },
                             singleLine = true,
                         )
                     }
@@ -286,15 +342,6 @@ fun ScaleContent(
                     }
                 }
 
-                state.message?.let { message ->
-                    item(key = "message") {
-                        Text(
-                            text = messageText(message),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
-                }
             } else {
                 item(key = "cook_hint") {
                     Text(
@@ -311,7 +358,7 @@ fun ScaleContent(
 
             item(key = "warning") {
                 AnimatedVisibility(
-                    visible = state.showScaleWarning,
+                    visible = state.showScaleWarning && !warningDismissed,
                     enter = expandVertically() + fadeIn(),
                     exit = shrinkVertically() + fadeOut(),
                 ) {
@@ -321,9 +368,14 @@ fun ScaleContent(
                         ),
                     ) {
                         Row(
-                            modifier = Modifier.padding(12.dp),
+                            modifier = Modifier.padding(
+                                start = 12.dp,
+                                top = 4.dp,
+                                bottom = 4.dp,
+                                end = 4.dp,
+                            ),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.Top,
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
                                 Icons.Outlined.WarningAmber,
@@ -331,32 +383,31 @@ fun ScaleContent(
                             )
                             Text(
                                 text = stringResource(
-                                    if (state.factor > 4.0) R.string.scale_warning_big
-                                    else R.string.scale_warning_small,
+                                    if (warningExpanded) {
+                                        if (state.factor > 4.0) R.string.scale_warning_big
+                                        else R.string.scale_warning_small
+                                    } else {
+                                        if (state.factor > 4.0) R.string.scale_warning_big_short
+                                        else R.string.scale_warning_small_short
+                                    },
                                     formatYield(state.factor),
                                 ),
                                 style = MaterialTheme.typography.bodyMedium,
+                                maxLines = if (warningExpanded) Int.MAX_VALUE else 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clickable { warningExpanded = !warningExpanded },
                             )
+                            IconButton(onClick = { warningDismissed = true }) {
+                                Icon(
+                                    Icons.Filled.Close,
+                                    contentDescription = stringResource(
+                                        R.string.action_dismiss,
+                                    ),
+                                )
+                            }
                         }
-                    }
-                }
-            }
-
-            if (!state.cookMode) {
-                item(key = "show_original") {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            stringResource(R.string.scale_show_original),
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Switch(
-                            checked = state.showOriginal,
-                            onCheckedChange = callbacks.onShowOriginal,
-                        )
                     }
                 }
             }
@@ -389,10 +440,22 @@ private fun SummaryLine(state: ScaleUiState) {
     val derived = state.derivedYieldAmount?.let {
         stringResource(R.string.scale_makes, formatYield(it), state.yieldLabel)
     }
-    Text(
-        text = listOfNotNull(factorText, derived).joinToString(" · "),
-        style = MaterialTheme.typography.titleMedium,
-    )
+    Row(
+        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = listOfNotNull(factorText, derived).joinToString(" · "),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        if (state.message != null) {
+            Text(
+                text = stringResource(R.string.scale_input_not_read),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
 }
 
 @Composable
@@ -473,5 +536,5 @@ private fun ScaledRow(
 @Composable
 private fun messageText(message: ScaleMessage): String = when (message) {
     is ScaleMessage.CantRead -> stringResource(R.string.msg_cant_read, message.text)
-    ScaleMessage.EnterAmountAboveZero -> stringResource(R.string.err_amount_above_zero)
+    is ScaleMessage.EnterAmountAboveZero -> stringResource(R.string.err_amount_above_zero)
 }

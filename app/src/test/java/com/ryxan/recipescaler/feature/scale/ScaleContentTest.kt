@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.onNodeWithContentDescription
 import com.ryxan.recipescaler.core.designsystem.RescaleTheme
 import com.ryxan.recipescaler.core.domain.model.ScaleStatus
 import com.ryxan.recipescaler.core.domain.model.ScaledIngredient
@@ -116,7 +117,7 @@ class ScaleContentTest {
     fun `warning banner shows for large factors`() {
         content(state(factor = 5.0, showWarning = true))
         composeRule.onNodeWithText(
-            "×5 is a big jump.",
+            "×5 is a big jump",
             substring = true,
         ).assertIsDisplayed()
     }
@@ -125,9 +126,55 @@ class ScaleContentTest {
     fun `warning banner shows for very small factors`() {
         content(state(factor = 0.1, showWarning = true))
         composeRule.onNodeWithText(
-            "makes a very small batch.",
+            "makes a very small batch",
             substring = true,
         ).assertIsDisplayed()
+    }
+
+    @Test
+    fun `warning banner expands to detail and dismisses`() {
+        content(state(factor = 5.0, showWarning = true))
+        composeRule.onNodeWithText(
+            "×5 is a big jump",
+            substring = true,
+        ).performClick()
+        composeRule.onNodeWithText(
+            "split across pans",
+            substring = true,
+        ).assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Dismiss").performClick()
+        composeRule.onAllNodesWithText(
+            "×5 is a big jump",
+            substring = true,
+        ).assertCountEquals(0)
+    }
+
+    @Test
+    fun `unreadable input marks the failing field and flags the summary`() {
+        content(
+            state().copy(
+                inputs = ScaleInputs(servesText = "4", scaleToText = "abc"),
+                message = ScaleMessage.CantRead("abc", ScaleField.SCALE_TO),
+                factor = 1.0,
+                derivedYieldAmount = null,
+            ),
+        )
+        composeRule.onAllNodesWithText("Can't read 'abc'").assertCountEquals(1)
+        composeRule.onNodeWithText("(input not read)").assertIsDisplayed()
+        composeRule.onNodeWithText("×1").assertIsDisplayed()
+    }
+
+    @Test
+    fun `show original lives in the overflow menu`() {
+        var toggled: Boolean? = null
+        content(
+            state(),
+            ScaleCallbacks(onShowOriginal = { toggled = it }),
+        )
+        composeRule.onAllNodesWithText("Show original amounts").assertCountEquals(0)
+        composeRule.onNodeWithContentDescription("More options").performClick()
+        composeRule.onNodeWithText("Show original amounts").performClick()
+        assertEquals(true, toggled)
     }
 
     @Test
