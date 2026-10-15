@@ -3,6 +3,7 @@ package com.ryxan.recipescaler.feature.pro
 import android.app.Activity
 import com.ryxan.recipescaler.core.data.billing.ProPlan
 import com.ryxan.recipescaler.core.data.billing.PurchaseLaunch
+import com.ryxan.recipescaler.testing.FakeAiImportQuota
 import com.ryxan.recipescaler.testing.FakeProRepository
 import com.ryxan.recipescaler.testing.MainDispatcherRule
 import kotlinx.coroutines.flow.first
@@ -27,7 +28,7 @@ class ProViewModelTest {
     @Test
     fun `init refreshes products and loading clears`() = runTest {
         val repo = FakeProRepository()
-        val vm = ProViewModel(repo)
+        val vm = ProViewModel(repo, FakeAiImportQuota())
 
         assertEquals(1, repo.refreshCalls)
         assertFalse(vm.uiState.value.loading)
@@ -46,7 +47,7 @@ class ProViewModelTest {
                 ),
             ),
         )
-        val vm = ProViewModel(repo)
+        val vm = ProViewModel(repo, FakeAiImportQuota())
 
         assertTrue(vm.uiState.value.isPro)
         assertEquals(1, vm.uiState.value.products.size)
@@ -56,7 +57,7 @@ class ProViewModelTest {
     fun `plan flows into state`() = runTest {
         val repo = FakeProRepository(pro = true)
         repo.setPlan(ProPlan.Monthly)
-        val vm = ProViewModel(repo)
+        val vm = ProViewModel(repo, FakeAiImportQuota())
 
         assertEquals(ProPlan.Monthly, vm.uiState.value.plan)
     }
@@ -65,7 +66,7 @@ class ProViewModelTest {
     fun `purchase error surfaces as a one-shot message`() = runTest {
         val repo = FakeProRepository()
         repo.launchResult = PurchaseLaunch.Error("Billing is not available on this device")
-        val vm = ProViewModel(repo)
+        val vm = ProViewModel(repo, FakeAiImportQuota())
         val activity = Robolectric.buildActivity(Activity::class.java).get()
 
         vm.purchase(activity, "rescale_pro_monthly")
@@ -78,11 +79,52 @@ class ProViewModelTest {
     fun `restore failure surfaces a message`() = runTest {
         val repo = FakeProRepository()
         repo.restoreResult = false
-        val vm = ProViewModel(repo)
+        val vm = ProViewModel(repo, FakeAiImportQuota())
 
         vm.restore()
 
         assertEquals(1, repo.restoreCalls)
+        assertTrue(vm.messages.first().isNotBlank())
+    }
+
+    @Test
+    fun `free scans left flows into state`() = runTest {
+        val vm = ProViewModel(FakeProRepository(), FakeAiImportQuota())
+
+        assertEquals(
+            com.ryxan.recipescaler.core.domain.importer.AiImportConfig.FREE_LIFETIME_LIMIT,
+            vm.uiState.value.freeScansLeft,
+        )
+    }
+
+    @Test
+    fun `retry refreshes products again and loading clears`() = runTest {
+        val repo = FakeProRepository()
+        val vm = ProViewModel(repo, FakeAiImportQuota())
+
+        vm.retry()
+
+        assertEquals(2, repo.refreshCalls)
+        assertFalse(vm.uiState.value.loading)
+    }
+
+    @Test
+    fun `verifying flows into state`() = runTest {
+        val repo = FakeProRepository()
+        val vm = ProViewModel(repo, FakeAiImportQuota())
+
+        repo.setVerifying(true)
+
+        assertTrue(vm.uiState.value.verifying)
+    }
+
+    @Test
+    fun `verification denial surfaces a message`() = runTest {
+        val repo = FakeProRepository()
+        val vm = ProViewModel(repo, FakeAiImportQuota())
+
+        repo.emitVerificationDenied()
+
         assertTrue(vm.messages.first().isNotBlank())
     }
 }

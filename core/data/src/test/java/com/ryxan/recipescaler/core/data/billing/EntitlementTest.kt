@@ -14,13 +14,13 @@ class EntitlementTest {
     @Test
     fun `lifetime purchase grants Pro`() {
         val e = entitlementOf(listOf(purchase(listOf(ProProductIds.LIFETIME))))
-        assertEquals(Entitlement(isPro = true, isPending = false), e)
+        assertEquals(Entitlement(isPro = true, isPending = false, plan = ProPlan.Lifetime), e)
     }
 
     @Test
     fun `monthly subscription purchase grants Pro`() {
         val e = entitlementOf(listOf(purchase(listOf(ProProductIds.MONTHLY))))
-        assertEquals(Entitlement(isPro = true, isPending = false), e)
+        assertEquals(Entitlement(isPro = true, isPending = false, plan = ProPlan.Monthly), e)
     }
 
     @Test
