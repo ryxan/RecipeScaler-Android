@@ -8,9 +8,7 @@ import android.graphics.Matrix
 import android.media.ExifInterface
 import android.net.Uri
 import android.os.Build
-import android.os.SystemClock
 import android.util.Log
-import androidx.core.content.FileProvider
 import com.ryxan.recipescaler.core.data.BuildConfig
 import com.ryxan.recipescaler.core.domain.importer.AiImportConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -27,35 +25,18 @@ import kotlinx.coroutines.withContext
 
 /** Prepares and cleans up images for the scan / AI-import flows. */
 interface ImagePreprocessor {
-    /** A fresh FileProvider URI for TakePicture, or null when the cache dir is unavailable. */
-    fun newCaptureUri(): Uri?
-
     /** Decode [uri] and re-encode as a bounded JPEG for the AI importer; null on failure. */
     suspend fun jpegForAi(uri: Uri): ByteArray?
 
-    /** Deletes a temp scan file (file:// or our fileprovider URI). Never throws. */
+    /** Deletes a temp scan file (file://). Never throws. */
     fun delete(uri: Uri)
 }
 
-/**
- * Image decoding/scaling shared by the camera capture, document-scanner and
- * gallery paths. Temp captures live in `cacheDir/recipe_scan/` (mapped by the
- * app FileProvider); each new capture wipes leftovers from interrupted scans.
- */
+/** Image decoding/scaling shared by the document-scanner and gallery paths. */
 @Singleton
 class AndroidImagePreprocessor @Inject constructor(
     @ApplicationContext private val context: Context,
 ) : ImagePreprocessor {
-
-    override fun newCaptureUri(): Uri? = try {
-        val dir = File(context.cacheDir, SCAN_DIR).also { it.mkdirs() }
-        dir.listFiles()?.forEach { it.delete() }
-        val file = File(dir, "scan_${System.currentTimeMillis()}.jpg")
-        FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-    } catch (e: Exception) {
-        if (BuildConfig.DEBUG) Log.w(TAG, "newCaptureUri failed", e)
-        null
-    }
 
     /**
      * Decode [uri] and re-encode as a bounded JPEG for the AI importer:
@@ -95,15 +76,7 @@ class AndroidImagePreprocessor @Inject constructor(
 
     override fun delete(uri: Uri) {
         try {
-            when (uri.scheme) {
-                "file" -> uri.path?.let { File(it).delete() }
-                "content" -> {
-                    if (uri.authority == "${context.packageName}.fileprovider") {
-                        val name = uri.lastPathSegment ?: return
-                        File(File(context.cacheDir, SCAN_DIR), name).delete()
-                    }
-                }
-            }
+            if (uri.scheme == "file") uri.path?.let { File(it).delete() }
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) Log.w(TAG, "delete failed for $uri", e)
         }
@@ -210,6 +183,5 @@ class AndroidImagePreprocessor @Inject constructor(
 
     private companion object {
         const val TAG = "RecipeScaler"
-        const val SCAN_DIR = "recipe_scan"
     }
 }

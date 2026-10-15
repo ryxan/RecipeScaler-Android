@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.ryxan.recipescaler.core.designsystem.RescaleMotion
 import com.ryxan.recipescaler.feature.editor.EditorScreen
 import com.ryxan.recipescaler.feature.pro.ProScreen
@@ -70,7 +71,7 @@ fun RescaleNavHost() {
     ) {
         composable<RecipeList> {
             RecipeListScreen(
-                onOpenRecipe = { id -> navController.navigate(Editor(recipeId = id)) },
+                onOpenRecipe = { id -> navController.navigate(Scale(id)) },
                 onNewRecipe = { navController.navigate(Editor()) },
                 onQuickScale = { title -> navController.navigate(Editor(initialTitle = title)) },
                 onNavigateToSettings = { navController.navigate(Settings) },
@@ -79,12 +80,24 @@ fun RescaleNavHost() {
         composable<Editor> {
             EditorScreen(
                 onNavigateUp = { navController.navigateUp() },
-                onScale = { id -> navController.navigate(Scale(id)) },
+                onScale = { id ->
+                    // Returning to the Scale entry below keeps its in-session factor.
+                    val previous = navController.previousBackStackEntry
+                        ?.let { runCatching { it.toRoute<Scale>() }.getOrNull() }
+                    if (previous?.recipeId == id) {
+                        navController.popBackStack()
+                    } else {
+                        navController.navigate(Scale(id))
+                    }
+                },
                 onNavigateToPro = { navController.navigate(Pro) },
             )
         }
         composable<Scale> {
-            ScaleScreen(onNavigateUp = { navController.navigateUp() })
+            ScaleScreen(
+                onNavigateUp = { navController.navigateUp() },
+                onEdit = { id -> navController.navigate(Editor(recipeId = id)) },
+            )
         }
         composable<Settings> {
             SettingsScreen(

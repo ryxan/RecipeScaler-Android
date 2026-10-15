@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.room.Room
+import com.ryxan.recipescaler.core.data.db.MIGRATION_1_2
 import com.ryxan.recipescaler.core.data.db.RecipeDao
 import com.ryxan.recipescaler.core.data.db.RecipeDatabase
 import com.ryxan.recipescaler.core.domain.time.Clock
@@ -16,8 +17,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import com.ryxan.recipescaler.core.data.ads.AdMobRewardedAds
 import com.ryxan.recipescaler.core.data.ads.RewardedAds
+import com.ryxan.recipescaler.core.data.billing.OkHttpProVerificationApi
 import com.ryxan.recipescaler.core.data.billing.PlayBillingProRepository
 import com.ryxan.recipescaler.core.data.billing.ProRepository
+import com.ryxan.recipescaler.core.data.billing.ProVerificationApi
 import com.ryxan.recipescaler.core.data.di.ApplicationScope
 import com.ryxan.recipescaler.core.data.importer.AiImportQuota
 import com.ryxan.recipescaler.core.data.importer.AiRecipeImporter
@@ -27,16 +30,16 @@ import com.ryxan.recipescaler.core.data.importer.FirebaseAiRecipeImporter
 import com.ryxan.recipescaler.core.data.importer.ImagePreprocessor
 import com.ryxan.recipescaler.core.data.importer.MlKitOcrEngine
 import com.ryxan.recipescaler.core.data.importer.OcrEngine
+import com.ryxan.recipescaler.core.data.settings.DataStoreScaleInputsRepository
 import com.ryxan.recipescaler.core.data.settings.DataStoreSettingsRepository
 import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
-import com.ryxan.recipescaler.core.domain.formatting.defaultMeasurementSystemFor
 import com.ryxan.recipescaler.core.domain.repository.RecipeRepository
+import com.ryxan.recipescaler.core.domain.repository.ScaleInputsRepository
 import com.ryxan.recipescaler.core.domain.repository.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import java.io.File
-import java.util.Locale
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
@@ -51,7 +54,9 @@ object DataModule {
     @Provides
     @Singleton
     fun provideRecipeDatabase(@ApplicationContext context: Context): RecipeDatabase =
-        Room.databaseBuilder(context, RecipeDatabase::class.java, "recipes.db").build()
+        Room.databaseBuilder(context, RecipeDatabase::class.java, "recipes.db")
+            .addMigrations(MIGRATION_1_2)
+            .build()
 
     @Provides
     fun provideRecipeDao(db: RecipeDatabase): RecipeDao = db.recipeDao()
@@ -70,14 +75,17 @@ object DataModule {
     @Provides
     @Singleton
     @DefaultMeasurementSystem
-    fun provideDefaultMeasurementSystem(): MeasurementSystem =
-        defaultMeasurementSystemFor(Locale.getDefault().country)
+    fun provideDefaultMeasurementSystem(): MeasurementSystem = MeasurementSystem.MATCH_RECIPE
 
     @Provides
     @Singleton
     @ApplicationScope
     fun provideApplicationScope(): CoroutineScope =
         CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    @Provides
+    @Singleton
+    fun provideProVerificationApi(): ProVerificationApi = OkHttpProVerificationApi()
 }
 
 @Module
@@ -91,6 +99,10 @@ abstract class RepositoryBindingsModule {
     @Binds
     @Singleton
     abstract fun bindSettingsRepository(impl: DataStoreSettingsRepository): SettingsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindScaleInputsRepository(impl: DataStoreScaleInputsRepository): ScaleInputsRepository
 
     @Binds
     @Singleton

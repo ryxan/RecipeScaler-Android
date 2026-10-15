@@ -29,3 +29,6 @@ app/google-services.json
 
 # Release bundles
 app/release/
+
+# graphify knowledge-graph output — generated, contains local paths
+graphify-out/

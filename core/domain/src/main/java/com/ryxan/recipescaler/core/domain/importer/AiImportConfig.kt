@@ -24,7 +24,7 @@ object AiImportConfig {
     const val SCANS_PER_PACK = 100
 
     /** Credits granted per completed rewarded ad. */
-    const val SCANS_PER_REWARDED_AD = 5
+    const val SCANS_PER_REWARDED_AD = 2
 
     /** Hidden per-day cap for Pro users — cost guardrail, not advertised. */
     const val PREMIUM_DAILY_CAP = 30

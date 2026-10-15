@@ -27,8 +27,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // UMP consent, then MobileAds init + first rewarded-ad preload when allowed.
-        adConsentManager.gatherConsentAndMaybeInitAds(this)
         // Every screen has the (dark) brand gradient behind the status bar, so
         // status-bar icons stay light in both themes.
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT))
@@ -43,6 +41,17 @@ class MainActivity : ComponentActivity() {
                 dynamicColor = settings.dynamicColor,
             ) {
                 RescaleNavHost()
+            }
+        }
+        // UMP does decor/window work on a worker thread during the consent-info
+        // request; if it runs while the decor is still being installed (notably
+        // during a relaunch on rotation) the two threads race inside
+        // PhoneWindow.generateLayout and the activity dies with "Window
+        // couldn't find content container view". Deferring to the decor view
+        // guarantees the window is fully laid out first.
+        window.decorView.post {
+            if (!isFinishing && !isDestroyed) {
+                adConsentManager.gatherConsentAndMaybeInitAds(this)
             }
         }
     }

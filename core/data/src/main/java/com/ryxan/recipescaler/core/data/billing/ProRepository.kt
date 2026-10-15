@@ -65,6 +65,16 @@ interface ProRepository {
      */
     val creditsGranted: Flow<Int>
 
+    /** True while a new purchase is being verified with the backend. */
+    val verifying: StateFlow<Boolean>
+
+    /**
+     * One-shot event when backend verification denies a purchase (invalid
+     * verdict, pending status, or non-transient error). Transient failures
+     * fail open instead and do not emit.
+     */
+    val verificationDenied: Flow<Unit>
+
     /** Refresh the purchasable product list. False when Play Billing is unreachable. */
     suspend fun refreshProducts(): Boolean
 

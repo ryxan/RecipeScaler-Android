@@ -49,4 +49,11 @@ interface RecipeDao {
 
     @Query("SELECT COUNT(*) FROM ingredients WHERE recipeId = :recipeId")
     suspend fun ingredientCount(recipeId: Long): Int
+
+    /** Sets/clears the "Promote to" override on one ingredient row. */
+    @Query(
+        "UPDATE ingredients SET promotedUnitKey = :unitKey " +
+            "WHERE id = :ingredientId AND recipeId = :recipeId"
+    )
+    suspend fun setPromotedUnit(recipeId: Long, ingredientId: Long, unitKey: String?)
 }

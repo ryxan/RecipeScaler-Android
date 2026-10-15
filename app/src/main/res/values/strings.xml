@@ -126,9 +126,9 @@
     <string name="action_retry">Try again</string>
     <string name="action_restore_purchases">Restore purchases</string>
     <string name="pro_pending">Purchase pending</string>
+    <string name="pro_pending_detail">Pro unlocks as soon as Google Play confirms the payment.</string>
     <string name="pro_state_active">Active</string>
     <string name="pro_refresh_failed">Couldn\'t check purchases. Try again later.</string>
-    <string name="pro_pending_detail">Pro unlocks as soon as Google Play confirms the payment.</string>
     <string name="pro_verifying">Verifying purchase…</string>
     <string name="pro_welcome_title">You\'re Pro!</string>
     <string name="pro_welcome_subtitle">Thank you — everything is unlocked.</string>

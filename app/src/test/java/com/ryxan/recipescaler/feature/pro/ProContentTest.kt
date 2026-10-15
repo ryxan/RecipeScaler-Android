@@ -1,6 +1,5 @@
 package com.ryxan.recipescaler.feature.pro
 
-import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -111,10 +110,11 @@ class ProContentTest {
         composeRule.onNodeWithText("You're Pro!").assertIsDisplayed()
         composeRule.onNodeWithText("Thank you — everything is unlocked.").assertIsDisplayed()
         composeRule.onNodeWithText("What's unlocked").assertIsDisplayed()
-        composeRule.onNodeWithText("No ads").assertIsDisplayed()
-        composeRule.onNodeWithText("Scan your first recipe").assertIsDisplayed()
-        composeRule.onNodeWithText("Back to recipes").assertIsDisplayed()
+        composeRule.onNodeWithText("No ads").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Scan your first recipe").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Back to recipes").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("$3.99 / month").assertDoesNotExist()
+        composeRule.onNodeWithText("Unlock for $14.99").assertDoesNotExist()
         composeRule.onNodeWithText("Restore purchases").assertDoesNotExist()
     }
 
@@ -151,7 +151,7 @@ class ProContentTest {
             onTryAiImport = { called = true },
         )
 
-        composeRule.onNodeWithText("Scan your first recipe").performClick()
+        composeRule.onNodeWithText("Scan your first recipe").performScrollTo().performClick()
 
         assertTrue(called)
     }
@@ -164,7 +164,7 @@ class ProContentTest {
             onBackToRecipes = { called = true },
         )
 
-        composeRule.onNodeWithText("Back to recipes").performClick()
+        composeRule.onNodeWithText("Back to recipes").performScrollTo().performClick()
 
         assertTrue(called)
     }
@@ -187,7 +187,9 @@ class ProContentTest {
         content(ProUiState(isPending = true, products = products, loading = false))
 
         composeRule.onNodeWithText("Purchase pending").assertIsDisplayed()
-        composeRule.onNodeWithText("Pro unlocks as soon as Google Play confirms the payment.").assertIsDisplayed()
+        composeRule.onNodeWithText("Pro unlocks as soon as Google Play confirms the payment.")
+            .performScrollTo()
+            .assertIsDisplayed()
         composeRule.onNodeWithText("Unlock for $14.99").assertDoesNotExist()
         composeRule.onNodeWithText("Restore purchases").assertIsDisplayed()
     }
@@ -221,6 +223,5 @@ class ProContentTest {
         composeRule.onNodeWithText("Restore purchases").performClick()
 
         assertEquals(true, restored)
-    }
     }
 }
