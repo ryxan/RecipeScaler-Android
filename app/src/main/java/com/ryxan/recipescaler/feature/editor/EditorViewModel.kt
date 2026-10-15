@@ -478,9 +478,9 @@ class EditorViewModel @Inject constructor(
     }
 
     /**
-     * Entry point for every image source (document scanner, camera, gallery).
-     * [deleteWhenDone] is true for temp files we own (scanner output, camera
-     * capture) and false for gallery picks. Ignored while an import is busy.
+     * Entry point for every image source (document scanner, gallery).
+     * [deleteWhenDone] is true for temp files we own (scanner output) and
+     * false for gallery picks. Ignored while an import is busy.
      */
     fun onImageCaptured(uri: Uri, deleteWhenDone: Boolean) {
         if (_uiState.value.importBusy != null) return

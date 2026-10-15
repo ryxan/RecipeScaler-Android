@@ -102,6 +102,12 @@ class PlayBillingProRepository @Inject constructor(
     private val _creditsGranted = MutableSharedFlow<Int>(extraBufferCapacity = 1)
     override val creditsGranted: Flow<Int> = _creditsGranted.asSharedFlow()
 
+    private val _verifying = MutableStateFlow(false)
+    override val verifying: StateFlow<Boolean> = _verifying.asStateFlow()
+
+    private val _verificationDenied = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    override val verificationDenied: Flow<Unit> = _verificationDenied.asSharedFlow()
+
     /** Play-side details for [products], needed to build the purchase flow params. */
     @Volatile
     private var productDetails: Map<String, ProductDetails> = emptyMap()
@@ -386,6 +392,7 @@ class PlayBillingProRepository @Inject constructor(
                             applyEntitlement(Entitlement(isPro = true, isPending = false))
                         } else {
                             Log.w(TAG, "Purchase verification denied; entitlement unchanged")
+                            _verificationDenied.tryEmit(Unit)
                         }
                     }
                 }
@@ -429,8 +436,9 @@ class PlayBillingProRepository @Inject constructor(
             packageName = context.packageName,
             productId = productId,
             purchaseToken = purchase.purchaseToken,
-            productType = if (productId == ProProductIds.MONTHLY) "subscription" else "inapp",
+            productType = backendProductType(productId, productDetails[productId]?.productType),
         )
+        _verifying.value = true
         return try {
             val response = verificationApi.verifyPurchase(request)
             Log.d(TAG, "Verification response: valid=${response.valid}, status=${response.status}")
@@ -461,6 +469,8 @@ class PlayBillingProRepository @Inject constructor(
             if (e is CancellationException) throw e
             Log.e(TAG, "Verification exception, failing closed", e)
             false
+        } finally {
+            _verifying.value = false
         }
     }
 
@@ -555,3 +565,16 @@ class PlayBillingProRepository @Inject constructor(
         }
     }
 }
+
+/**
+ * The `productType` sent to the verify endpoint. Play's own product type is
+ * authoritative when details were fetched in this session; the product-id
+ * convention is the fallback for purchases completed in a different session
+ * (the details map is empty).
+ */
+internal fun backendProductType(productId: String, playProductType: String?): String =
+    when (playProductType) {
+        BillingClient.ProductType.SUBS -> "subscription"
+        BillingClient.ProductType.INAPP -> "inapp"
+        else -> if (productId == ProProductIds.MONTHLY) "subscription" else "inapp"
+    }

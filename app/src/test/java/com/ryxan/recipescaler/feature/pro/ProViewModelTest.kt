@@ -97,4 +97,24 @@ class ProViewModelTest {
         assertEquals(2, repo.refreshCalls)
         assertFalse(vm.uiState.value.loading)
     }
+
+    @Test
+    fun `verifying flows into state`() = runTest {
+        val repo = FakeProRepository()
+        val vm = ProViewModel(repo, FakeAiImportQuota())
+
+        repo.setVerifying(true)
+
+        assertTrue(vm.uiState.value.verifying)
+    }
+
+    @Test
+    fun `verification denial surfaces a message`() = runTest {
+        val repo = FakeProRepository()
+        val vm = ProViewModel(repo, FakeAiImportQuota())
+
+        repo.emitVerificationDenied()
+
+        assertTrue(vm.messages.first().isNotBlank())
+    }
 }

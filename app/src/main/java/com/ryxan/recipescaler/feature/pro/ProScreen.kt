@@ -110,7 +110,8 @@ fun ProContent(
     }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     val selected = plans.firstOrNull { it.id == selectedId } ?: plans.firstOrNull()
-    val canBuy = !state.isPro && !state.isPending && !state.loading && selected != null
+    val canBuy = !state.isPro && !state.isPending && !state.loading &&
+        !state.verifying && selected != null
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -131,6 +132,7 @@ fun ProContent(
             if (!state.isPro) {
                 PurchaseBar(
                     selected = selected.takeIf { canBuy },
+                    verifying = state.verifying,
                     onPurchase = onPurchase,
                     onRestore = onRestore,
                 )
@@ -385,6 +387,7 @@ private fun Unavailable(onRetry: () -> Unit) {
 @Composable
 private fun PurchaseBar(
     selected: ProProduct?,
+    verifying: Boolean,
     onPurchase: (String) -> Unit,
     onRestore: () -> Unit,
 ) {
@@ -398,6 +401,23 @@ private fun PurchaseBar(
                     .padding(horizontal = Spacing.l, vertical = Spacing.m),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+                if (verifying) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+                    ) {
+                        LinearProgressIndicator(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(4.dp),
+                        )
+                        Text(
+                            text = stringResource(R.string.pro_verifying),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
                 if (selected != null) {
                     GradientButton(
                         onClick = { onPurchase(selected.id) },

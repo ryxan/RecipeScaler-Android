@@ -14,7 +14,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -194,6 +197,47 @@ class PlayBillingProRepositoryTest {
     }
 
     @Test
+    fun `denial emits verificationDenied and verifying tracks the request`() = runTest {
+        val api = FakeProVerificationApi(Result.failure(HttpError(403)))
+        val repo = newRepo(newAppScope(), api)
+        val denied = mutableListOf<Unit>()
+        // Unconfined so the subscriber resumes inline with tryEmit —
+        // a test-dispatched collector isn't guaranteed to have subscribed
+        // before the verification coroutine emits.
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            repo.verificationDenied.toList(denied)
+        }
+        var verifyingDuringCall: Boolean? = null
+        api.onVerify = { verifyingDuringCall = repo.verifying.value }
+        advanceUntilIdle()
+
+        repo.onPurchasesUpdated(okResult(), mutableListOf(purchase(ProProductIds.MONTHLY)))
+        advanceUntilIdle()
+
+        assertFalse(repo.isPro.value)
+        assertEquals(1, denied.size)
+        assertEquals(true, verifyingDuringCall)
+        assertFalse(repo.verifying.value)
+    }
+
+    @Test
+    fun `backend product type prefers Play details over the id convention`() {
+        // Play-reported type wins even when it contradicts the product id.
+        assertEquals(
+            "subscription",
+            backendProductType(ProProductIds.LIFETIME, BillingClient.ProductType.SUBS),
+        )
+        assertEquals(
+            "inapp",
+            backendProductType(ProProductIds.MONTHLY, BillingClient.ProductType.INAPP),
+        )
+        // No details (purchase from another session): fall back to the id.
+        assertEquals("subscription", backendProductType(ProProductIds.MONTHLY, null))
+        assertEquals("inapp", backendProductType(ProProductIds.LIFETIME, null))
+        assertEquals("inapp", backendProductType(ProProductIds.AI_SCANS_100, null))
+    }
+
+    @Test
     fun `denied purchase does not revoke an existing entitlement`() = runTest {
         val api = FakeProVerificationApi(
             Result.success(VerifyPurchaseResponse(valid = true, status = "active")),
@@ -254,9 +298,11 @@ class PlayBillingProRepositoryTest {
         var result: Result<VerifyPurchaseResponse>,
     ) : ProVerificationApi {
         val requests = mutableListOf<VerifyPurchaseRequest>()
+        var onVerify: (suspend () -> Unit)? = null
 
         override suspend fun verifyPurchase(request: VerifyPurchaseRequest): VerifyPurchaseResponse {
             requests += request
+            onVerify?.invoke()
             return result.getOrThrow()
         }
     }

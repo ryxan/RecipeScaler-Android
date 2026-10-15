@@ -114,6 +114,15 @@ class ProContentTest {
     }
 
     @Test
+    fun `verifying purchase hides the action and shows the verifying note`() {
+        content(ProUiState(products = products, loading = false, verifying = true))
+
+        composeRule.onNodeWithText("Verifying purchase…").assertIsDisplayed()
+        composeRule.onNodeWithText("Unlock for $14.99").assertDoesNotExist()
+        composeRule.onNodeWithText("Restore purchases").assertIsDisplayed()
+    }
+
+    @Test
     fun `usage meter shows scans left, and the empty message at zero`() {
         content(ProUiState(products = products, loading = false, freeScansLeft = 7))
         composeRule.onNodeWithText("7 AI scans left").assertIsDisplayed()

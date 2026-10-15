@@ -109,13 +109,13 @@ Paths are relative to `app/src/main/java/com/toolstack/io/`.
 **UX decisions to carry into the rewrite** (from the existing screen and VM):
 
 - A fraction/unit accessory bar tied to the focused field (`FocusedIngredientField`), with IME inset handled once by the parent `imePadding()`.
-- "Next" on the accessory bar adds a row and focuses its quantity (`addIngredientAndFocusName`).
+- "Next" on the accessory bar steps qty → unit picker → name, and appends+focuses a new row at the end of the list.
 - Scan results replace silently only if the list is blank; otherwise the user picks Replace / Append / Cancel.
 - A `MAX_INGREDIENTS = 50` cap.
 - A warning banner when the multiplier is over 4× (`showScaleWarning`). Baking chemistry and pan sizes don't scale linearly.
 - A "Show original values" caption under each scaled row.
 - Copy formats: Plain / Markdown / Shopping list (checkbox glyphs).
-- The camera URI held in `rememberSaveable`, so it survives process death.
+- Image capture is delegated to the ML Kit document scanner (no in-app camera URI to preserve across process death).
 
 ### 2.2 Reusable Domain Logic vs. Rewrite: Summary
 

@@ -129,6 +129,7 @@
     <string name="pro_pending_detail">Pro unlocks as soon as Google Play confirms the payment.</string>
     <string name="pro_state_active">Active</string>
     <string name="pro_refresh_failed">Couldn\'t check purchases. Try again later.</string>
+    <string name="pro_verifying">Verifying purchase…</string>
     <string name="settings_section_debug">Debug</string>
     <string name="settings_debug_pro">Pretend Pro</string>
     <string name="settings_debug_ai_scans">AI scans left: %1$d</string>

@@ -303,6 +303,19 @@ data class EditorCallbacks(
 private enum class RowField { QTY, NAME }
 private data class FocusedField(val rowKey: Long, val field: RowField)
 
+/** LazyColumn sections above the ingredient rows, in display order. */
+private enum class EditorHeader { TITLE_HEADER, TITLE, YIELD, INGREDIENTS_HEADER, EMPTY_STATE }
+
+private fun editorHeaders(rows: List<EditorRow>): List<EditorHeader> = buildList {
+    add(EditorHeader.TITLE_HEADER)
+    add(EditorHeader.TITLE)
+    add(EditorHeader.YIELD)
+    add(EditorHeader.INGREDIENTS_HEADER)
+    if (rows.all { it.rawQuantity.isBlank() && it.name.isBlank() }) {
+        add(EditorHeader.EMPTY_STATE)
+    }
+}
+
 private val FRACTION_INSERTS = listOf("½", "⅓", "¼", "¾", "⅔", "⅛", "/")
 private val BAR_UNITS = listOf(
     KitchenUnit.CUP, KitchenUnit.TBSP, KitchenUnit.TSP, KitchenUnit.G, KitchenUnit.OZ,
@@ -355,12 +368,9 @@ fun EditorContent(
         val index = snapshotFlow {
             val s = latestState
             val idx = s.rows.indexOfFirst { it.key == target.rowKey }
-            if (idx < 0) {
-                -1
-            } else {
-                // Header items precede the rows, plus the empty-state row when shown.
-                idx + if (s.rows.all { it.rawQuantity.isBlank() && it.name.isBlank() }) 5 else 4
-            }
+            // Header sections precede the rows; their count derives from the
+            // same list the LazyColumn emits, so it can't drift out of sync.
+            if (idx < 0) -1 else idx + editorHeaders(s.rows).size
         }.first { it >= 0 }
         if (lazyListState.layoutInfo.visibleItemsInfo.none { it.key == target.rowKey }) {
             lazyListState.animateScrollToItem(index)
@@ -540,70 +550,66 @@ fun EditorContent(
                 ),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                item(key = "title_header") {
-                    Text(
-                        stringResource(R.string.header_name),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-                item(key = "title") {
-                    OutlinedTextField(
-                        value = state.title,
-                        onValueChange = callbacks.onTitleChange,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .semantics {
-                                contentDescription = titleCd
-                            },
-                        singleLine = true,
-                    )
-                }
-                item(key = "yield") {
-                    val yieldError = state.yieldError
-                    Column {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
+                items(editorHeaders(state.rows), key = { it.name }) { section ->
+                    when (section) {
+                        EditorHeader.TITLE_HEADER -> Text(
+                            stringResource(R.string.header_name),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        EditorHeader.TITLE -> OutlinedTextField(
+                            value = state.title,
+                            onValueChange = callbacks.onTitleChange,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .semantics {
+                                    contentDescription = titleCd
+                                },
+                            singleLine = true,
+                        )
+                        EditorHeader.YIELD -> {
+                            val yieldError = state.yieldError
+                            Column {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    Text(
+                                        stringResource(R.string.editor_makes),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                    )
+                                    OutlinedTextField(
+                                        value = state.yieldText,
+                                        onValueChange = callbacks.onYieldTextChange,
+                                        modifier = Modifier
+                                            .width(96.dp)
+                                            .semantics { contentDescription = yieldAmountCd },
+                                        placeholder = { Text("4") },
+                                        keyboardOptions = KeyboardOptions(
+                                            keyboardType = KeyboardType.Decimal,
+                                        ),
+                                        isError = yieldError,
+                                        singleLine = true,
+                                    )
+                                }
+                                if (yieldError) {
+                                    Text(
+                                        stringResource(R.string.msg_cant_read_example, state.yieldText),
+                                        color = MaterialTheme.colorScheme.error,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        modifier = Modifier.padding(start = 4.dp, top = 4.dp),
+                                    )
+                                }
+                            }
+                        }
+                        EditorHeader.INGREDIENTS_HEADER -> Text(
+                            stringResource(R.string.header_ingredients),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        EditorHeader.EMPTY_STATE -> Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
-                            Text(
-                                stringResource(R.string.editor_makes),
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
-                            OutlinedTextField(
-                                value = state.yieldText,
-                                onValueChange = callbacks.onYieldTextChange,
-                                modifier = Modifier
-                                    .width(96.dp)
-                                    .semantics { contentDescription = yieldAmountCd },
-                                placeholder = { Text("4") },
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Decimal,
-                                ),
-                                isError = yieldError,
-                                singleLine = true,
-                            )
-                        }
-                        if (yieldError) {
-                            Text(
-                                stringResource(R.string.msg_cant_read_example, state.yieldText),
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(start = 4.dp, top = 4.dp),
-                            )
-                        }
-                    }
-                }
-                item(key = "ingredients_header") {
-                    Text(
-                        stringResource(R.string.header_ingredients),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-                if (state.rows.all { it.rawQuantity.isBlank() && it.name.isBlank() }) {
-                    item(key = "ingredients_empty") {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilledTonalButton(
                                 onClick = callbacks.onScanClick,
                                 modifier = Modifier.weight(1f),

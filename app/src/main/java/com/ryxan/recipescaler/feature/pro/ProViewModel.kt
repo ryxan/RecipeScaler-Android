@@ -24,6 +24,8 @@ data class ProUiState(
     val products: List<ProProduct> = emptyList(),
     /** True while a product refresh is in flight (initially, and on retry). */
     val loading: Boolean = true,
+    /** True while a new purchase is being verified with the backend. */
+    val verifying: Boolean = false,
     /** Free + bonus AI scans left. Null until the quota has been read. */
     val freeScansLeft: Int? = null,
 )
@@ -45,6 +47,12 @@ class ProViewModel @Inject constructor(
         viewModelScope.launch { proRepository.isPro.collect { p -> _uiState.update { it.copy(isPro = p) } } }
         viewModelScope.launch { proRepository.isPending.collect { p -> _uiState.update { it.copy(isPending = p) } } }
         viewModelScope.launch { proRepository.products.collect { p -> _uiState.update { it.copy(products = p) } } }
+        viewModelScope.launch { proRepository.verifying.collect { v -> _uiState.update { it.copy(verifying = v) } } }
+        viewModelScope.launch {
+            proRepository.verificationDenied.collect {
+                _messages.trySend("Couldn't verify the purchase. If Pro doesn't unlock, try Restore purchases.")
+            }
+        }
         viewModelScope.launch {
             combine(quota.remainingFree, quota.bonusCredits) { free, bonus -> free + bonus }
                 .collect { left -> _uiState.update { it.copy(freeScansLeft = left) } }
