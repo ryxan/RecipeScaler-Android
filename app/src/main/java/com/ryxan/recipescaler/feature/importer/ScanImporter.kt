@@ -74,8 +74,6 @@ class ScanImporter @Inject constructor(
     /** JPEG prepared for the AI importer, cached for retries; cleared per scan. */
     internal var cachedJpeg: ByteArray? = null
 
-    fun newCaptureUri(): Uri? = images.newCaptureUri()
-
     suspend fun scan(uri: Uri, useAi: Boolean, deleteWhenDone: Boolean): ScanOutcome {
         clear()
         try {

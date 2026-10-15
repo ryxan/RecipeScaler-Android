@@ -3,6 +3,7 @@ package com.ryxan.recipescaler.feature.scale
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.ryxan.recipescaler.core.domain.formatting.DisplayMode
+import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
 import com.ryxan.recipescaler.core.domain.model.Ingredient
 import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import com.ryxan.recipescaler.core.domain.model.Recipe
@@ -11,16 +12,20 @@ import com.ryxan.recipescaler.core.domain.scaling.RecipeScalerCalculator
 import com.ryxan.recipescaler.testing.FakeRecipeRepository
 import com.ryxan.recipescaler.testing.FakeSettingsRepository
 import com.ryxan.recipescaler.testing.MainDispatcherRule
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.math.abs
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class ScaleViewModelTest {
 
     @get:Rule
@@ -149,7 +154,7 @@ class ScaleViewModelTest {
         vm.uiState.filter { !it.isLoading }.first()
         vm.setScaleTo("0")
         val s = vm.uiState.filter {
-            it.message == ScaleMessage.EnterAmountAboveZero
+            it.message == ScaleMessage.EnterAmountAboveZero(ScaleField.SCALE_TO)
         }.first()
         assertEquals(1.0, s.factor, 0.001)
     }
@@ -255,6 +260,253 @@ class ScaleViewModelTest {
             s.rows, "4", CopyFormat.PLAIN,
         )
         assertEquals(expected, vm.copyText(CopyFormat.PLAIN))
+    }
+
+    @Test
+    fun `the stepper steps the target servings`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.stepServings(1)
+        var s = vm.uiState.filter { !it.isLoading && it.inputs.scaleToText == "5" }.first()
+        assertEquals(1.25, s.factor, 0.001)
+
+        vm.stepServings(-1)
+        s = vm.uiState.filter { !it.isLoading && it.inputs.scaleToText == "4" }.first()
+        assertEquals(1.0, s.factor, 0.001)
+    }
+
+    @Test
+    fun `the stepper snaps a fractional target in the step direction`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.setScaleTo("4.5")
+        vm.uiState.filter { it.factor == 1.125 }.first()
+
+        vm.stepServings(1)
+        var s = vm.uiState.filter { it.inputs.scaleToText == "5" }.first()
+        assertEquals(1.25, s.factor, 0.001)
+
+        vm.setScaleTo("4.5")
+        vm.uiState.filter { it.inputs.scaleToText == "4.5" }.first()
+        vm.stepServings(-1)
+        s = vm.uiState.filter { it.inputs.scaleToText == "4" }.first()
+        assertEquals(1.0, s.factor, 0.001)
+    }
+
+    @Test
+    fun `the stepper clamps at the minimum and maximum servings`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.setScaleTo("1")
+        vm.uiState.filter { it.factor == 0.25 }.first()
+
+        // Already at the minimum — no input write.
+        vm.stepServings(-1)
+        var s = vm.uiState.filter { !it.isLoading }.first()
+        assertEquals("1", s.inputs.scaleToText)
+
+        vm.setScaleTo("99")
+        vm.uiState.filter { it.factor == 24.75 }.first()
+        vm.stepServings(1)
+        s = vm.uiState.filter { !it.isLoading }.first()
+        assertEquals("99", s.inputs.scaleToText)
+    }
+
+    @Test
+    fun `the stepper resets an unreadable serves to 1`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.setServes("abc")
+        vm.uiState.filter { it.message is ScaleMessage.CantRead }.first()
+
+        vm.stepServings(1)
+        val s = vm.uiState.filter { it.inputs.servesText == "1" }.first()
+        assertEquals("5", s.inputs.scaleToText)
+        assertEquals(5.0, s.factor, 0.001)
+    }
+
+    @Test
+    fun `the stepper restarts from serves when the target is unreadable`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.setScaleTo("abc")
+        vm.uiState.filter { it.message is ScaleMessage.CantRead }.first()
+
+        vm.stepServings(1)
+        val s = vm.uiState.filter { it.inputs.scaleToText == "5" }.first()
+        assertNull(s.message)
+        assertEquals(1.25, s.factor, 0.001)
+    }
+
+    @Test
+    fun `inputs persist through the saved state handle`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val settings = FakeSettingsRepository()
+        val handle = SavedStateHandle(mapOf("recipeId" to id))
+        val vm = ScaleViewModel(handle, repo, settings)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.setScaleTo("8")
+        vm.uiState.filter { it.factor == 2.0 }.first()
+
+        // A new VM over the same handle restores the in-session factor.
+        val vm2 = ScaleViewModel(handle, repo, settings)
+        val s = vm2.uiState
+            .filter { !it.isLoading && it.inputs.scaleToText == "8" }
+            .first()
+        assertEquals(2.0, s.factor, 0.001)
+    }
+
+    @Test
+    fun `measurement system changes flow into the state`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val settings = FakeSettingsRepository()
+        val vm = vm(repo, settings, id)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.setMeasurementSystem(MeasurementSystem.METRIC)
+        val s = vm.uiState
+            .filter { it.measurementSystem == MeasurementSystem.METRIC }
+            .first()
+        assertTrue(s.unitsSelectable)
+    }
+
+    @Test
+    fun `units are not selectable outside kitchen mode`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val settings = FakeSettingsRepository()
+        val vm = vm(repo, settings, id)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        settings.setDisplayMode(DisplayMode.DECIMAL)
+        val s = vm.uiState.filter { !it.isLoading && !it.unitsSelectable }.first()
+        assertFalse(s.unitsSelectable)
+    }
+
+    // ── "Promote to" ──────────────────────────────────────────────────────────
+
+    @Test
+    fun `promote persists the override and re-renders the row`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(
+            repo,
+            ingredients = listOf(
+                Ingredient(rawQuantity = "44", unit = KitchenUnit.CUP, name = "Stock"),
+            ),
+        )
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        val s = vm.uiState.filter { !it.isLoading }.first()
+        val rowId = s.rows[0].id
+        assertEquals("44 cup", s.rows[0].displayText)
+
+        vm.promote(rowId, KitchenUnit.QUART)
+        val promoted = vm.uiState
+            .filter { it.rows[0].promotedUnit == KitchenUnit.QUART }
+            .first()
+        assertEquals("11 qt", promoted.rows[0].displayText)
+
+        // The choice lives on the ingredient row, not session state.
+        assertEquals(KitchenUnit.QUART, repo.get(id)!!.ingredients[0].promotedUnit)
+    }
+
+    @Test
+    fun `promotion survives a scale-to change and auto resets`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(
+            repo,
+            ingredients = listOf(
+                Ingredient(rawQuantity = "22", unit = KitchenUnit.CUP, name = "Stock"),
+            ),
+        )
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        val s = vm.uiState.filter { !it.isLoading }.first()
+        val rowId = s.rows[0].id
+        vm.promote(rowId, KitchenUnit.GALLON)
+        vm.uiState.filter { it.rows[0].promotedUnit == KitchenUnit.GALLON }.first()
+        // 22 cup = 1056 tsp = 1 gal + 1 qt + 2 cup.
+        assertEquals("1 gal 1 qt 2 cup", vm.uiState.value.rows[0].displayText)
+
+        // Re-scaling keeps the override (22 cup → 44 cup = 2 gal 3 qt).
+        vm.setScaleTo("8")
+        val doubled = vm.uiState.filter { it.factor == 2.0 }.first()
+        assertEquals("2 gal 3 qt", doubled.rows[0].displayText)
+
+        // "Auto" clears it.
+        vm.promote(rowId, null)
+        val auto = vm.uiState.filter { it.rows[0].promotedUnit == null }.first()
+        assertEquals("44 cup", auto.rows[0].displayText)
+        assertNull(repo.get(id)!!.ingredients[0].promotedUnit)
+    }
+
+    @Test
+    fun `promote ignores an unknown ingredient id`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.promote("not-a-number", KitchenUnit.QUART)
+        vm.promote("9999", KitchenUnit.QUART)
+        runCurrent()
+        assertNull(repo.get(id)!!.ingredients[0].promotedUnit)
+    }
+
+    @Test
+    fun `promote options flow into the rows`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(
+            repo,
+            ingredients = listOf(
+                Ingredient(rawQuantity = "44", unit = KitchenUnit.CUP, name = "Stock"),
+                Ingredient(rawQuantity = "1", unit = KitchenUnit.TSP, name = "Salt"),
+            ),
+        )
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        val s = vm.uiState.filter { !it.isLoading }.first()
+        assertEquals(
+            listOf(KitchenUnit.QUART, KitchenUnit.GALLON, KitchenUnit.ML, KitchenUnit.L),
+            s.rows[0].promoteOptions.map { it.unit },
+        )
+        assertTrue(s.rows[1].promoteOptions.isEmpty())
+    }
+
+    @Test
+    fun `copy text reflects the promoted unit`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(
+            repo,
+            ingredients = listOf(
+                Ingredient(rawQuantity = "44", unit = KitchenUnit.CUP, name = "Stock"),
+            ),
+        )
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        val s = vm.uiState.filter { !it.isLoading }.first()
+        vm.promote(s.rows[0].id, KitchenUnit.QUART)
+        vm.uiState.filter { it.rows[0].promotedUnit == KitchenUnit.QUART }.first()
+
+        assertTrue(vm.copyText(CopyFormat.PLAIN).contains("11 qt"))
     }
 
     @Test

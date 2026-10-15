@@ -234,6 +234,60 @@ class RoomRecipeRepositoryTest {
         }
     }
 
+    // ── "Promote to" override ─────────────────────────────────────────────────
+
+    @Test
+    fun `setPromotedUnit round-trips without touching updatedAt`() = runTest {
+        val id = repo.save(recipe())
+        val before = repo.get(id)!!
+        val ingredientId = before.ingredients[0].id
+
+        now = 9_000L
+        repo.setPromotedUnit(id, ingredientId, KitchenUnit.QUART)
+
+        val after = repo.get(id)!!
+        assertEquals(KitchenUnit.QUART, after.ingredients[0].promotedUnit)
+        assertNull(after.ingredients[1].promotedUnit)
+        assertEquals(before.updatedAt, after.updatedAt)
+
+        repo.setPromotedUnit(id, ingredientId, null)
+        assertNull(repo.get(id)!!.ingredients[0].promotedUnit)
+    }
+
+    @Test
+    fun `setPromotedUnit on unknown ids is a no-op`() = runTest {
+        val id = repo.save(recipe())
+        repo.setPromotedUnit(id, 9999, KitchenUnit.QUART)
+        repo.setPromotedUnit(9999, 1, KitchenUnit.QUART)
+        assertNull(repo.get(id)!!.ingredients[0].promotedUnit)
+    }
+
+    @Test
+    fun `save and restore preserve promotedUnit`() = runTest {
+        val id = repo.save(
+            recipe(
+                ingredients = listOf(
+                    Ingredient(
+                        rawQuantity = "44", unit = KitchenUnit.CUP, name = "stock",
+                        promotedUnit = KitchenUnit.QUART,
+                    ),
+                ),
+            ),
+        )
+        assertEquals(KitchenUnit.QUART, repo.get(id)!!.ingredients[0].promotedUnit)
+
+        // An edit (delete + re-insert with new ids) keeps the override.
+        now = 2_000L
+        repo.save(repo.get(id)!!.copy(title = "Pancakes v2"))
+        val edited = repo.get(id)!!
+        assertEquals(KitchenUnit.QUART, edited.ingredients[0].promotedUnit)
+
+        // Restore after delete also keeps it.
+        repo.delete(id)
+        repo.restore(edited)
+        assertEquals(KitchenUnit.QUART, repo.get(id)!!.ingredients[0].promotedUnit)
+    }
+
     @Test
     fun `unknown unitKey maps to NONE`() = runTest {
         val id = repo.save(recipe(ingredients = emptyList()))

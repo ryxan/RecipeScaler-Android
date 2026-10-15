@@ -11,17 +11,6 @@ import kotlin.math.floor
 enum class MeasurementSystem { MATCH_RECIPE, US, METRIC }
 enum class DisplayMode { KITCHEN, KEEP_UNITS, DECIMAL }
 
-/**
- * First-run measurement-system default derived from the device's locale
- * country: the US, Liberia, and Myanmar use customary units; everywhere else
- * (including a blank/unknown country) defaults to metric.
- */
-fun defaultMeasurementSystemFor(countryCode: String): MeasurementSystem =
-    when (countryCode.uppercase()) {
-        "US", "LR", "MM" -> MeasurementSystem.US
-        else -> MeasurementSystem.METRIC
-    }
-
 data class DisplayPrefs(
     val system: MeasurementSystem = MeasurementSystem.MATCH_RECIPE,
     val mode: DisplayMode = DisplayMode.KITCHEN,
@@ -49,6 +38,61 @@ object KitchenFormatter {
         val unit = KitchenUnit.fromKey(unitKey)
         return formatInternal(amount, unit, unit?.label ?: unitKey.trim(), prefs)
     }
+
+    // ── Promote-to display ────────────────────────────────────────────────────
+    //
+    // Manual per-ingredient unit promotion (Scale screen "Promote to"). Volume
+    // only; ignores the US/Metric system preference — the amount is normalised
+    // through mL/tsp and rendered in [target] regardless of [unit]'s system.
+    // Returns null when [unit] or [target] isn't VOLUME, the target isn't a
+    // promotable unit, or the amount is below 1 of [target].
+
+    /** Units a volume row can be promoted to. */
+    val PROMOTE_TARGETS: List<KitchenUnit> = listOf(
+        KitchenUnit.QUART, KitchenUnit.GALLON, KitchenUnit.ML, KitchenUnit.L,
+    )
+
+    fun formatIn(amount: Double, unit: KitchenUnit, target: KitchenUnit): String? {
+        if (amount <= 0.0 || unit.family != UnitFamily.VOLUME) return null
+        if (target !in PROMOTE_TARGETS) return null
+        val totalMl = UnitConversions.toMl(amount, unit) ?: return null
+        return when (target) {
+            KitchenUnit.QUART, KitchenUnit.GALLON -> {
+                val totalTsp = snapHalf(totalMl / UnitConversions.ML_PER_TSP)
+                val perTarget = UnitConversions.TSP_PER_UNIT[target]!!
+                if (totalTsp < perTarget) return null
+                val parts = mutableListOf<String>()
+                var rest = totalTsp
+                if (target == KitchenUnit.GALLON) {
+                    val gal = floor(rest / 768.0).toInt()
+                    if (gal > 0) {
+                        parts += "$gal gal"
+                        rest -= gal * 768.0
+                    }
+                }
+                val qt = floor(rest / 192.0).toInt()
+                if (qt > 0) {
+                    parts += "$qt qt"
+                    rest -= qt * 192.0
+                }
+                if (rest > 0.0) parts += usVolume(rest)
+                parts.joinToString(" ").ifEmpty { null }
+            }
+            KitchenUnit.ML -> {
+                if (totalMl < 1.0) return null
+                "${roundHalfUp(totalMl)} mL"
+            }
+            KitchenUnit.L -> {
+                if (totalMl < UnitConversions.ML_PER_L) return null
+                metricVolume(totalMl)
+            }
+            else -> null
+        }
+    }
+
+    /** True when [amount] in [unit] is at least 1 of [target] (option offered). */
+    fun canPromoteTo(amount: Double, unit: KitchenUnit, target: KitchenUnit): Boolean =
+        formatIn(amount, unit, target) != null
 
     // ── Dispatch ──────────────────────────────────────────────────────────────
 

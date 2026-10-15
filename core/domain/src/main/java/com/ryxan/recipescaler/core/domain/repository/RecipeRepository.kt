@@ -1,5 +1,6 @@
 package com.ryxan.recipescaler.core.domain.repository
 
+import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import com.ryxan.recipescaler.core.domain.model.Recipe
 import com.ryxan.recipescaler.core.domain.model.RecipeSummary
 import kotlinx.coroutines.flow.Flow
@@ -32,4 +33,11 @@ interface RecipeRepository {
      * order. No-op if a recipe with that id already exists.
      */
     suspend fun restore(recipe: Recipe)
+
+    /**
+     * Sets/clears the Scale screen "Promote to" override on one ingredient row
+     * (null = Auto). Doesn't touch the recipe's updatedAt, so list order is
+     * unchanged. No-op when the ids don't match a row.
+     */
+    suspend fun setPromotedUnit(recipeId: Long, ingredientId: Long, unit: KitchenUnit?)
 }

@@ -158,4 +158,56 @@ class KitchenFormatterTest {
         assertEquals("L",    RecipeScalerCalculator.canonicalUnit("l"))
         assertEquals("pt",   RecipeScalerCalculator.canonicalUnit("pt"))
     }
+
+    // ── formatIn ("Promote to") ───────────────────────────────────────────────
+
+    private fun inUnit(amount: Double, unit: KitchenUnit, target: KitchenUnit) =
+        KitchenFormatter.formatIn(amount, unit, target)
+
+    @Test fun `44 cups promote to 11 qt`() =
+        assertEquals("11 qt", inUnit(44.0, KitchenUnit.CUP, KitchenUnit.QUART))
+
+    @Test fun `44 cups promote to 2 gal 3 qt`() =
+        assertEquals("2 gal 3 qt", inUnit(44.0, KitchenUnit.CUP, KitchenUnit.GALLON))
+
+    @Test fun `7 and a third cups promote to 1 qt 3⅓ cup`() =
+        assertEquals(
+            "1 qt 3⅓ cup",
+            inUnit(7.0 + 1.0 / 3.0, KitchenUnit.CUP, KitchenUnit.QUART),
+        )
+
+    @Test fun `promote skips pints`() =
+        assertEquals("1 qt 1 cup", inUnit(5.0, KitchenUnit.CUP, KitchenUnit.QUART))
+
+    @Test fun `below one target unit is not offered`() {
+        assertEquals(null, inUnit(3.0, KitchenUnit.CUP, KitchenUnit.QUART))
+        assertEquals(null, inUnit(0.5, KitchenUnit.CUP, KitchenUnit.GALLON))
+        assertEquals(null, inUnit(500.0, KitchenUnit.ML, KitchenUnit.L))
+    }
+
+    @Test fun `metric ml promotes to whole mL`() =
+        assertEquals("2500 mL", inUnit(2.5, KitchenUnit.L, KitchenUnit.ML))
+
+    @Test fun `metric L promotes to L plus mL`() =
+        assertEquals("10 L 416 mL", inUnit(10416.0, KitchenUnit.ML, KitchenUnit.L))
+
+    @Test fun `us ingredient can promote to metric`() =
+        assertEquals("3 L 785 mL", inUnit(1.0, KitchenUnit.GALLON, KitchenUnit.L))
+
+    @Test fun `metric ingredient can promote to us units`() =
+        // 946.353 mL ≈ 192 tsp = 1 qt exactly.
+        assertEquals("1 qt", inUnit(946.353, KitchenUnit.ML, KitchenUnit.QUART))
+
+    @Test fun `promote ignores non-volume units and targets`() {
+        assertEquals(null, inUnit(2.0, KitchenUnit.KG, KitchenUnit.QUART))
+        assertEquals(null, inUnit(2.0, KitchenUnit.EACH, KitchenUnit.L))
+        assertEquals(null, inUnit(2000.0, KitchenUnit.ML, KitchenUnit.KG))
+        assertEquals(null, inUnit(4.0, KitchenUnit.CUP, KitchenUnit.PINT))
+    }
+
+    @Test fun `remainder snaps to half-tsp precision`() =
+        assertEquals(
+            "1 qt 2 Tbsp",
+            inUnit(198.0, KitchenUnit.TSP, KitchenUnit.QUART),
+        )
 }

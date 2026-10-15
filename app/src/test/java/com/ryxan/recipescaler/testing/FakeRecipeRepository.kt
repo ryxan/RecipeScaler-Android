@@ -1,5 +1,6 @@
 package com.ryxan.recipescaler.testing
 
+import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import com.ryxan.recipescaler.core.domain.model.Recipe
 import com.ryxan.recipescaler.core.domain.model.RecipeSummary
 import com.ryxan.recipescaler.core.domain.repository.RecipeRepository
@@ -74,6 +75,17 @@ class FakeRecipeRepository : RecipeRepository {
         current[recipe.id] = recipe.copy(
             ingredients = recipe.ingredients.mapIndexed { i, ing ->
                 if (ing.id == 0L) ing.copy(id = recipe.id * 1000 + i + 1) else ing
+            },
+        )
+        recipes.value = current
+    }
+
+    override suspend fun setPromotedUnit(recipeId: Long, ingredientId: Long, unit: KitchenUnit?) {
+        val current = recipes.value.toMutableMap()
+        val recipe = current[recipeId] ?: return
+        current[recipeId] = recipe.copy(
+            ingredients = recipe.ingredients.map {
+                if (it.id == ingredientId) it.copy(promotedUnit = unit) else it
             },
         )
         recipes.value = current

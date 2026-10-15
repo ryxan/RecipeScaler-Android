@@ -1,9 +1,11 @@
 package com.ryxan.recipescaler.core.domain.scaling
 
+import com.ryxan.recipescaler.core.domain.formatting.DisplayMode
 import com.ryxan.recipescaler.core.domain.formatting.DisplayPrefs
 import com.ryxan.recipescaler.core.domain.formatting.KitchenFormatter
 import com.ryxan.recipescaler.core.domain.model.IngredientItem
 import com.ryxan.recipescaler.core.domain.model.KitchenUnit
+import com.ryxan.recipescaler.core.domain.model.PromoteOption
 import com.ryxan.recipescaler.core.domain.model.ScaleStatus
 import com.ryxan.recipescaler.core.domain.model.ScaledIngredient
 import com.ryxan.recipescaler.core.domain.model.UnitConversions
@@ -73,11 +75,12 @@ object ScaleRecipe {
         ingredients: List<IngredientItem>,
         mode: ScaleMode,
         prefs: DisplayPrefs = DisplayPrefs(),
+        promoted: Map<String, KitchenUnit> = emptyMap(),
     ): ScaleOutcome {
         val factor = factor(ingredients, mode).getOrElse { e ->
             return ScaleOutcome.Failure((e as ScaleException).error)
         }
-        val scaled = ingredients.map { scaleRow(it, factor, prefs) }
+        val scaled = ingredients.map { scaleRow(it, factor, prefs, promoted[it.id]) }
         return ScaleOutcome.Success(
             factor = factor,
             ingredients = scaled,
@@ -152,6 +155,7 @@ object ScaleRecipe {
         ingredient: IngredientItem,
         factor: Double,
         prefs: DisplayPrefs,
+        promotedTo: KitchenUnit?,
     ): ScaledIngredient {
         val raw = ingredient.qtyString
         if (raw.isBlank()) {
@@ -172,12 +176,54 @@ object ScaleRecipe {
             )
         }
         val status = if (QuantityParser.isRange(raw)) ScaleStatus.RANGE_LOW_END else ScaleStatus.SCALED
+        val scaled = qty * factor
+        val kitchenUnit = KitchenUnit.fromKey(ingredient.unit)
+
+        // "Promote to" applies in KITCHEN mode to volume rows only.
+        val promotedText =
+            if (prefs.mode == DisplayMode.KITCHEN && promotedTo != null && kitchenUnit != null) {
+                KitchenFormatter.formatIn(scaled, kitchenUnit, promotedTo)
+            } else {
+                null
+            }
+        val options = if (prefs.mode == DisplayMode.KITCHEN &&
+            kitchenUnit != null && kitchenUnit.family == UnitFamily.VOLUME
+        ) {
+            promoteOptions(scaled, kitchenUnit)
+        } else {
+            emptyList()
+        }
+
         return ScaledIngredient(
             id = ingredient.id, name = ingredient.name, unit = ingredient.unit,
-            originalQty = qty, scaledQty = qty * factor,
-            displayText = KitchenFormatter.format(qty * factor, ingredient.unit, prefs),
+            originalQty = qty, scaledQty = scaled,
+            displayText = promotedText ?: KitchenFormatter.format(scaled, ingredient.unit, prefs),
             originalDisplayText = KitchenFormatter.format(qty, ingredient.unit, prefs),
             status = status,
+            promotedUnit = if (prefs.mode == DisplayMode.KITCHEN &&
+                promotedTo != null && kitchenUnit?.family == UnitFamily.VOLUME
+            ) {
+                promotedTo
+            } else {
+                null
+            },
+            promoteOptions = options,
         )
+    }
+
+    // ── "Promote to" options ──────────────────────────────────────────────────
+    //
+    // Offered on KITCHEN-mode volume rows once the scaled amount reaches 1 cup;
+    // each listed target requires at least 1 of that unit (no "0 qt").
+
+    private const val MIN_PROMOTE_TSP = 48.0 // 1 cup
+
+    private fun promoteOptions(amount: Double, unit: KitchenUnit): List<PromoteOption> {
+        val ml = UnitConversions.toMl(amount, unit) ?: return emptyList()
+        if (ml < MIN_PROMOTE_TSP * UnitConversions.ML_PER_TSP) return emptyList()
+        return KitchenFormatter.PROMOTE_TARGETS.mapNotNull { target ->
+            KitchenFormatter.formatIn(amount, unit, target)
+                ?.let { PromoteOption(target, it) }
+        }
     }
 }

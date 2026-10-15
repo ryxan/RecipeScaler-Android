@@ -49,10 +49,8 @@ class FakeImagePreprocessor : ImagePreprocessor {
     /** Returned by every jpegForAi call; null simulates an undecodable image. */
     var jpeg: ByteArray? = byteArrayOf(1, 2, 3)
     var jpegCalls = 0
-    var captureUri: Uri? = null
     val deleted = mutableListOf<Uri>()
 
-    override fun newCaptureUri(): Uri? = captureUri
     override suspend fun jpegForAi(uri: Uri): ByteArray? {
         jpegCalls++
         return jpeg
@@ -173,7 +171,19 @@ class FakeProRepository(pro: Boolean = false) : ProRepository {
     private val _creditsGranted = MutableSharedFlow<Int>(extraBufferCapacity = 1)
     override val creditsGranted: Flow<Int> = _creditsGranted
 
+    private val _verifying = MutableStateFlow(false)
+    override val verifying: StateFlow<Boolean> = _verifying
+
+    private val _verificationDenied = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    override val verificationDenied: Flow<Unit> = _verificationDenied
+
     suspend fun emitCreditsGranted(count: Int) = _creditsGranted.emit(count)
+
+    fun setVerifying(value: Boolean) {
+        _verifying.value = value
+    }
+
+    suspend fun emitVerificationDenied() = _verificationDenied.emit(Unit)
 
     var refreshResult = true
     var restoreResult = true

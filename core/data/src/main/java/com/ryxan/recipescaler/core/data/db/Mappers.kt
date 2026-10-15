@@ -21,6 +21,7 @@ internal fun IngredientEntity.toDomain(): Ingredient = Ingredient(
     unit = KitchenUnit.fromKey(unitKey) ?: KitchenUnit.NONE,
     name = name,
     note = note,
+    promotedUnit = promotedUnitKey?.let { KitchenUnit.fromKey(it) },
 )
 
 internal fun Ingredient.toEntity(recipeId: Long, position: Int): IngredientEntity = IngredientEntity(
@@ -31,6 +32,7 @@ internal fun Ingredient.toEntity(recipeId: Long, position: Int): IngredientEntit
     unitKey = unit.key,
     name = name,
     note = note,
+    promotedUnitKey = promotedUnit?.key,
 )
 
 internal fun RecipeSummaryTuple.toDomain(): RecipeSummary = RecipeSummary(

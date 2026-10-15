@@ -11,6 +11,8 @@ data class Ingredient(
     val unit: KitchenUnit,
     val name: String,
     val note: String? = null,
+    /** Manual "Promote to" unit override on the Scale screen; null = Auto. */
+    val promotedUnit: KitchenUnit? = null,
 )
 
 data class Recipe(

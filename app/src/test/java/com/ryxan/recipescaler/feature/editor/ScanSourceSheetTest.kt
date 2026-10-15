@@ -1,7 +1,9 @@
 package com.ryxan.recipescaler.feature.editor
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import com.ryxan.recipescaler.core.designsystem.RescaleTheme
 import org.junit.Rule
@@ -29,9 +31,13 @@ class ScanSourceSheetTest {
     fun `sources render and pro sees the handwriting hint`() {
         sheet(EditorUiState(aiAvailable = true, isPro = true))
 
-        composeRule.onNodeWithText("Scan document").assertIsDisplayed()
-        composeRule.onNodeWithText("Take photo").assertIsDisplayed()
-        composeRule.onNodeWithText("Choose from gallery").assertIsDisplayed()
+        composeRule.onNodeWithText("Scan").assertIsDisplayed()
+        composeRule.onNodeWithText("Choose existing photo").assertIsDisplayed()
+        // The sheet collapsed to one Scan entry: the document scanner already
+        // covers camera capture and gallery import.
+        composeRule.onAllNodesWithText("Take photo").assertCountEquals(0)
+        composeRule.onAllNodesWithText("Scan document").assertCountEquals(0)
+        composeRule.onAllNodesWithText("Choose from gallery").assertCountEquals(0)
         // The AI row can sit below the sheet's visible fold in tests — assert
         // it exists rather than that it's on screen.
         composeRule.onNodeWithText("Use AI import").assertExists()
@@ -56,6 +62,6 @@ class ScanSourceSheetTest {
     fun `AI switch is hidden when AI is unavailable`() {
         sheet(EditorUiState(aiAvailable = false))
 
-        composeRule.onNodeWithText("Use AI import").assertDoesNotExist()
+        composeRule.onAllNodesWithText("Use AI import").assertCountEquals(0)
     }
 }

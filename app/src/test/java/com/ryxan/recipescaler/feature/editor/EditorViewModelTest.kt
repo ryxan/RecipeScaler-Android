@@ -320,6 +320,119 @@ class EditorViewModelTest {
     }
 
     @Test
+    fun `removeRow stashes the row and undoPendingEdit restores it at its index`() = runTest {
+        val repo = FakeRecipeRepository()
+        val vm = EditorViewModel(
+            SavedStateHandle(),
+            repo,
+            UndoDeleteController(repo, backgroundScope),
+            testScanImporter(),
+            backgroundScope,
+            FakeProRepository(),
+            NoopRewardedAds(),
+        )
+        vm.importText("1 cup flour\n2 eggs\n1 tsp salt")
+        val keys = vm.uiState.value.rows.map { it.key }
+
+        vm.removeRow(keys[1])
+        assertEquals(listOf("Flour", "Salt"), vm.uiState.value.rows.map { it.name })
+        val undo = vm.uiState.value.pendingUndo
+        assertTrue(undo is EditorUndo.RowRemoved)
+
+        vm.undoPendingEdit()
+        assertEquals(listOf("Flour", "Eggs", "Salt"), vm.uiState.value.rows.map { it.name })
+        assertNull(vm.uiState.value.pendingUndo)
+    }
+
+    @Test
+    fun `clearIngredients stashes the rows and undoPendingEdit restores them`() = runTest {
+        val repo = FakeRecipeRepository()
+        val vm = EditorViewModel(
+            SavedStateHandle(),
+            repo,
+            UndoDeleteController(repo, backgroundScope),
+            testScanImporter(),
+            backgroundScope,
+            FakeProRepository(),
+            NoopRewardedAds(),
+        )
+        vm.importText("1 cup flour\n2 eggs")
+
+        vm.clearIngredients()
+        var s = vm.uiState.value
+        assertEquals(listOf(""), s.rows.map { it.name })
+        assertTrue(s.pendingUndo is EditorUndo.RowsCleared)
+
+        vm.undoPendingEdit()
+        s = vm.uiState.value
+        assertEquals(listOf("Flour", "Eggs"), s.rows.map { it.name })
+        assertNull(s.pendingUndo)
+    }
+
+    @Test
+    fun `undo after a clear keeps rows typed in the meantime`() = runTest {
+        val repo = FakeRecipeRepository()
+        val vm = EditorViewModel(
+            SavedStateHandle(),
+            repo,
+            UndoDeleteController(repo, backgroundScope),
+            testScanImporter(),
+            backgroundScope,
+            FakeProRepository(),
+            NoopRewardedAds(),
+        )
+        vm.importText("1 cup flour")
+
+        vm.clearIngredients()
+        vm.onRowNameChange(vm.uiState.value.rows[0].key, "salt")
+        vm.undoPendingEdit()
+
+        assertEquals(listOf("Flour", "salt"), vm.uiState.value.rows.map { it.name })
+    }
+
+    @Test
+    fun `dismissPendingUndo drops the stash without restoring`() = runTest {
+        val repo = FakeRecipeRepository()
+        val vm = EditorViewModel(
+            SavedStateHandle(),
+            repo,
+            UndoDeleteController(repo, backgroundScope),
+            testScanImporter(),
+            backgroundScope,
+            FakeProRepository(),
+            NoopRewardedAds(),
+        )
+        vm.importText("1 cup flour\n2 eggs")
+        val keys = vm.uiState.value.rows.map { it.key }
+
+        vm.removeRow(keys[0])
+        vm.dismissPendingUndo()
+        vm.undoPendingEdit()
+
+        assertEquals(listOf("Eggs"), vm.uiState.value.rows.map { it.name })
+    }
+
+    @Test
+    fun `yield label edits persist to the saved recipe`() = runTest {
+        val repo = FakeRecipeRepository()
+        val vm = EditorViewModel(
+            SavedStateHandle(),
+            repo,
+            UndoDeleteController(repo, backgroundScope),
+            testScanImporter(),
+            backgroundScope,
+            FakeProRepository(),
+            NoopRewardedAds(),
+        )
+        vm.onRowQtyChange(vm.uiState.value.rows[0].key, "1")
+        vm.onYieldLabelChange("cookies")
+        advanceTimeBy(600)
+
+        val id = repo.observeSummaries("").first()[0].id
+        assertEquals("cookies", repo.get(id)?.yieldLabel)
+    }
+
+    @Test
     fun `inferFromName splits quantity and unit out of the name`() = runTest {
         val repo = FakeRecipeRepository()
         val vm = EditorViewModel(
@@ -404,6 +517,69 @@ class EditorViewModelTest {
         assertEquals("5", row.rawQuantity)
         assertEquals("2 cups flour", row.name)
         assertEquals(k2, row.key)
+    }
+
+    // ── "Promote to" round-trip ───────────────────────────────────────────────
+
+    @Test
+    fun `editing preserves the promoted unit on unchanged ingredients`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = repo.save(
+            recipe("Soup").copy(
+                ingredients = listOf(
+                    Ingredient(
+                        rawQuantity = "44", unit = KitchenUnit.CUP, name = "Stock",
+                        promotedUnit = KitchenUnit.QUART,
+                    ),
+                    Ingredient(rawQuantity = "2", unit = KitchenUnit.EACH, name = "Eggs"),
+                ),
+            ),
+        )
+        val vm = EditorViewModel(
+            SavedStateHandle(mapOf("recipeId" to id)),
+            repo, UndoDeleteController(repo, backgroundScope), testScanImporter(),
+            backgroundScope, FakeProRepository(), NoopRewardedAds(),
+        )
+
+        vm.onTitleChange("Soup v2")
+        vm.flush()
+        runCurrent()
+
+        val saved = repo.get(id)!!
+        assertEquals(KitchenUnit.QUART, saved.ingredients[0].promotedUnit)
+        assertNull(saved.ingredients[1].promotedUnit)
+    }
+
+    @Test
+    fun `changing the unit to non-volume clears the promoted unit`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = repo.save(
+            recipe("Soup").copy(
+                ingredients = listOf(
+                    Ingredient(
+                        rawQuantity = "44", unit = KitchenUnit.CUP, name = "Stock",
+                        promotedUnit = KitchenUnit.QUART,
+                    ),
+                ),
+            ),
+        )
+        val vm = EditorViewModel(
+            SavedStateHandle(mapOf("recipeId" to id)),
+            repo, UndoDeleteController(repo, backgroundScope), testScanImporter(),
+            backgroundScope, FakeProRepository(), NoopRewardedAds(),
+        )
+        val key = vm.uiState.value.rows[0].key
+
+        // Volume → volume keeps it.
+        vm.onRowUnitChange(key, KitchenUnit.TBSP)
+        assertEquals(KitchenUnit.QUART, vm.uiState.value.rows[0].promotedUnit)
+
+        // Volume → count clears it, and the save drops it.
+        vm.onRowUnitChange(key, KitchenUnit.EACH)
+        assertNull(vm.uiState.value.rows[0].promotedUnit)
+        vm.flush()
+        runCurrent()
+        assertNull(repo.get(id)!!.ingredients[0].promotedUnit)
     }
 
     @Test

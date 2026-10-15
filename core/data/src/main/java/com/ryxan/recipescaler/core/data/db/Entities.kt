@@ -37,6 +37,7 @@ data class IngredientEntity(
     val unitKey: String,
     val name: String,
     val note: String?,
+    val promotedUnitKey: String? = null,
 )
 
 data class RecipeWithIngredients(

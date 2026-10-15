@@ -6,26 +6,34 @@ import androidx.lifecycle.viewModelScope
 import com.ryxan.recipescaler.core.data.billing.ProProduct
 import com.ryxan.recipescaler.core.data.billing.ProRepository
 import com.ryxan.recipescaler.core.data.billing.PurchaseLaunch
+import com.ryxan.recipescaler.core.data.importer.AiImportQuota
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class ProUiState(
     val isPro: Boolean = false,
     val isPending: Boolean = false,
     val products: List<ProProduct> = emptyList(),
-    /** True until the first product refresh completes. */
+    /** True while a product refresh is in flight (initially, and on retry). */
     val loading: Boolean = true,
+    /** True while a new purchase is being verified with the backend. */
+    val verifying: Boolean = false,
+    /** Free + bonus AI scans left. Null until the quota has been read. */
+    val freeScansLeft: Int? = null,
 )
 
 @HiltViewModel
 class ProViewModel @Inject constructor(
     private val proRepository: ProRepository,
+    quota: AiImportQuota,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProUiState())
@@ -36,12 +44,29 @@ class ProViewModel @Inject constructor(
     val messages: Flow<String> = _messages.receiveAsFlow()
 
     init {
-        viewModelScope.launch { proRepository.isPro.collect { p -> _uiState.value = _uiState.value.copy(isPro = p) } }
-        viewModelScope.launch { proRepository.isPending.collect { p -> _uiState.value = _uiState.value.copy(isPending = p) } }
-        viewModelScope.launch { proRepository.products.collect { p -> _uiState.value = _uiState.value.copy(products = p) } }
+        viewModelScope.launch { proRepository.isPro.collect { p -> _uiState.update { it.copy(isPro = p) } } }
+        viewModelScope.launch { proRepository.isPending.collect { p -> _uiState.update { it.copy(isPending = p) } } }
+        viewModelScope.launch { proRepository.products.collect { p -> _uiState.update { it.copy(products = p) } } }
+        viewModelScope.launch { proRepository.verifying.collect { v -> _uiState.update { it.copy(verifying = v) } } }
         viewModelScope.launch {
+            proRepository.verificationDenied.collect {
+                _messages.trySend("Couldn't verify the purchase. If Pro doesn't unlock, try Restore purchases.")
+            }
+        }
+        viewModelScope.launch {
+            combine(quota.remainingFree, quota.bonusCredits) { free, bonus -> free + bonus }
+                .collect { left -> _uiState.update { it.copy(freeScansLeft = left) } }
+        }
+        refresh()
+    }
+
+    fun retry() = refresh()
+
+    private fun refresh() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(loading = true) }
             proRepository.refreshProducts()
-            _uiState.value = _uiState.value.copy(loading = false)
+            _uiState.update { it.copy(loading = false) }
         }
     }
 
