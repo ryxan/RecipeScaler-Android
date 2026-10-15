@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.SwapVert
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -98,6 +99,7 @@ import com.ryxan.recipescaler.core.designsystem.QuantityText
 import com.ryxan.recipescaler.core.designsystem.RescaleCard
 import com.ryxan.recipescaler.core.designsystem.Spacing
 import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
+import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import com.ryxan.recipescaler.core.domain.model.ScaleStatus
 import com.ryxan.recipescaler.core.domain.model.ScaledIngredient
 import com.ryxan.recipescaler.core.domain.model.formatYield
@@ -135,6 +137,7 @@ fun ScaleScreen(
             onShowOriginal = viewModel::setShowOriginal,
             onCookMode = viewModel::toggleCookMode,
             onToggleChecked = viewModel::toggleChecked,
+            onPromote = viewModel::promote,
             onMeasurementSystem = viewModel::setMeasurementSystem,
             onCopy = { format ->
                 scope.launch {
@@ -164,6 +167,7 @@ data class ScaleCallbacks(
     val onShowOriginal: (Boolean) -> Unit = {},
     val onCookMode: () -> Unit = {},
     val onToggleChecked: (String) -> Unit = {},
+    val onPromote: (String, KitchenUnit?) -> Unit = { _, _ -> },
     val onCopy: (CopyFormat) -> Unit = {},
     val onShare: () -> Unit = {},
     val onMeasurementSystem: (MeasurementSystem) -> Unit = {},
@@ -563,6 +567,8 @@ fun ScaleContent(
                                 showOriginal = state.showOriginal && !state.cookMode,
                                 checked = if (state.cookMode) row.id in state.checkedIds else null,
                                 onToggle = { callbacks.onToggleChecked(row.id) },
+                                promoteEnabled = state.unitsSelectable && !state.cookMode,
+                                onPromote = { unit -> callbacks.onPromote(row.id, unit) },
                             )
                         }
                     }
@@ -604,6 +610,8 @@ private fun ScaledRow(
     showOriginal: Boolean,
     checked: Boolean?,
     onToggle: () -> Unit,
+    promoteEnabled: Boolean,
+    onPromote: (KitchenUnit?) -> Unit,
 ) {
     val struck = checked == true
     Row(
@@ -670,8 +678,81 @@ private fun ScaledRow(
                 )
             }
         }
+        if (promoteEnabled && row.promoteOptions.isNotEmpty()) {
+            Spacer(Modifier.weight(1f))
+            PromoteMenu(row = row, onPromote = onPromote)
+        }
     }
 }
+
+@Composable
+private fun PromoteMenu(
+    row: ScaledIngredient,
+    onPromote: (KitchenUnit?) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { expanded = true }) {
+            Icon(
+                Icons.Outlined.SwapVert,
+                contentDescription = stringResource(R.string.cd_promote_unit),
+                tint = if (row.promotedUnit != null) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            row.promoteOptions.forEach { option ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            stringResource(
+                                R.string.promote_option,
+                                promoteUnitName(option.unit),
+                                option.previewText,
+                            ),
+                        )
+                    },
+                    trailingIcon = {
+                        if (row.promotedUnit == option.unit) {
+                            Icon(Icons.Filled.Check, contentDescription = null)
+                        }
+                    },
+                    onClick = {
+                        expanded = false
+                        onPromote(option.unit)
+                    },
+                )
+            }
+            if (row.promotedUnit != null) {
+                HorizontalDivider()
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.promote_auto)) },
+                    onClick = {
+                        expanded = false
+                        onPromote(null)
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun promoteUnitName(unit: KitchenUnit): String = stringResource(
+    when (unit) {
+        KitchenUnit.QUART -> R.string.promote_unit_quarts
+        KitchenUnit.GALLON -> R.string.promote_unit_gallons
+        KitchenUnit.ML -> R.string.promote_unit_ml
+        KitchenUnit.L -> R.string.promote_unit_litres
+        else -> R.string.promote_to
+    },
+)
 
 @Composable
 private fun messageText(message: ScaleMessage): String = when (message) {

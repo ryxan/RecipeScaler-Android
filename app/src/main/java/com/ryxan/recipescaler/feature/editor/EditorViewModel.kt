@@ -14,6 +14,7 @@ import com.ryxan.recipescaler.core.domain.model.Ingredient
 import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import com.ryxan.recipescaler.core.domain.model.ParsedIngredient
 import com.ryxan.recipescaler.core.domain.model.Recipe
+import com.ryxan.recipescaler.core.domain.model.UnitFamily
 import com.ryxan.recipescaler.core.domain.model.formatYield
 import com.ryxan.recipescaler.core.domain.parsing.QuantityParser
 import com.ryxan.recipescaler.core.domain.parsing.RecipeOcrParser
@@ -48,6 +49,8 @@ data class EditorRow(
     val name: String = "",
     /** Imported with an unparseable quantity; cleared on any edit. Not persisted. */
     val needsReview: Boolean = false,
+    /** Persisted "Promote to" override; kept so editing round-trips it. */
+    val promotedUnit: KitchenUnit? = null,
 ) {
     val qtyError: Boolean
         get() = rawQuantity.isNotBlank() && QuantityParser.parse(rawQuantity) == null
@@ -231,6 +234,7 @@ class EditorViewModel @Inject constructor(
         rawQuantity = rawQuantity,
         unit = unit,
         name = name,
+        promotedUnit = promotedUnit?.takeIf { unit.family == UnitFamily.VOLUME },
     )
 
     // ── Field edits ───────────────────────────────────────────────────────────
@@ -240,7 +244,14 @@ class EditorViewModel @Inject constructor(
     fun onYieldLabelChange(v: String) = edit { it.copy(yieldLabel = v) }
 
     fun onRowQtyChange(key: Long, v: String) = editRows(key) { it.copy(rawQuantity = v, needsReview = false) }
-    fun onRowUnitChange(key: Long, v: KitchenUnit) = editRows(key) { it.copy(unit = v, needsReview = false) }
+    fun onRowUnitChange(key: Long, v: KitchenUnit) = editRows(key) {
+        it.copy(
+            unit = v,
+            needsReview = false,
+            // The "Promote to" override only applies to volume units.
+            promotedUnit = if (v.family == UnitFamily.VOLUME) it.promotedUnit else null,
+        )
+    }
     fun onRowNameChange(key: Long, v: String) = editRows(key) { it.copy(name = v, needsReview = false) }
 
     private fun edit(transform: (EditorUiState) -> EditorUiState) {
@@ -642,6 +653,8 @@ class EditorViewModel @Inject constructor(
                                 rawQuantity = it.rawQuantity,
                                 unit = it.unit,
                                 name = it.name,
+                                promotedUnit = it.promotedUnit
+                                    ?.takeIf { _ -> it.unit.family == UnitFamily.VOLUME },
                             )
                         },
                 ),

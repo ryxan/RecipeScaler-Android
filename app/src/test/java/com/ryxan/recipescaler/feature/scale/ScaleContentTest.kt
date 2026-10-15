@@ -11,9 +11,12 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import com.ryxan.recipescaler.core.designsystem.RescaleTheme
 import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
+import com.ryxan.recipescaler.core.domain.model.KitchenUnit
+import com.ryxan.recipescaler.core.domain.model.PromoteOption
 import com.ryxan.recipescaler.core.domain.model.ScaleStatus
 import com.ryxan.recipescaler.core.domain.model.ScaledIngredient
 import com.ryxan.recipescaler.core.domain.scaling.CopyFormat
@@ -31,7 +34,13 @@ class ScaleContentTest {
     @get:Rule
     val composeRule = createComposeRule()
 
-    private fun row(text: String, name: String, status: ScaleStatus = ScaleStatus.SCALED) =
+    private fun row(
+        text: String,
+        name: String,
+        status: ScaleStatus = ScaleStatus.SCALED,
+        promotedUnit: KitchenUnit? = null,
+        promoteOptions: List<PromoteOption> = emptyList(),
+    ) =
         ScaledIngredient(
             id = "1",
             name = name,
@@ -41,6 +50,8 @@ class ScaleContentTest {
             displayText = text,
             originalDisplayText = "1 cup",
             status = status,
+            promotedUnit = promotedUnit,
+            promoteOptions = promoteOptions,
         )
 
     private fun state(
@@ -343,5 +354,71 @@ class ScaleContentTest {
         composeRule.onAllNodesWithText("Match recipe").assertCountEquals(0)
         composeRule.onAllNodesWithText("US customary").assertCountEquals(0)
         composeRule.onAllNodesWithText("Metric").assertCountEquals(0)
+    }
+
+    // ── "Promote to" ──────────────────────────────────────────────────────────
+
+    private val promoteOptions = listOf(
+        PromoteOption(KitchenUnit.QUART, "11 qt"),
+        PromoteOption(KitchenUnit.GALLON, "2 gal 3 qt"),
+        PromoteOption(KitchenUnit.L, "10 L 410 mL"),
+    )
+
+    private fun promotedState(promotedUnit: KitchenUnit? = null, unitsSelectable: Boolean = true) =
+        state(unitsSelectable = unitsSelectable).copy(
+            rows = listOf(
+                row(
+                    "44 cup", "Stock",
+                    promotedUnit = promotedUnit,
+                    promoteOptions = promoteOptions,
+                ),
+            ),
+        )
+
+    @Test
+    fun `the promote menu lists targets and fires the callback`() {
+        var picked: Pair<String, KitchenUnit?>? = null
+        content(
+            promotedState(),
+            ScaleCallbacks(onPromote = { id, unit -> picked = id to unit }),
+        )
+        composeRule.onNodeWithContentDescription("Promote to a larger unit").performClick()
+        composeRule.onNodeWithText("Quarts — 11 qt").assertIsDisplayed()
+        composeRule.onNodeWithText("Gallons — 2 gal 3 qt").assertIsDisplayed()
+        composeRule.onNodeWithText("Litres — 10 L 410 mL").performClick()
+        assertEquals("1" to KitchenUnit.L, picked)
+    }
+
+    @Test
+    fun `the promote menu hides auto without an override`() {
+        content(promotedState())
+        composeRule.onNodeWithContentDescription("Promote to a larger unit").performClick()
+        composeRule.onAllNodesWithText("Auto").assertCountEquals(0)
+    }
+
+    @Test
+    fun `the promote menu auto entry resets the override`() {
+        var reset: Pair<String, KitchenUnit?>? = null
+        content(
+            promotedState(promotedUnit = KitchenUnit.QUART),
+            ScaleCallbacks(onPromote = { id, unit -> reset = id to unit }),
+        )
+        composeRule.onNodeWithContentDescription("Promote to a larger unit").performClick()
+        composeRule.onNodeWithText("Auto").performClick()
+        assertEquals("1" to null, reset)
+    }
+
+    @Test
+    fun `the promote button is hidden without options`() {
+        content(state())
+        composeRule.onAllNodesWithContentDescription("Promote to a larger unit")
+            .assertCountEquals(0)
+    }
+
+    @Test
+    fun `the promote button is hidden outside kitchen mode`() {
+        content(promotedState(unitsSelectable = false))
+        composeRule.onAllNodesWithContentDescription("Promote to a larger unit")
+            .assertCountEquals(0)
     }
 }

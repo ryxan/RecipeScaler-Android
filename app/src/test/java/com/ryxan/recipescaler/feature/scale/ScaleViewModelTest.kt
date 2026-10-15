@@ -12,8 +12,10 @@ import com.ryxan.recipescaler.core.domain.scaling.RecipeScalerCalculator
 import com.ryxan.recipescaler.testing.FakeRecipeRepository
 import com.ryxan.recipescaler.testing.FakeSettingsRepository
 import com.ryxan.recipescaler.testing.MainDispatcherRule
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.math.abs
 import org.junit.Assert.assertEquals
@@ -23,6 +25,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class ScaleViewModelTest {
 
     @get:Rule
@@ -396,6 +399,114 @@ class ScaleViewModelTest {
         settings.setDisplayMode(DisplayMode.DECIMAL)
         val s = vm.uiState.filter { !it.isLoading && !it.unitsSelectable }.first()
         assertFalse(s.unitsSelectable)
+    }
+
+    // ── "Promote to" ──────────────────────────────────────────────────────────
+
+    @Test
+    fun `promote persists the override and re-renders the row`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(
+            repo,
+            ingredients = listOf(
+                Ingredient(rawQuantity = "44", unit = KitchenUnit.CUP, name = "Stock"),
+            ),
+        )
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        val s = vm.uiState.filter { !it.isLoading }.first()
+        val rowId = s.rows[0].id
+        assertEquals("44 cup", s.rows[0].displayText)
+
+        vm.promote(rowId, KitchenUnit.QUART)
+        val promoted = vm.uiState
+            .filter { it.rows[0].promotedUnit == KitchenUnit.QUART }
+            .first()
+        assertEquals("11 qt", promoted.rows[0].displayText)
+
+        // The choice lives on the ingredient row, not session state.
+        assertEquals(KitchenUnit.QUART, repo.get(id)!!.ingredients[0].promotedUnit)
+    }
+
+    @Test
+    fun `promotion survives a scale-to change and auto resets`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(
+            repo,
+            ingredients = listOf(
+                Ingredient(rawQuantity = "22", unit = KitchenUnit.CUP, name = "Stock"),
+            ),
+        )
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        val s = vm.uiState.filter { !it.isLoading }.first()
+        val rowId = s.rows[0].id
+        vm.promote(rowId, KitchenUnit.GALLON)
+        vm.uiState.filter { it.rows[0].promotedUnit == KitchenUnit.GALLON }.first()
+        // 22 cup = 1056 tsp = 1 gal + 1 qt + 2 cup.
+        assertEquals("1 gal 1 qt 2 cup", vm.uiState.value.rows[0].displayText)
+
+        // Re-scaling keeps the override (22 cup → 44 cup = 2 gal 3 qt).
+        vm.setScaleTo("8")
+        val doubled = vm.uiState.filter { it.factor == 2.0 }.first()
+        assertEquals("2 gal 3 qt", doubled.rows[0].displayText)
+
+        // "Auto" clears it.
+        vm.promote(rowId, null)
+        val auto = vm.uiState.filter { it.rows[0].promotedUnit == null }.first()
+        assertEquals("44 cup", auto.rows[0].displayText)
+        assertNull(repo.get(id)!!.ingredients[0].promotedUnit)
+    }
+
+    @Test
+    fun `promote ignores an unknown ingredient id`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.promote("not-a-number", KitchenUnit.QUART)
+        vm.promote("9999", KitchenUnit.QUART)
+        runCurrent()
+        assertNull(repo.get(id)!!.ingredients[0].promotedUnit)
+    }
+
+    @Test
+    fun `promote options flow into the rows`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(
+            repo,
+            ingredients = listOf(
+                Ingredient(rawQuantity = "44", unit = KitchenUnit.CUP, name = "Stock"),
+                Ingredient(rawQuantity = "1", unit = KitchenUnit.TSP, name = "Salt"),
+            ),
+        )
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        val s = vm.uiState.filter { !it.isLoading }.first()
+        assertEquals(
+            listOf(KitchenUnit.QUART, KitchenUnit.GALLON, KitchenUnit.ML, KitchenUnit.L),
+            s.rows[0].promoteOptions.map { it.unit },
+        )
+        assertTrue(s.rows[1].promoteOptions.isEmpty())
+    }
+
+    @Test
+    fun `copy text reflects the promoted unit`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(
+            repo,
+            ingredients = listOf(
+                Ingredient(rawQuantity = "44", unit = KitchenUnit.CUP, name = "Stock"),
+            ),
+        )
+        val vm = vm(repo, FakeSettingsRepository(), id)
+
+        val s = vm.uiState.filter { !it.isLoading }.first()
+        vm.promote(s.rows[0].id, KitchenUnit.QUART)
+        vm.uiState.filter { it.rows[0].promotedUnit == KitchenUnit.QUART }.first()
+
+        assertTrue(vm.copyText(CopyFormat.PLAIN).contains("11 qt"))
     }
 
     @Test

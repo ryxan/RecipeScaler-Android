@@ -6,6 +6,7 @@ import com.ryxan.recipescaler.core.data.db.RecipeDatabase
 import com.ryxan.recipescaler.core.data.db.RecipeEntity
 import com.ryxan.recipescaler.core.data.db.toDomain
 import com.ryxan.recipescaler.core.data.db.toEntity
+import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import com.ryxan.recipescaler.core.domain.model.Recipe
 import com.ryxan.recipescaler.core.domain.model.RecipeSummary
 import com.ryxan.recipescaler.core.domain.repository.RecipeRepository
@@ -84,6 +85,10 @@ class RoomRecipeRepository @Inject constructor(
         dao.insertIngredients(
             recipe.ingredients.mapIndexed { i, ing -> ing.copy(id = 0).toEntity(recipe.id, i) }
         )
+    }
+
+    override suspend fun setPromotedUnit(recipeId: Long, ingredientId: Long, unit: KitchenUnit?) {
+        dao.setPromotedUnit(recipeId, ingredientId, unit?.key)
     }
 
     private companion object {

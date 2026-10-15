@@ -519,6 +519,69 @@ class EditorViewModelTest {
         assertEquals(k2, row.key)
     }
 
+    // ── "Promote to" round-trip ───────────────────────────────────────────────
+
+    @Test
+    fun `editing preserves the promoted unit on unchanged ingredients`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = repo.save(
+            recipe("Soup").copy(
+                ingredients = listOf(
+                    Ingredient(
+                        rawQuantity = "44", unit = KitchenUnit.CUP, name = "Stock",
+                        promotedUnit = KitchenUnit.QUART,
+                    ),
+                    Ingredient(rawQuantity = "2", unit = KitchenUnit.EACH, name = "Eggs"),
+                ),
+            ),
+        )
+        val vm = EditorViewModel(
+            SavedStateHandle(mapOf("recipeId" to id)),
+            repo, UndoDeleteController(repo, backgroundScope), testScanImporter(),
+            backgroundScope, FakeProRepository(), NoopRewardedAds(),
+        )
+
+        vm.onTitleChange("Soup v2")
+        vm.flush()
+        runCurrent()
+
+        val saved = repo.get(id)!!
+        assertEquals(KitchenUnit.QUART, saved.ingredients[0].promotedUnit)
+        assertNull(saved.ingredients[1].promotedUnit)
+    }
+
+    @Test
+    fun `changing the unit to non-volume clears the promoted unit`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = repo.save(
+            recipe("Soup").copy(
+                ingredients = listOf(
+                    Ingredient(
+                        rawQuantity = "44", unit = KitchenUnit.CUP, name = "Stock",
+                        promotedUnit = KitchenUnit.QUART,
+                    ),
+                ),
+            ),
+        )
+        val vm = EditorViewModel(
+            SavedStateHandle(mapOf("recipeId" to id)),
+            repo, UndoDeleteController(repo, backgroundScope), testScanImporter(),
+            backgroundScope, FakeProRepository(), NoopRewardedAds(),
+        )
+        val key = vm.uiState.value.rows[0].key
+
+        // Volume → volume keeps it.
+        vm.onRowUnitChange(key, KitchenUnit.TBSP)
+        assertEquals(KitchenUnit.QUART, vm.uiState.value.rows[0].promotedUnit)
+
+        // Volume → count clears it, and the save drops it.
+        vm.onRowUnitChange(key, KitchenUnit.EACH)
+        assertNull(vm.uiState.value.rows[0].promotedUnit)
+        vm.flush()
+        runCurrent()
+        assertNull(repo.get(id)!!.ingredients[0].promotedUnit)
+    }
+
     @Test
     fun `initialTitle prefills the title and autofocuses the first row without saving`() = runTest {
         val repo = FakeRecipeRepository()

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.ryxan.recipescaler.core.domain.formatting.DisplayMode
 import com.ryxan.recipescaler.core.domain.formatting.DisplayPrefs
 import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
+import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import com.ryxan.recipescaler.core.domain.model.Recipe
 import com.ryxan.recipescaler.core.domain.model.ScaledIngredient
 import com.ryxan.recipescaler.core.domain.model.formatYield
@@ -74,7 +75,7 @@ data class ScaleUiState(
 @HiltViewModel
 class ScaleViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
-    repository: RecipeRepository,
+    private val repository: RecipeRepository,
     private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
@@ -163,6 +164,15 @@ class ScaleViewModel @Inject constructor(
         viewModelScope.launch { settingsRepository.setMeasurementSystem(system) }
     }
 
+    /**
+     * Sets/clears a row's "Promote to" unit override (null = Auto). Persisted on
+     * the ingredient row; the state re-derives through [RecipeRepository.observe].
+     */
+    fun promote(ingredientId: String, unit: KitchenUnit?) {
+        val id = ingredientId.toLongOrNull() ?: return
+        viewModelScope.launch { repository.setPromotedUnit(recipeId, id, unit) }
+    }
+
     /** Toggles cook/checklist mode; turning it off clears the checked rows. */
     fun toggleCookMode() {
         val on = !cookMode.value
@@ -199,9 +209,13 @@ class ScaleViewModel @Inject constructor(
         val items = recipe.ingredients.map { it.toScaleItem() }
         val inp = rawInputs ?: defaultInputs(recipe)
 
+        val promoted = recipe.ingredients.mapNotNull { ing ->
+            ing.promotedUnit?.let { ing.id.toString() to it }
+        }.toMap()
+
         val (mode, firstMessage) = modeFor(inp)
         var message = firstMessage
-        val outcome = ScaleRecipe.scale(items, mode, prefs)
+        val outcome = ScaleRecipe.scale(items, mode, prefs, promoted)
 
         val factor: Double
         val rows: List<ScaledIngredient>
@@ -214,7 +228,7 @@ class ScaleViewModel @Inject constructor(
             }
             is ScaleOutcome.Failure -> {
                 factor = 1.0
-                rows = (ScaleRecipe.scale(items, ScaleMode.ByFactor(1.0), prefs)
+                rows = (ScaleRecipe.scale(items, ScaleMode.ByFactor(1.0), prefs, promoted)
                         as ScaleOutcome.Success).ingredients
                 warning = false
                 message = message ?: when (outcome.error) {

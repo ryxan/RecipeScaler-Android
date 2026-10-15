@@ -166,6 +166,14 @@
     <string name="action_cook_done">Done</string>
     <string name="cook_mode_hint">Tap an ingredient to check it off. The screen stays on.</string>
     <string name="scale_recipe_missing">This recipe no longer exists</string>
+    <string name="promote_to">Promote to</string>
+    <string name="cd_promote_unit">Promote to a larger unit</string>
+    <string name="promote_auto">Auto</string>
+    <string name="promote_option">%1$s — %2$s</string>
+    <string name="promote_unit_quarts">Quarts</string>
+    <string name="promote_unit_gallons">Gallons</string>
+    <string name="promote_unit_ml">Millilitres</string>
+    <string name="promote_unit_litres">Litres</string>
 
     <!-- Recipe list -->
     <string name="action_new_recipe">New recipe</string>

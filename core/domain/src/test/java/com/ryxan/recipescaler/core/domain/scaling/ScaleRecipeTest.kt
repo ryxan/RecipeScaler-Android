@@ -3,6 +3,7 @@ package com.ryxan.recipescaler.core.domain.scaling
 import com.ryxan.recipescaler.core.domain.formatting.DisplayMode
 import com.ryxan.recipescaler.core.domain.formatting.DisplayPrefs
 import com.ryxan.recipescaler.core.domain.model.IngredientItem
+import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import com.ryxan.recipescaler.core.domain.model.ScaleStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -196,6 +197,100 @@ class ScaleRecipeTest {
         val row = s.ingredients.first()
         assertEquals("⅓ cup", row.originalDisplayText)
         assertEquals("1 cup", row.displayText)
+    }
+
+    // ── "Promote to" overrides ────────────────────────────────────────────────
+
+    @Test fun `promoted row displays in the target unit and keeps the original was text`() {
+        val s = success(
+            ScaleRecipe.scale(
+                listOf(ingredient("a", "44", "cup", "stock")),
+                ScaleMode.ByFactor(1.0),
+                promoted = mapOf("a" to KitchenUnit.QUART),
+            )
+        )
+        val row = s.ingredients.first()
+        assertEquals("11 qt", row.displayText)
+        assertEquals("44 cup", row.originalDisplayText)
+        assertEquals(KitchenUnit.QUART, row.promotedUnit)
+    }
+
+    @Test fun `promotion rescales with the factor`() {
+        val s = success(
+            ScaleRecipe.scale(
+                listOf(ingredient("a", "22", "cup", "stock")),
+                ScaleMode.ByFactor(2.0),
+                promoted = mapOf("a" to KitchenUnit.GALLON),
+            )
+        )
+        assertEquals("2 gal 3 qt", s.ingredients.first().displayText)
+    }
+
+    @Test fun `promotion is ignored on non-volume rows`() {
+        val s = success(
+            ScaleRecipe.scale(
+                listOf(ingredient("a", "2", "each", "eggs")),
+                ScaleMode.ByFactor(2.0),
+                promoted = mapOf("a" to KitchenUnit.QUART),
+            )
+        )
+        val row = s.ingredients.first()
+        assertEquals("4 each", row.displayText)
+        assertEquals(null, row.promotedUnit)
+    }
+
+    @Test fun `promotion falls back when below one target unit`() {
+        val s = success(
+            ScaleRecipe.scale(
+                listOf(ingredient("a", "1", "cup", "milk")),
+                ScaleMode.ByFactor(0.5),
+                promoted = mapOf("a" to KitchenUnit.QUART),
+            )
+        )
+        assertEquals("½ cup", s.ingredients.first().displayText)
+    }
+
+    @Test fun `promotion is ignored outside kitchen mode`() {
+        val s = success(
+            ScaleRecipe.scale(
+                listOf(ingredient("a", "44", "cup", "stock")),
+                ScaleMode.ByFactor(1.0),
+                prefs = DisplayPrefs(mode = DisplayMode.DECIMAL),
+                promoted = mapOf("a" to KitchenUnit.QUART),
+            )
+        )
+        val row = s.ingredients.first()
+        assertEquals("44 cup", row.displayText)
+        assertEquals(null, row.promotedUnit)
+    }
+
+    @Test fun `promote options are listed once the scaled amount reaches a cup`() {
+        val s = success(
+            ScaleRecipe.scale(
+                listOf(
+                    ingredient("a", "1", "cup", "milk"),
+                    ingredient("b", "44", "cup", "stock"),
+                    ingredient("c", "2", "each", "eggs"),
+                    ingredient("d", "0.5", "cup", "cream"),
+                ),
+                ScaleMode.ByFactor(1.0),
+            )
+        )
+        // 1 cup: only the mL target (below qt, gal, L).
+        assertEquals(listOf(KitchenUnit.ML), s.ingredients[0].promoteOptions.map { it.unit })
+        assertEquals("237 mL", s.ingredients[0].promoteOptions[0].previewText)
+        // 44 cup: qt, gal, mL and L all ≥ 1 unit.
+        assertEquals(
+            listOf(
+                KitchenUnit.QUART, KitchenUnit.GALLON,
+                KitchenUnit.ML, KitchenUnit.L,
+            ),
+            s.ingredients[1].promoteOptions.map { it.unit },
+        )
+        assertEquals("11 qt", s.ingredients[1].promoteOptions[0].previewText)
+        // Non-volume and <1-cup rows get no options.
+        assertTrue(s.ingredients[2].promoteOptions.isEmpty())
+        assertTrue(s.ingredients[3].promoteOptions.isEmpty())
     }
 
     // ── Copy output with blank rows ───────────────────────────────────────────

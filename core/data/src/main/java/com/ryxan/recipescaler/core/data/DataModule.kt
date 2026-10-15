@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.room.Room
+import com.ryxan.recipescaler.core.data.db.MIGRATION_1_2
 import com.ryxan.recipescaler.core.data.db.RecipeDao
 import com.ryxan.recipescaler.core.data.db.RecipeDatabase
 import com.ryxan.recipescaler.core.domain.time.Clock
@@ -49,7 +50,9 @@ object DataModule {
     @Provides
     @Singleton
     fun provideRecipeDatabase(@ApplicationContext context: Context): RecipeDatabase =
-        Room.databaseBuilder(context, RecipeDatabase::class.java, "recipes.db").build()
+        Room.databaseBuilder(context, RecipeDatabase::class.java, "recipes.db")
+            .addMigrations(MIGRATION_1_2)
+            .build()
 
     @Provides
     fun provideRecipeDao(db: RecipeDatabase): RecipeDao = db.recipeDao()
