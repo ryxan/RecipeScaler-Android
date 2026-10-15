@@ -7,14 +7,20 @@ import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
 import com.ryxan.recipescaler.core.domain.model.Ingredient
 import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import com.ryxan.recipescaler.core.domain.model.Recipe
+import com.ryxan.recipescaler.core.domain.model.SavedScaleInputs
 import com.ryxan.recipescaler.core.domain.scaling.CopyFormat
 import com.ryxan.recipescaler.core.domain.scaling.RecipeScalerCalculator
 import com.ryxan.recipescaler.testing.FakeRecipeRepository
+import com.ryxan.recipescaler.testing.FakeScaleInputsRepository
 import com.ryxan.recipescaler.testing.FakeSettingsRepository
 import com.ryxan.recipescaler.testing.MainDispatcherRule
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.math.abs
@@ -52,7 +58,11 @@ class ScaleViewModelTest {
         repo: FakeRecipeRepository,
         settings: FakeSettingsRepository,
         id: Long,
-    ) = ScaleViewModel(SavedStateHandle(mapOf("recipeId" to id)), repo, settings)
+        scaleInputs: FakeScaleInputsRepository = FakeScaleInputsRepository(),
+        appScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
+    ) = ScaleViewModel(
+        SavedStateHandle(mapOf("recipeId" to id)), repo, settings, scaleInputs, appScope,
+    )
 
     @Test
     fun `defaults come from the recipe yield`() = runTest {
@@ -222,7 +232,10 @@ class ScaleViewModelTest {
         val id = seeded(repo)
         val settings = FakeSettingsRepository()
         val handle = SavedStateHandle(mapOf("recipeId" to id))
-        val vm = ScaleViewModel(handle, repo, settings)
+        val vm = ScaleViewModel(
+            handle, repo, settings, FakeScaleInputsRepository(),
+            CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
+        )
 
         vm.toggleCookMode()
         val s = vm.uiState.filter { it.cookMode }.first()
@@ -230,7 +243,10 @@ class ScaleViewModelTest {
         vm.uiState.filter { it.checkedIds.isNotEmpty() }.first()
 
         // A new VM over the same handle (process death) restores both.
-        val vm2 = ScaleViewModel(handle, repo, settings)
+        val vm2 = ScaleViewModel(
+            handle, repo, settings, FakeScaleInputsRepository(),
+            CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
+        )
         val s2 = vm2.uiState.filter { !it.isLoading }.first()
         assertTrue(s2.cookMode)
         assertEquals(setOf(s.rows[0].id), s2.checkedIds)
@@ -359,18 +375,129 @@ class ScaleViewModelTest {
         val id = seeded(repo)
         val settings = FakeSettingsRepository()
         val handle = SavedStateHandle(mapOf("recipeId" to id))
-        val vm = ScaleViewModel(handle, repo, settings)
+        val vm = ScaleViewModel(
+            handle, repo, settings, FakeScaleInputsRepository(),
+            CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
+        )
 
         vm.uiState.filter { !it.isLoading }.first()
         vm.setScaleTo("8")
         vm.uiState.filter { it.factor == 2.0 }.first()
 
         // A new VM over the same handle restores the in-session factor.
-        val vm2 = ScaleViewModel(handle, repo, settings)
+        val vm2 = ScaleViewModel(
+            handle, repo, settings, FakeScaleInputsRepository(),
+            CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
+        )
         val s = vm2.uiState
             .filter { !it.isLoading && it.inputs.scaleToText == "8" }
             .first()
         assertEquals(2.0, s.factor, 0.001)
+    }
+
+    @Test
+    fun `saved scale inputs restore when reopening the recipe`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val scaleInputs = FakeScaleInputsRepository()
+        scaleInputs.seed(id, SavedScaleInputs("4", "9"))
+        val vm = vm(repo, FakeSettingsRepository(), id, scaleInputs)
+
+        val s = vm.uiState.filter { !it.isLoading }.first()
+        assertEquals("4", s.inputs.servesText)
+        assertEquals("9", s.inputs.scaleToText)
+        assertEquals(2.25, s.factor, 0.001)
+    }
+
+    @Test
+    fun `saved inputs are per recipe`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id1 = seeded(repo, title = "One")
+        val id2 = seeded(repo, title = "Two")
+        val scaleInputs = FakeScaleInputsRepository()
+        scaleInputs.seed(id1, SavedScaleInputs("4", "9"))
+
+        val vm2 = vm(repo, FakeSettingsRepository(), id2, scaleInputs)
+        val s2 = vm2.uiState.filter { !it.isLoading }.first()
+        assertEquals("4", s2.inputs.servesText)
+        assertEquals("4", s2.inputs.scaleToText)
+    }
+
+    @Test
+    fun `saved state handle restore wins over the store`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val scaleInputs = FakeScaleInputsRepository()
+        scaleInputs.seed(id, SavedScaleInputs("4", "9"))
+        // Process death left newer in-session values in the handle.
+        val handle = SavedStateHandle(
+            mapOf("recipeId" to id, "scaleServes" to "3", "scaleScaleTo" to "7"),
+        )
+        val vm = ScaleViewModel(
+            handle, repo, FakeSettingsRepository(), scaleInputs,
+            CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
+        )
+
+        val s = vm.uiState.filter { !it.isLoading }.first()
+        assertEquals("3", s.inputs.servesText)
+        assertEquals("7", s.inputs.scaleToText)
+    }
+
+    @Test
+    fun `typing scale-to persists it for the recipe`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val scaleInputs = FakeScaleInputsRepository()
+        val vm = vm(repo, FakeSettingsRepository(), id, scaleInputs)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.setScaleTo("6")
+        advanceUntilIdle()
+
+        assertEquals(SavedScaleInputs("4", "6"), scaleInputs.savedFor(id))
+    }
+
+    @Test
+    fun `typing serves persists the pair`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val scaleInputs = FakeScaleInputsRepository()
+        val vm = vm(repo, FakeSettingsRepository(), id, scaleInputs)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.setServes("2")
+        advanceUntilIdle()
+
+        assertEquals(SavedScaleInputs("2", "4"), scaleInputs.savedFor(id))
+    }
+
+    @Test
+    fun `servings chip persists the new target`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val scaleInputs = FakeScaleInputsRepository()
+        val vm = vm(repo, FakeSettingsRepository(), id, scaleInputs)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.applyServings(8)
+        advanceUntilIdle()
+
+        assertEquals(SavedScaleInputs("4", "8"), scaleInputs.savedFor(id))
+    }
+
+    @Test
+    fun `a pending edit is flushed when the view model is cleared`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val scaleInputs = FakeScaleInputsRepository()
+        val vm = vm(repo, FakeSettingsRepository(), id, scaleInputs)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        // Faster than the debounce window — the store would lose this without the flush.
+        vm.setScaleTo("6")
+        vm.flushPendingInputs()
+
+        assertEquals(SavedScaleInputs("4", "6"), scaleInputs.savedFor(id))
     }
 
     @Test
