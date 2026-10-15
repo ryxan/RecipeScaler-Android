@@ -30,9 +30,11 @@ import com.ryxan.recipescaler.core.data.importer.FirebaseAiRecipeImporter
 import com.ryxan.recipescaler.core.data.importer.ImagePreprocessor
 import com.ryxan.recipescaler.core.data.importer.MlKitOcrEngine
 import com.ryxan.recipescaler.core.data.importer.OcrEngine
+import com.ryxan.recipescaler.core.data.settings.DataStoreScaleInputsRepository
 import com.ryxan.recipescaler.core.data.settings.DataStoreSettingsRepository
 import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
 import com.ryxan.recipescaler.core.domain.repository.RecipeRepository
+import com.ryxan.recipescaler.core.domain.repository.ScaleInputsRepository
 import com.ryxan.recipescaler.core.domain.repository.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -97,6 +99,10 @@ abstract class RepositoryBindingsModule {
     @Binds
     @Singleton
     abstract fun bindSettingsRepository(impl: DataStoreSettingsRepository): SettingsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindScaleInputsRepository(impl: DataStoreScaleInputsRepository): ScaleInputsRepository
 
     @Binds
     @Singleton
