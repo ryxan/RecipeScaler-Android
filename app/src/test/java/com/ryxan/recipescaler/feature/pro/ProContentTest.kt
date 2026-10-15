@@ -5,9 +5,11 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import com.ryxan.recipescaler.core.data.billing.ProPlan
 import com.ryxan.recipescaler.core.data.billing.ProProduct
 import com.ryxan.recipescaler.core.designsystem.RescaleTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,6 +27,9 @@ class ProContentTest {
         state: ProUiState,
         onPurchase: (String) -> Unit = {},
         onRestore: () -> Unit = {},
+        onTryAiImport: () -> Unit = {},
+        onBackToRecipes: () -> Unit = {},
+        onManageSubscription: () -> Unit = {},
         onRetry: () -> Unit = {},
     ) {
         composeRule.setContent {
@@ -33,6 +38,9 @@ class ProContentTest {
                     state = state,
                     onPurchase = onPurchase,
                     onRestore = onRestore,
+                    onTryAiImport = onTryAiImport,
+                    onBackToRecipes = onBackToRecipes,
+                    onManageSubscription = onManageSubscription,
                     onRetry = onRetry,
                 )
             }
@@ -96,12 +104,82 @@ class ProContentTest {
     }
 
     @Test
-    fun `pro user sees the thank-you state and no purchase UI`() {
+    fun `pro user sees the celebration state with next steps`() {
         content(ProUiState(isPro = true, products = products, loading = false))
 
-        composeRule.onNodeWithText("You're Pro").assertIsDisplayed()
+        composeRule.onNodeWithText("You're Pro!").assertIsDisplayed()
+        composeRule.onNodeWithText("Thank you — everything is unlocked.").assertIsDisplayed()
+        composeRule.onNodeWithText("What's unlocked").assertIsDisplayed()
+        composeRule.onNodeWithText("No ads").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Scan your first recipe").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Back to recipes").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("$3.99 / month").assertDoesNotExist()
         composeRule.onNodeWithText("Unlock for $14.99").assertDoesNotExist()
         composeRule.onNodeWithText("Restore purchases").assertDoesNotExist()
+    }
+
+    @Test
+    fun `monthly plan shows plan row and manage subscription`() {
+        content(ProUiState(isPro = true, plan = ProPlan.Monthly, loading = false))
+
+        composeRule.onNodeWithText("Monthly").assertIsDisplayed()
+        composeRule.onNodeWithText("Manage subscription").assertIsDisplayed()
+        composeRule.onNodeWithText("Lifetime").assertDoesNotExist()
+    }
+
+    @Test
+    fun `lifetime plan shows lifetime row and no manage link`() {
+        content(ProUiState(isPro = true, plan = ProPlan.Lifetime, loading = false))
+
+        composeRule.onNodeWithText("Lifetime").assertIsDisplayed()
+        composeRule.onNodeWithText("Manage subscription").assertDoesNotExist()
+    }
+
+    @Test
+    fun `unknown plan hides the plan row`() {
+        content(ProUiState(isPro = true, plan = null, loading = false))
+
+        composeRule.onNodeWithText("Monthly").assertDoesNotExist()
+        composeRule.onNodeWithText("Lifetime").assertDoesNotExist()
+    }
+
+    @Test
+    fun `tapping scan calls onTryAiImport`() {
+        var called = false
+        content(
+            ProUiState(isPro = true, loading = false),
+            onTryAiImport = { called = true },
+        )
+
+        composeRule.onNodeWithText("Scan your first recipe").performScrollTo().performClick()
+
+        assertTrue(called)
+    }
+
+    @Test
+    fun `tapping back calls onBackToRecipes`() {
+        var called = false
+        content(
+            ProUiState(isPro = true, loading = false),
+            onBackToRecipes = { called = true },
+        )
+
+        composeRule.onNodeWithText("Back to recipes").performScrollTo().performClick()
+
+        assertTrue(called)
+    }
+
+    @Test
+    fun `tapping manage calls onManageSubscription`() {
+        var called = false
+        content(
+            ProUiState(isPro = true, plan = ProPlan.Monthly, loading = false),
+            onManageSubscription = { called = true },
+        )
+
+        composeRule.onNodeWithText("Manage subscription").performClick()
+
+        assertTrue(called)
     }
 
     @Test
@@ -109,6 +187,9 @@ class ProContentTest {
         content(ProUiState(isPending = true, products = products, loading = false))
 
         composeRule.onNodeWithText("Purchase pending").assertIsDisplayed()
+        composeRule.onNodeWithText("Pro unlocks as soon as Google Play confirms the payment.")
+            .performScrollTo()
+            .assertIsDisplayed()
         composeRule.onNodeWithText("Unlock for $14.99").assertDoesNotExist()
         composeRule.onNodeWithText("Restore purchases").assertIsDisplayed()
     }

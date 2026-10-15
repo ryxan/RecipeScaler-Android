@@ -39,6 +39,9 @@ sealed interface PurchaseLaunch {
     data class Error(val message: String) : PurchaseLaunch
 }
 
+/** Which Pro plan the user owns, when known. */
+enum class ProPlan { Monthly, Lifetime }
+
 /**
  * Source of truth for the Rescale Pro entitlement. Consumers observe [isPro]
  * rather than querying Play Billing directly.
@@ -47,6 +50,14 @@ interface ProRepository {
     val isPro: StateFlow<Boolean>
     val isPending: StateFlow<Boolean>
     val products: StateFlow<List<ProProduct>>
+
+    /**
+     * The owned Pro plan, or null for free users / when the plan couldn't be
+     * determined (e.g. the debug entitlement override, which carries no
+     * purchase). The post-purchase screen uses this for the plan row and the
+     * "Manage subscription" link, which only applies to [ProPlan.Monthly].
+     */
+    val plan: StateFlow<ProPlan?>
 
     /**
      * One-shot event with the number of bonus AI scans granted by a

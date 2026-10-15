@@ -3,6 +3,7 @@ package com.ryxan.recipescaler.feature.pro
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ryxan.recipescaler.core.data.billing.ProPlan
 import com.ryxan.recipescaler.core.data.billing.ProProduct
 import com.ryxan.recipescaler.core.data.billing.ProRepository
 import com.ryxan.recipescaler.core.data.billing.PurchaseLaunch
@@ -22,6 +23,8 @@ data class ProUiState(
     val isPro: Boolean = false,
     val isPending: Boolean = false,
     val products: List<ProProduct> = emptyList(),
+    /** Which plan the user owns; null for free users or when unknown. */
+    val plan: ProPlan? = null,
     /** True while a product refresh is in flight (initially, and on retry). */
     val loading: Boolean = true,
     /** True while a new purchase is being verified with the backend. */
@@ -47,6 +50,7 @@ class ProViewModel @Inject constructor(
         viewModelScope.launch { proRepository.isPro.collect { p -> _uiState.update { it.copy(isPro = p) } } }
         viewModelScope.launch { proRepository.isPending.collect { p -> _uiState.update { it.copy(isPending = p) } } }
         viewModelScope.launch { proRepository.products.collect { p -> _uiState.update { it.copy(products = p) } } }
+        viewModelScope.launch { proRepository.plan.collect { p -> _uiState.update { it.copy(plan = p) } } }
         viewModelScope.launch { proRepository.verifying.collect { v -> _uiState.update { it.copy(verifying = v) } } }
         viewModelScope.launch {
             proRepository.verificationDenied.collect {

@@ -14,13 +14,13 @@ class EntitlementTest {
     @Test
     fun `lifetime purchase grants Pro`() {
         val e = entitlementOf(listOf(purchase(listOf(ProProductIds.LIFETIME))))
-        assertEquals(Entitlement(isPro = true, isPending = false), e)
+        assertEquals(Entitlement(isPro = true, isPending = false, plan = ProPlan.Lifetime), e)
     }
 
     @Test
     fun `monthly subscription purchase grants Pro`() {
         val e = entitlementOf(listOf(purchase(listOf(ProProductIds.MONTHLY))))
-        assertEquals(Entitlement(isPro = true, isPending = false), e)
+        assertEquals(Entitlement(isPro = true, isPending = false, plan = ProPlan.Monthly), e)
     }
 
     @Test
@@ -50,6 +50,42 @@ class EntitlementTest {
                 purchase(listOf(ProProductIds.LIFETIME), state = PurchaseStatus.PENDING),
             ),
         )
-        assertEquals(Entitlement(isPro = true, isPending = false), e)
+        assertEquals(Entitlement(isPro = true, isPending = false, plan = ProPlan.Monthly), e)
+    }
+
+    @Test
+    fun `monthly purchase reports the monthly plan`() {
+        val e = entitlementOf(listOf(purchase(listOf(ProProductIds.MONTHLY))))
+        assertEquals(ProPlan.Monthly, e.plan)
+    }
+
+    @Test
+    fun `lifetime purchase reports the lifetime plan`() {
+        val e = entitlementOf(listOf(purchase(listOf(ProProductIds.LIFETIME))))
+        assertEquals(ProPlan.Lifetime, e.plan)
+    }
+
+    @Test
+    fun `both plans owned reports monthly so it can be managed`() {
+        val e = entitlementOf(
+            listOf(
+                purchase(listOf(ProProductIds.MONTHLY)),
+                purchase(listOf(ProProductIds.LIFETIME)),
+            ),
+        )
+        assertEquals(ProPlan.Monthly, e.plan)
+    }
+
+    @Test
+    fun `pending-only purchase reports no plan`() {
+        val e = entitlementOf(
+            listOf(purchase(listOf(ProProductIds.MONTHLY), state = PurchaseStatus.PENDING)),
+        )
+        assertEquals(null, e.plan)
+    }
+
+    @Test
+    fun `no entitlement reports no plan`() {
+        assertEquals(null, entitlementOf(emptyList()).plan)
     }
 }

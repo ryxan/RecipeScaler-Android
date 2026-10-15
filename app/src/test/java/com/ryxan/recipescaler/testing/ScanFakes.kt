@@ -2,6 +2,7 @@ package com.ryxan.recipescaler.testing
 
 import android.app.Activity
 import android.net.Uri
+import com.ryxan.recipescaler.core.data.billing.ProPlan
 import com.ryxan.recipescaler.core.data.billing.ProProduct
 import com.ryxan.recipescaler.core.data.billing.ProRepository
 import com.ryxan.recipescaler.core.data.billing.PurchaseLaunch
@@ -165,6 +166,8 @@ class FakeProRepository(pro: Boolean = false) : ProRepository {
     private val _isPro = MutableStateFlow(pro)
     override val isPro: StateFlow<Boolean> = _isPro
     override val isPending: StateFlow<Boolean> = MutableStateFlow(false)
+    private val _plan = MutableStateFlow<ProPlan?>(null)
+    override val plan: StateFlow<ProPlan?> = _plan
     override val products: StateFlow<List<ProProduct>> =
         MutableStateFlow(emptyList())
 
@@ -195,6 +198,10 @@ class FakeProRepository(pro: Boolean = false) : ProRepository {
 
     fun setPro(value: Boolean) {
         _isPro.value = value
+    }
+
+    fun setPlan(value: ProPlan?) {
+        _plan.value = value
     }
 
     fun setProducts(list: List<ProProduct>) {
