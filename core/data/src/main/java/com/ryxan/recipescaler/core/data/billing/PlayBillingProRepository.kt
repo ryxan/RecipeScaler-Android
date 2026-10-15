@@ -88,6 +88,9 @@ class PlayBillingProRepository @Inject constructor(
     private val _isPending = MutableStateFlow(false)
     override val isPending: StateFlow<Boolean> = _isPending.asStateFlow()
 
+    private val _plan = MutableStateFlow<ProPlan?>(null)
+    override val plan: StateFlow<ProPlan?> = _plan.asStateFlow()
+
     private val _products = MutableStateFlow<List<ProProduct>>(emptyList())
     override val products: StateFlow<List<ProProduct>> = _products.asStateFlow()
 
@@ -371,7 +374,13 @@ class PlayBillingProRepository @Inject constructor(
                         it == ProProductIds.MONTHLY || it == ProProductIds.LIFETIME
                     }
                 ) {
-                    applyEntitlement(Entitlement(isPro = true, isPending = false))
+                    val plan = when {
+                        ProProductIds.MONTHLY in purchase.products -> ProPlan.Monthly
+                        else -> ProPlan.Lifetime
+                    }
+                    applyEntitlement(
+                        Entitlement(isPro = true, isPending = false, plan = plan),
+                    )
                 }
             }
             Purchase.PurchaseState.PENDING -> {
@@ -410,6 +419,7 @@ class PlayBillingProRepository @Inject constructor(
     private fun applyEntitlement(entitlement: Entitlement) {
         _isPro.value = entitlement.isPro
         _isPending.value = entitlement.isPending
+        _plan.value = entitlement.plan
         appScope.launch {
             try {
                 dataStore.edit { it[KEY_IS_PRO] = entitlement.isPro }

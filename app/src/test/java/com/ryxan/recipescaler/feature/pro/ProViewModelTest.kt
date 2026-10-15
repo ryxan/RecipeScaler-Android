@@ -1,6 +1,7 @@
 package com.ryxan.recipescaler.feature.pro
 
 import android.app.Activity
+import com.ryxan.recipescaler.core.data.billing.ProPlan
 import com.ryxan.recipescaler.core.data.billing.PurchaseLaunch
 import com.ryxan.recipescaler.testing.FakeProRepository
 import com.ryxan.recipescaler.testing.MainDispatcherRule
@@ -49,6 +50,15 @@ class ProViewModelTest {
 
         assertTrue(vm.uiState.value.isPro)
         assertEquals(1, vm.uiState.value.products.size)
+    }
+
+    @Test
+    fun `plan flows into state`() = runTest {
+        val repo = FakeProRepository(pro = true)
+        repo.setPlan(ProPlan.Monthly)
+        val vm = ProViewModel(repo)
+
+        assertEquals(ProPlan.Monthly, vm.uiState.value.plan)
     }
 
     @Test

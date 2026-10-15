@@ -93,7 +93,10 @@ fun RescaleNavHost() {
             )
         }
         composable<Pro> {
-            ProScreen(onNavigateUp = { navController.navigateUp() })
+            ProScreen(
+                onNavigateUp = { navController.navigateUp() },
+                onTryAiImport = { navController.navigate(Editor()) },
+            )
         }
     }
 }

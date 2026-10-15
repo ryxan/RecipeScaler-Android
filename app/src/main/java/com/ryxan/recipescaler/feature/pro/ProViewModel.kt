@@ -3,6 +3,7 @@ package com.ryxan.recipescaler.feature.pro
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ryxan.recipescaler.core.data.billing.ProPlan
 import com.ryxan.recipescaler.core.data.billing.ProProduct
 import com.ryxan.recipescaler.core.data.billing.ProRepository
 import com.ryxan.recipescaler.core.data.billing.PurchaseLaunch
@@ -19,6 +20,8 @@ data class ProUiState(
     val isPro: Boolean = false,
     val isPending: Boolean = false,
     val products: List<ProProduct> = emptyList(),
+    /** Which plan the user owns; null for free users or when unknown. */
+    val plan: ProPlan? = null,
     /** True until the first product refresh completes. */
     val loading: Boolean = true,
 )
@@ -39,6 +42,7 @@ class ProViewModel @Inject constructor(
         viewModelScope.launch { proRepository.isPro.collect { p -> _uiState.value = _uiState.value.copy(isPro = p) } }
         viewModelScope.launch { proRepository.isPending.collect { p -> _uiState.value = _uiState.value.copy(isPending = p) } }
         viewModelScope.launch { proRepository.products.collect { p -> _uiState.value = _uiState.value.copy(products = p) } }
+        viewModelScope.launch { proRepository.plan.collect { p -> _uiState.value = _uiState.value.copy(plan = p) } }
         viewModelScope.launch {
             proRepository.refreshProducts()
             _uiState.value = _uiState.value.copy(loading = false)
