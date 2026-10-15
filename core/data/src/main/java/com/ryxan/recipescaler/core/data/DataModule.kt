@@ -17,8 +17,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import com.ryxan.recipescaler.core.data.ads.AdMobRewardedAds
 import com.ryxan.recipescaler.core.data.ads.RewardedAds
+import com.ryxan.recipescaler.core.data.billing.OkHttpProVerificationApi
 import com.ryxan.recipescaler.core.data.billing.PlayBillingProRepository
 import com.ryxan.recipescaler.core.data.billing.ProRepository
+import com.ryxan.recipescaler.core.data.billing.ProVerificationApi
 import com.ryxan.recipescaler.core.data.di.ApplicationScope
 import com.ryxan.recipescaler.core.data.importer.AiImportQuota
 import com.ryxan.recipescaler.core.data.importer.AiRecipeImporter
@@ -78,6 +80,10 @@ object DataModule {
     @ApplicationScope
     fun provideApplicationScope(): CoroutineScope =
         CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    @Provides
+    @Singleton
+    fun provideProVerificationApi(): ProVerificationApi = OkHttpProVerificationApi()
 }
 
 @Module

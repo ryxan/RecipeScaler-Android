@@ -31,6 +31,9 @@ import com.ryxan.recipescaler.core.data.di.ApplicationScope
 import com.ryxan.recipescaler.core.data.importer.AiImportQuota
 import com.ryxan.recipescaler.core.domain.importer.AiImportConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -52,12 +55,16 @@ import kotlinx.coroutines.sync.withLock
 /**
  * Google Play Billing implementation of [ProRepository].
  *
- * Entitlement is granted on the client-side PURCHASED state — there is no
- * backend verification server for Rescale, so acknowledge-anything-purchased
- * is the whole rule (refund revocation still propagates through Play's
- * purchase queries). Purchases are re-queried on init and on every process
- * resume, and the last known entitlement is persisted so Pro users don't see
- * the free UI while the first query is in flight.
+ * New Pro purchases are verified server-side (POST verify-purchase on
+ * api.riverwatch.cc) before the entitlement is granted — the client-side
+ * PURCHASED state can be spoofed on rooted devices. Backend rate limits
+ * (HTTP 429), transient Google errors (503) and network failures fail open
+ * on the client state; explicit rejections fail closed without touching the
+ * current entitlement. The restore path ([queryActivePurchases], re-run on
+ * init and every process resume) intentionally skips backend verification —
+ * Play's own query is authoritative for expiry/refund revocation — and the
+ * last known entitlement is persisted as an offline grace cache so Pro
+ * users don't see the free UI while the first query is in flight.
  *
  * Connection is serialised through [connectionMutex] so concurrent callers
  * share a single [BillingClient.startConnection] attempt rather than racing.
@@ -68,6 +75,7 @@ class PlayBillingProRepository @Inject constructor(
     private val dataStore: DataStore<Preferences>,
     @ApplicationScope private val appScope: CoroutineScope,
     private val aiQuota: AiImportQuota,
+    private val verificationApi: ProVerificationApi,
 ) : ProRepository, PurchasesUpdatedListener {
 
     private val billingClient: BillingClient by lazy {
@@ -371,7 +379,15 @@ class PlayBillingProRepository @Inject constructor(
                         it == ProProductIds.MONTHLY || it == ProProductIds.LIFETIME
                     }
                 ) {
-                    applyEntitlement(Entitlement(isPro = true, isPending = false))
+                    // Grant only after the backend confirms the purchase —
+                    // see verifyPurchaseWithBackend for the failure policy.
+                    appScope.launch {
+                        if (verifyPurchaseWithBackend(purchase)) {
+                            applyEntitlement(Entitlement(isPro = true, isPending = false))
+                        } else {
+                            Log.w(TAG, "Purchase verification denied; entitlement unchanged")
+                        }
+                    }
                 }
             }
             Purchase.PurchaseState.PENDING -> {
@@ -379,6 +395,72 @@ class PlayBillingProRepository @Inject constructor(
                 Log.d(TAG, "Purchase pending")
             }
             else -> Log.w(TAG, "Purchase in state ${purchase.purchaseState}")
+        }
+    }
+
+    /**
+     * Verify [purchase] with the riverwatch backend. True means the
+     * entitlement may be granted.
+     *
+     * The backend calls the Google Play Developer API, the authoritative
+     * source of truth — the client-side PURCHASED state can be spoofed on
+     * rooted devices. Failure policy:
+     * - `valid == false` (any status, incl. 'pending'/'invalid') or a non-2xx
+     *   other than 429/503 → fail closed: no grant. The existing entitlement
+     *   is left untouched, so a failed *new* purchase can't revoke live Pro.
+     * - HTTP 429 (rate limited) or 503 (transient Google error), or the
+     *   backend being unreachable ([UnknownHostException],
+     *   [SocketTimeoutException], [IOException]) → fail open on the
+     *   client-side PURCHASED state.
+     * - [CancellationException] propagates; any other exception fails closed.
+     *
+     * The purchase token is sent to the backend but never logged.
+     */
+    private suspend fun verifyPurchaseWithBackend(purchase: Purchase): Boolean {
+        val productId = purchase.products.firstOrNull()
+        if (productId == null) {
+            Log.e(TAG, "Purchase has no product ID")
+            return false
+        }
+        val request = VerifyPurchaseRequest(
+            // context.packageName is com.ryxan.recipescaler.debug in debug
+            // builds — the backend intentionally rejects it; setDebugPro
+            // covers debug testing.
+            packageName = context.packageName,
+            productId = productId,
+            purchaseToken = purchase.purchaseToken,
+            productType = if (productId == ProProductIds.MONTHLY) "subscription" else "inapp",
+        )
+        return try {
+            val response = verificationApi.verifyPurchase(request)
+            Log.d(TAG, "Verification response: valid=${response.valid}, status=${response.status}")
+            if (!response.valid) {
+                Log.w(TAG, "Backend rejected purchase: status=${response.status}")
+            }
+            response.valid
+        } catch (e: HttpError) {
+            if (e.code == 429 || e.code == 503) {
+                // Rate-limited or Google transiently down — same treatment as
+                // a network failure.
+                Log.w(TAG, "Backend temporarily unavailable (HTTP ${e.code}); granting on client state")
+                true
+            } else {
+                Log.e(TAG, "Backend rejected purchase with HTTP ${e.code}")
+                false
+            }
+        } catch (e: UnknownHostException) {
+            Log.w(TAG, "Backend unreachable (DNS); granting on client state")
+            true
+        } catch (e: SocketTimeoutException) {
+            Log.w(TAG, "Backend timed out; granting on client state")
+            true
+        } catch (e: IOException) {
+            Log.w(TAG, "Backend unreachable (I/O); granting on client state")
+            true
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            Log.e(TAG, "Verification exception, failing closed", e)
+            false
         }
     }
 

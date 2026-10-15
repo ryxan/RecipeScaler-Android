@@ -55,6 +55,7 @@ dependencies {
     ksp(libs.room.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.okhttp)
     implementation(libs.core.ktx)
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.lifecycle.process)
