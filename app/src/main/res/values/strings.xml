@@ -14,20 +14,24 @@
     <string name="action_clear_ingredients">Clear ingredients</string>
     <string name="action_delete_recipe">Delete recipe</string>
     <string name="action_import">Import</string>
-    <string name="action_replace">Replace</string>
-    <string name="action_append">Append</string>
+    <string name="action_replace_ingredients">Replace ingredients</string>
+    <string name="action_append_ingredients">Append to list</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_delete">Delete</string>
-    <string name="action_clear">Clear</string>
     <string name="action_add_ingredient">Add ingredient</string>
     <string name="action_remove_ingredient">Remove ingredient</string>
-    <string name="action_edit_ingredients">Edit ingredients</string>
-    <string name="action_done_editing">Done editing</string>
     <string name="action_next">Next</string>
-    <string name="hint_recipe_title">Recipe title</string>
+    <string name="action_dismiss">Dismiss</string>
+    <string name="action_paste">Paste</string>
+    <string name="action_type">Type</string>
+    <string name="cd_recipe_title">Recipe title</string>
+    <string name="cd_quantity_field">Quantity, ingredient %1$d</string>
+    <string name="cd_ingredient_name_field">Ingredient name, row %1$d</string>
+    <string name="cd_yield_amount">Yield amount</string>
     <string name="hint_quantity">Qty</string>
     <string name="hint_ingredient_name">Ingredient</string>
-    <string name="header_name">Name</string>
+    <string name="editor_makes">Makes:</string>
+    <string name="header_name">Recipe title</string>
     <string name="header_ingredients">Ingredients</string>
     <string name="unit_picker_title">Unit</string>
     <string name="unit_group_volume">Volume</string>
@@ -39,22 +43,22 @@
     <string name="ingredient_cap_reached">Only the first 50 ingredients were added</string>
     <string name="confirm_import_title">Import ingredients</string>
     <string name="confirm_import_message">Replace the current ingredients, or append to them?</string>
-    <string name="confirm_clear_title">Clear ingredients?</string>
-    <string name="confirm_clear_message">Remove all ingredient rows?</string>
     <string name="msg_cant_read">Can\'t read \'%1$s\'</string>
+    <string name="msg_cant_read_example">Can\'t read \'%1$s\' — try 4 or ½</string>
     <string name="action_undo">Undo</string>
     <string name="snackbar_recipe_deleted">Recipe deleted</string>
     <string name="snackbar_deleted_titled">Deleted “%1$s”</string>
-    <string name="action_reorder">Reorder</string>
+    <string name="snackbar_ingredient_removed">Ingredient removed</string>
+    <string name="snackbar_ingredients_cleared">Ingredients cleared</string>
+    <string name="fab_need_ingredient">Add an ingredient to scale</string>
     <string name="action_move_up">Move up</string>
     <string name="action_move_down">Move down</string>
 
     <!-- Scan import -->
     <string name="action_scan_recipe">Scan recipe</string>
     <string name="scan_source_title">Scan a recipe</string>
-    <string name="action_scan_document">Scan document</string>
-    <string name="action_take_photo">Take photo</string>
-    <string name="action_choose_gallery">Choose from gallery</string>
+    <string name="action_scan">Scan</string>
+    <string name="action_choose_photo">Choose existing photo</string>
     <string name="scan_use_ai">Use AI import</string>
     <string name="scan_ai_pro">Best for handwriting</string>
     <string name="scan_ai_free_left">Best for handwriting · %1$d left</string>
@@ -74,7 +78,6 @@
     <string name="action_ok">OK</string>
     <string name="scan_snackbar_not_right">Not quite right?</string>
     <string name="scan_no_scanner">Scanner isn\'t available on this device</string>
-    <string name="scan_no_camera">No camera app available</string>
     <string name="row_needs_review">Check this line</string>
     <string name="ai_paywall_title">You\'re out of AI scans</string>
     <string name="ai_paywall_subtitle">Top up to keep importing recipes with AI — or keep scanning on-device for free, anytime.</string>
@@ -82,7 +85,7 @@
     <string name="ai_paywall_pack_subtitle">One-time top-up · never expires</string>
     <string name="ai_paywall_best_value">Best value</string>
     <string name="ai_paywall_pro_title">Rescale Pro</string>
-    <string name="ai_paywall_pro_subtitle">Unlimited AI scans, forever</string>
+    <string name="ai_paywall_pro_subtitle">AI scans every day, forever</string>
     <string name="ai_paywall_free_option">or earn scans for free</string>
     <string name="ai_paywall_ad_title">Watch a short ad</string>
     <string name="ai_paywall_soon">Soon</string>
@@ -99,22 +102,36 @@
 
     <!-- Pro -->
     <string name="title_pro">Rescale Pro</string>
-    <string name="pro_benefit_ai">Unlimited AI recipe import</string>
+    <string name="pro_hero_subtitle">Import any recipe card with AI — handwriting included.</string>
+    <string name="pro_hero_title_active">You\'re Pro</string>
+    <string name="pro_hero_subtitle_active">Thanks for supporting Rescale.</string>
+    <string name="pro_benefit_ai">AI recipe import, every day</string>
     <string name="pro_benefit_handwriting">Reads handwritten and printed recipe cards</string>
+    <plurals name="pro_scans_left">
+        <item quantity="one">%d AI scan left</item>
+        <item quantity="other">%d AI scans left</item>
+    </plurals>
+    <string name="pro_scans_none">No AI scans left. On-device scanning is always free.</string>
+    <string name="pro_plan_lifetime">Lifetime</string>
+    <string name="pro_plan_lifetime_detail">Pay once, keep it forever</string>
+    <string name="pro_plan_monthly">Monthly</string>
+    <string name="pro_plan_monthly_detail">Billed monthly</string>
     <string name="pro_price_monthly">%1$s / month</string>
+    <string name="pro_cta_lifetime">Unlock for %1$s</string>
     <string name="pro_price_lifetime">%1$s · lifetime</string>
+    <string name="pro_cta_monthly">Subscribe for %1$s / month</string>
+    <string name="pro_fine_lifetime">One-time payment. No subscription.</string>
+    <string name="pro_fine_monthly">Renews monthly. Cancel anytime in Google Play.</string>
     <string name="pro_unavailable">Purchases aren\'t available right now</string>
+    <string name="action_retry">Try again</string>
     <string name="action_restore_purchases">Restore purchases</string>
     <string name="pro_pending">Purchase pending</string>
-    <string name="pro_pending_subtitle">Your payment is still processing. Pro will unlock automatically — nothing else to do.</string>
     <string name="pro_state_active">Active</string>
     <string name="pro_refresh_failed">Couldn\'t check purchases. Try again later.</string>
+    <string name="pro_pending_detail">Pro unlocks as soon as Google Play confirms the payment.</string>
+    <string name="pro_verifying">Verifying purchase…</string>
     <string name="pro_welcome_title">You\'re Pro!</string>
     <string name="pro_welcome_subtitle">Thank you — everything is unlocked.</string>
-    <string name="pro_plan_monthly">Monthly plan</string>
-    <string name="pro_plan_monthly_detail">Renews monthly · cancel anytime in Google Play</string>
-    <string name="pro_plan_lifetime">Lifetime access</string>
-    <string name="pro_plan_lifetime_detail">One-time purchase · yours forever</string>
     <string name="pro_manage_subscription">Manage subscription</string>
     <string name="pro_unlocked_title">What\'s unlocked</string>
     <string name="pro_benefit_ai_detail">Import recipes from photos, scans, and text</string>
@@ -129,16 +146,24 @@
     <string name="settings_debug_ai_scans_reset">Reset</string>
 
     <!-- Scale view -->
+    <string name="action_edit">Edit</string>
     <string name="action_copy">Copy</string>
     <string name="action_share">Share</string>
-    <string name="copy_format_plain">Plain</string>
-    <string name="copy_format_markdown">Markdown</string>
-    <string name="copy_format_shopping">Shopping list</string>
+    <string name="action_share_send">Share…</string>
+    <string name="action_decrease_servings">Decrease servings</string>
+    <string name="action_increase_servings">Increase servings</string>
+    <string name="cd_target_servings">Makes %1$s %2$s</string>
+    <string name="copy_format_plain">Copy plain</string>
+    <string name="copy_format_markdown">Copy Markdown</string>
+    <string name="copy_format_shopping">Copy shopping list</string>
     <string name="msg_copied">Copied</string>
     <string name="scale_factor_prefix">×%1$s</string>
     <string name="scale_makes">Makes %1$s %2$s</string>
     <string name="scale_warning_big">×%1$s is a big jump. Large batches don\'t scale perfectly: split across pans or use bigger ones, check doneness early, and taste before adding all the salt and spices.</string>
     <string name="scale_warning_small">×%1$s makes a very small batch. Tiny amounts are hard to measure — a kitchen scale helps, and cooking times will be shorter.</string>
+    <string name="scale_warning_big_short">×%1$s is a big jump — baking doesn\'t scale linearly</string>
+    <string name="scale_warning_small_short">×%1$s makes a very small batch</string>
+    <string name="scale_input_not_read">(input not read)</string>
     <string name="scale_show_original">Show original amounts</string>
     <string name="scale_was">was %1$s</string>
     <string name="scale_from_range">Scaled from the low end of a range</string>
@@ -148,8 +173,18 @@
     <string name="scale_label_scale_to">Scale to (servings)</string>
     <string name="action_cook_mode">Cook mode</string>
     <string name="action_exit_cook_mode">Exit cook mode</string>
+    <string name="action_cook">Cook</string>
+    <string name="action_cook_done">Done</string>
     <string name="cook_mode_hint">Tap an ingredient to check it off. The screen stays on.</string>
     <string name="scale_recipe_missing">This recipe no longer exists</string>
+    <string name="promote_to">Promote to</string>
+    <string name="cd_promote_unit">Promote to a larger unit</string>
+    <string name="promote_auto">Auto</string>
+    <string name="promote_option">%1$s — %2$s</string>
+    <string name="promote_unit_quarts">Quarts</string>
+    <string name="promote_unit_gallons">Gallons</string>
+    <string name="promote_unit_ml">Millilitres</string>
+    <string name="promote_unit_litres">Litres</string>
 
     <!-- Recipe list -->
     <string name="action_new_recipe">New recipe</string>
@@ -180,5 +215,6 @@
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_dynamic_color">Dynamic color</string>
     <string name="settings_section_about">About</string>
+    <string name="settings_privacy">Privacy policy</string>
     <string name="settings_version">Version %1$s</string>
 </resources>
