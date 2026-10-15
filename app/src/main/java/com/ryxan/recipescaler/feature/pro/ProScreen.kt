@@ -715,6 +715,7 @@ private fun IconBadge(
     }
 }
 
+/** Staggered entrance: fades + slides content in after [delayMillis]. Matches the AI paywall's motion. */
 private fun Reveal(delayMillis: Int, content: @Composable () -> Unit) {
     var visible by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
