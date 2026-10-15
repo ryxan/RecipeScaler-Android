@@ -6,13 +6,16 @@ import com.ryxan.recipescaler.core.domain.formatting.DisplayMode
 import com.ryxan.recipescaler.core.domain.model.Ingredient
 import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import com.ryxan.recipescaler.core.domain.model.Recipe
+import com.ryxan.recipescaler.core.domain.model.SavedScaleInputs
 import com.ryxan.recipescaler.core.domain.scaling.CopyFormat
 import com.ryxan.recipescaler.core.domain.scaling.RecipeScalerCalculator
 import com.ryxan.recipescaler.testing.FakeRecipeRepository
+import com.ryxan.recipescaler.testing.FakeScaleInputsRepository
 import com.ryxan.recipescaler.testing.FakeSettingsRepository
 import com.ryxan.recipescaler.testing.MainDispatcherRule
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlin.math.abs
 import org.junit.Assert.assertEquals
@@ -47,7 +50,8 @@ class ScaleViewModelTest {
         repo: FakeRecipeRepository,
         settings: FakeSettingsRepository,
         id: Long,
-    ) = ScaleViewModel(SavedStateHandle(mapOf("recipeId" to id)), repo, settings)
+        scaleInputs: FakeScaleInputsRepository = FakeScaleInputsRepository(),
+    ) = ScaleViewModel(SavedStateHandle(mapOf("recipeId" to id)), repo, settings, scaleInputs)
 
     @Test
     fun `defaults come from the recipe yield`() = runTest {
@@ -217,7 +221,7 @@ class ScaleViewModelTest {
         val id = seeded(repo)
         val settings = FakeSettingsRepository()
         val handle = SavedStateHandle(mapOf("recipeId" to id))
-        val vm = ScaleViewModel(handle, repo, settings)
+        val vm = ScaleViewModel(handle, repo, settings, FakeScaleInputsRepository())
 
         vm.toggleCookMode()
         val s = vm.uiState.filter { it.cookMode }.first()
@@ -225,7 +229,7 @@ class ScaleViewModelTest {
         vm.uiState.filter { it.checkedIds.isNotEmpty() }.first()
 
         // A new VM over the same handle (process death) restores both.
-        val vm2 = ScaleViewModel(handle, repo, settings)
+        val vm2 = ScaleViewModel(handle, repo, settings, FakeScaleInputsRepository())
         val s2 = vm2.uiState.filter { !it.isLoading }.first()
         assertTrue(s2.cookMode)
         assertEquals(setOf(s.rows[0].id), s2.checkedIds)
@@ -255,6 +259,76 @@ class ScaleViewModelTest {
             s.rows, "4", CopyFormat.PLAIN,
         )
         assertEquals(expected, vm.copyText(CopyFormat.PLAIN))
+    }
+
+    @Test
+    fun `saved scale inputs restore when reopening the recipe`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val scaleInputs = FakeScaleInputsRepository()
+        scaleInputs.seed(id, SavedScaleInputs("4", "9"))
+        val vm = vm(repo, FakeSettingsRepository(), id, scaleInputs)
+
+        val s = vm.uiState.filter { !it.isLoading }.first()
+        assertEquals("4", s.inputs.servesText)
+        assertEquals("9", s.inputs.scaleToText)
+        assertEquals(2.25, s.factor, 0.001)
+    }
+
+    @Test
+    fun `saved inputs are per recipe`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id1 = seeded(repo, title = "One")
+        val id2 = seeded(repo, title = "Two")
+        val scaleInputs = FakeScaleInputsRepository()
+        scaleInputs.seed(id1, SavedScaleInputs("4", "9"))
+
+        val vm2 = vm(repo, FakeSettingsRepository(), id2, scaleInputs)
+        val s2 = vm2.uiState.filter { !it.isLoading }.first()
+        assertEquals("4", s2.inputs.servesText)
+        assertEquals("4", s2.inputs.scaleToText)
+    }
+
+    @Test
+    fun `typing scale-to persists it for the recipe`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val scaleInputs = FakeScaleInputsRepository()
+        val vm = vm(repo, FakeSettingsRepository(), id, scaleInputs)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.setScaleTo("6")
+        advanceUntilIdle()
+
+        assertEquals(SavedScaleInputs("4", "6"), scaleInputs.savedFor(id))
+    }
+
+    @Test
+    fun `typing serves persists the pair`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val scaleInputs = FakeScaleInputsRepository()
+        val vm = vm(repo, FakeSettingsRepository(), id, scaleInputs)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.setServes("2")
+        advanceUntilIdle()
+
+        assertEquals(SavedScaleInputs("2", "4"), scaleInputs.savedFor(id))
+    }
+
+    @Test
+    fun `servings chip persists the new target`() = runTest {
+        val repo = FakeRecipeRepository()
+        val id = seeded(repo)
+        val scaleInputs = FakeScaleInputsRepository()
+        val vm = vm(repo, FakeSettingsRepository(), id, scaleInputs)
+
+        vm.uiState.filter { !it.isLoading }.first()
+        vm.applyServings(8)
+        advanceUntilIdle()
+
+        assertEquals(SavedScaleInputs("4", "8"), scaleInputs.savedFor(id))
     }
 
     @Test

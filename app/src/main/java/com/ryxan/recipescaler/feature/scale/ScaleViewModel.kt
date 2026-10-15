@@ -5,11 +5,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ryxan.recipescaler.core.domain.formatting.DisplayPrefs
 import com.ryxan.recipescaler.core.domain.model.Recipe
+import com.ryxan.recipescaler.core.domain.model.SavedScaleInputs
 import com.ryxan.recipescaler.core.domain.model.ScaledIngredient
 import com.ryxan.recipescaler.core.domain.model.formatYield
 import com.ryxan.recipescaler.core.domain.model.toScaleItem
 import com.ryxan.recipescaler.core.domain.parsing.QuantityParser
 import com.ryxan.recipescaler.core.domain.repository.RecipeRepository
+import com.ryxan.recipescaler.core.domain.repository.ScaleInputsRepository
 import com.ryxan.recipescaler.core.domain.repository.SettingsRepository
 import com.ryxan.recipescaler.core.domain.scaling.CopyFormat
 import com.ryxan.recipescaler.core.domain.scaling.RecipeScalerCalculator
@@ -24,9 +26,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 data class ScaleInputs(
     val servesText: String = "",
@@ -58,12 +65,16 @@ data class ScaleUiState(
     val recipeMissing: Boolean = false,
 )
 
+/** Debounce for persisting Scale View inputs while the user is typing. */
+private const val INPUTS_SAVE_DEBOUNCE_MS = 500L
+
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class ScaleViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     repository: RecipeRepository,
     settingsRepository: SettingsRepository,
+    private val scaleInputsRepository: ScaleInputsRepository,
 ) : ViewModel() {
 
     private val recipeId = savedStateHandle.get<Long>("recipeId") ?: 0L
@@ -74,6 +85,29 @@ class ScaleViewModel @Inject constructor(
     private val cookMode = savedStateHandle.getStateFlow("cookMode", false)
     private val checkedIds =
         savedStateHandle.getStateFlow<List<String>>("checked", emptyList())
+
+    init {
+        // Restore the last inputs the user left for this recipe. Never clobber
+        // values the user already typed if the load lands late.
+        viewModelScope.launch {
+            val saved = scaleInputsRepository.observe(recipeId).first()
+            if (saved != null && inputs.value == null) {
+                inputs.value = ScaleInputs(saved.servesText, saved.scaleToText)
+            }
+        }
+        // Persist edits (debounced so typing doesn't write on every keystroke).
+        viewModelScope.launch {
+            inputs.filterNotNull()
+                .debounce(INPUTS_SAVE_DEBOUNCE_MS)
+                .distinctUntilChanged()
+                .collect {
+                    scaleInputsRepository.save(
+                        recipeId,
+                        SavedScaleInputs(it.servesText, it.scaleToText),
+                    )
+                }
+        }
+    }
 
     val uiState: StateFlow<ScaleUiState> = combine(
         repository.observe(recipeId),
