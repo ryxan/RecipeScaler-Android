@@ -26,17 +26,18 @@ How to pull the Recipe Scaler out of ToolStack-Android and turn it into its own 
 - Ranges (`2-3`) scale the low end, and the row is marked `RANGE_LOW_END` so the UI can flag it.
 - **Editor autosaves straight to Room** (500 ms debounce, on an app-scoped coroutine so it survives leaving the screen). There's no Save button and no draft table. A new recipe isn't inserted until it has a title or an ingredient. A recipe created in the current session and then emptied is deleted on exit; a pre-existing one is never auto-deleted.
 - Yield is stored as the parsed low end (`½` → 0.5, `4-6` → 4). The raw text isn't kept, so `4-6` reopens as `4`.
-- First-run measurement system follows the device locale (US/LR/MM → US, everywhere else → Metric).
+- First-run measurement system defaults to Match recipe — each recipe displays in the units it was written in.
 - Scale inputs that are blank or can't be read show an inline error, and the list falls back to 1× (never zero).
 - `:app` unit tests run on the debug variant only. Release unit tests are disabled so the Compose test manifest never ships in release.
 - **Delete is undoable instead of confirmed.** Swipe (list) or overflow Delete (editor) removes the recipe right away and shows an Undo snackbar on the list. Undo calls `RecipeRepository.restore`, which brings the recipe back with its original id and timestamps, so it lands in the same list position. The editor saves pending edits before deleting, so Undo restores the latest version.
 - **Quick scale** is a normal autosaved recipe with the title "Quick scale" pre-filled and the first qty field focused. It's only inserted once the user edits something, so backing out without typing saves nothing.
 - **Cook mode** (Scale View) hides the inputs, lets you tap rows to strike them through, and keeps the screen on. Checks survive process death and are cleared when you leave cook mode.
 - **Unit inference** runs when the name field loses focus or on IME Next, and only when the row's qty is blank. "2 cups flour" becomes `2` / `cup` / `flour`. Lines with no quantity are left alone.
-- Drag-to-reorder uses `sh.calvin.reorderable` 2.4.3, plus "Move up/Move down" accessibility actions.
-- **Editor edit mode:** "Scan recipe" is a top-bar `DocumentScanner` icon (not an overflow item; the overflow keeps Paste text / Clear / Delete). A top-bar "Edit ingredients"/"Done editing" toggle, shown only when rows exist, reveals per-row ✕ remove buttons and drag handles; drag reorder is enabled only in edit mode, while the "Move up/Move down" accessibility actions stay available in both modes. Edit mode auto-exits when the last row is removed. Rows are top-aligned so the 56 dp unit button and the icons line up with the text fields regardless of `needsReview` supporting text.
-- **Scale View inputs are Serves + Scale to** (no tab row). Scaling-by-ingredient and the free-form factor field were removed from the UI; the domain's `ScaleMode.ByIngredient` stays for the iOS port. A `1×`–`10×` chip writes `serves × n` into Scale to (or `1`/`n` when serves isn't parseable). Serves edits are session-only — the recipe's yield is never rewritten from this screen.
-- **Pro post-purchase page:** after buying Pro, the Pro screen is a celebration + orientation page, not the paywall with one thank-you line — a gradient hero ("You're Pro!"), the owned plan (`ProPlan.Monthly`/`Lifetime` derived from Play purchases; monthly shows "Manage subscription" to the Play subscriptions page), a "What's unlocked" card (AI import, handwriting, no ads), and one obvious next step ("Scan your first recipe" → fresh editor). A pending payment gets an explainer instead of a bare status line.
+- Drag-to-reorder uses `sh.calvin.reorderable` 2.4.3 — each ingredient row is a card that reorders on long-press drag (no visible handle), plus "Move up/Move down" accessibility actions.
+- **Editor edit mode:** "Scan recipe" is a top-bar `DocumentScanner` icon (not an overflow item; the overflow keeps Paste text / Clear / Delete). The "Edit ingredients" mode toggle was later removed — rows are always editable, swipe-to-delete handles removal, and rows reorder by long-press drag on the card. The "Move up/Move down" accessibility actions stay available, and each row also exposes a "Remove ingredient" custom action.
+- **Scale View inputs are Serves + Scale to** (no tab row). Scaling-by-ingredient and the free-form factor field were removed from the UI; the domain's `ScaleMode.ByIngredient` stays for the iOS port. A `1×`–`10×` chip writes `serves × n` into Scale to (or `1`/`n` when serves isn't parseable). Serves + Scale to persist per recipe in DataStore (`ScaleInputsRepository`), so reopening a recipe restores the scaling the user left — the recipe's yield itself is still never rewritten from this screen.
+- **"Promote to" unit override** (DB v2): a KITCHEN-mode volume row whose scaled amount reaches 1 cup gets a row-level menu to render it in a larger unit (`qt`, `gal`, `mL`, `L`; previews require ≥1 of the target, so no "0 qt"). `KitchenFormatter.formatIn` peels whole units then renders the remainder with the existing renderers (½-tsp US precision, whole mL metric), ignoring the US/Metric pref. The choice is stored as `Ingredient.promotedUnit` (per recipe), survives editor saves (cleared if the unit leaves the volume family), and is set via `RecipeRepository.setPromotedUnit`, which doesn't bump `updatedAt`. "Auto" resets it.
+- **Pro post-purchase page:** after buying Pro, the Pro screen is a celebration + orientation page, not the paywall with one thank-you line — a gradient hero ("You're Pro!"), the owned plan (`ProPlan.Monthly`/`Lifetime` derived from the verified Play purchase; monthly shows "Manage subscription" to the Play subscriptions page), a "What's unlocked" card (AI import, handwriting, no ads), and one obvious next step ("Scan your first recipe" → fresh editor). The paywall keeps the verification UX: a "Verifying purchase…" bar while the backend check runs, a scans-left meter, a retry when products can't load, and the pending card while Play confirms payment.
 
 **Carried forward:**
 - Splitting `lowConfidence` out of `IngredientItem` moved from Phase 1 to Phase 3, where the editor model is designed.
@@ -109,13 +110,13 @@ Paths are relative to `app/src/main/java/com/toolstack/io/`.
 **UX decisions to carry into the rewrite** (from the existing screen and VM):
 
 - A fraction/unit accessory bar tied to the focused field (`FocusedIngredientField`), with IME inset handled once by the parent `imePadding()`.
-- "Next" on the accessory bar adds a row and focuses its quantity (`addIngredientAndFocusName`).
+- "Next" on the accessory bar steps qty → unit picker → name, and appends+focuses a new row at the end of the list.
 - Scan results replace silently only if the list is blank; otherwise the user picks Replace / Append / Cancel.
 - A `MAX_INGREDIENTS = 50` cap.
 - A warning banner when the multiplier is over 4× (`showScaleWarning`). Baking chemistry and pan sizes don't scale linearly.
 - A "Show original values" caption under each scaled row.
 - Copy formats: Plain / Markdown / Shopping list (checkbox glyphs).
-- The camera URI held in `rememberSaveable`, so it survives process death.
+- Image capture is delegated to the ML Kit document scanner (no in-app camera URI to preserve across process death).
 
 ### 2.2 Reusable Domain Logic vs. Rewrite: Summary
 
@@ -489,6 +490,8 @@ Each phase has exit criteria. Don't start the next phase until they're met.
 - Pro: monthly subscription + lifetime one-time purchase via Play Billing 8 (`PlayBillingProRepository`); entitlement re-queried on every process resume and persisted so Pro users don't flash free UI. Debug-only "Pretend Pro" switch in Settings (no-op in release).
 - **AI paywall (2026-10-13):** exhausted-quota dialog offers the `ai_scans_100` consumable (+100 scans, ~$5 — Play Console product still needs creating), monthly/lifetime Pro, "watch a rewarded ad for +5 scans", and on-device scanning as the free fallback. The ad path sits behind `RewardedAds` — a `NoopRewardedAds` stub until AdMob lands — so the button renders but can't earn yet. Consumable purchases are consumed and `creditsGranted` emits once per purchase token (double-grant safe).
 - **Firebase:** `google-services.json` is git-ignored and the google-services plugin applies only when the file is present, so clones still build (`AI_IMPORT_ENABLED` BuildConfig flag hides the AI toggle). `com.ryxan.recipescaler[.debug]` are registered in the shared **toolstack-ai** Firebase project (done 2026-10-12; debug App Check token still needs registering after first run). Explicitly configured `Firebase.ai(backend = GenerativeBackend.googleAI())` in `FirebaseAiRecipeImporter` to use the Gemini Developer API backend instead of defaulting to Vertex AI, preventing `GLVM` consent state / `Cannot get auth token for account id` errors.
+- **Pro screen redesign (2026-10-14):** hero + benefits + free-scans usage meter, plan picker (radio cards, lifetime listed and pre-selected first), pinned bottom bar with single CTA + fine print + Restore, retry when products can't load. Plans are filtered to `ProProductIds.MONTHLY`/`LIFETIME` so the `ai_scans_100` consumable can't leak in. Copy avoids "unlimited" ("AI scans every day") since Pro actually has the hidden 30/day cap.
+- **Server verification (2026-10-15):** new purchases are verified server-side via `ProVerificationApi` (OkHttp → `api.riverwatch.cc/verify-purchase`, shared backend registry) before Pro is granted. Fail-open on HTTP 429/503 and network errors; fail-closed on explicit rejection (`valid=false` or other HTTP errors) without touching the existing entitlement. The `queryActivePurchases` restore path stays Play-query-only (authoritative for expiry/refunds); the persisted entitlement is the offline grace cache. The backend intentionally rejects the `.debug` package name — `setDebugPro` covers debug testing.
 - **Untested on device:** real Play Billing (needs a Play Console test track + products `pro_monthly`/`pro_lifetime`), document-scanner/camera flows, App Check attestation.
 - Build env: `gradle/gradle-daemon-jvm.properties` pins the daemon to JDK 21 and `kotlin.compiler.execution.strategy=in-process` — JAVA_HOME points at JDK 25, which Kotlin 2.0.21 can't run on.
 
@@ -519,7 +522,7 @@ Decided on 2026-10-11:
 
 1. **Name (working):** launcher label `Rescale`, Play title `Rescale – Recipe Scaler`. **`applicationId`: `com.ryxan.recipescaler`** (brand-neutral, so a later rename of the app doesn't matter).
 2. **Monetization:** free with ads. **Pro** unlocks AI recipe import (accurate handwriting import) and **removes ads**. Ads, billing, and AI import are all **in v1**.
-3. **Measurement system:** user-selectable in Settings (US / Metric / Match recipe). First-run default follows the device locale (US locale → US, else Metric).
+3. **Measurement system:** user-selectable in Settings (US / Metric / Match recipe). First-run default is Match recipe (changed 2026-10-14; it originally followed the device locale — US locale → US, else Metric).
 4. **v1 scope:** a complete app at launch, with no rush to production. Photo scan (ML Kit) and AI import ship in v1, so Phase 5 is required.
 5. **Repo:** <https://github.com/ryxan/RecipeScaler-Android>, local at `C:\Users\ryxan\RecipeScaler-Android`. Code was extracted from ToolStack at tag `recipe-scaler-extract-base`.
 
