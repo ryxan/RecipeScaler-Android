@@ -69,6 +69,13 @@ class EditorContentTest {
         }
     }
 
+    // The empty-state card is tall enough to push the first ingredient row
+    // below the fold in the test viewport, so row content must be scrolled
+    // into view before it exists in the semantics tree.
+    private fun scrollTo(matcher: SemanticsMatcher) {
+        composeRule.onNode(hasScrollToIndexAction()).performScrollToNode(matcher)
+    }
+
     @Test
     fun `typing in the title field fires the callback`() {
         var typed = ""
@@ -99,6 +106,7 @@ class EditorContentTest {
     @Test
     fun `ingredient fields expose position content descriptions`() {
         content(state())
+        scrollTo(hasContentDescription("Quantity, ingredient 1"))
         composeRule.onNodeWithContentDescription("Quantity, ingredient 1")
             .assertIsDisplayed()
         composeRule.onNodeWithContentDescription("Ingredient name, row 1")
@@ -108,6 +116,7 @@ class EditorContentTest {
     @Test
     fun `qty field offers a next ime action`() {
         content(state())
+        scrollTo(hasContentDescription("Quantity, ingredient 1"))
         composeRule.onNodeWithContentDescription("Quantity, ingredient 1")
             .assert(
                 SemanticsMatcher.expectValue(
@@ -120,6 +129,7 @@ class EditorContentTest {
     @Test
     fun `fraction chips hide when the name field is focused`() {
         content(state())
+        scrollTo(hasContentDescription("Quantity, ingredient 1"))
         composeRule.onNodeWithContentDescription("Quantity, ingredient 1")
             .performClick()
         composeRule.onNodeWithText("½").assertIsDisplayed()
@@ -159,6 +169,7 @@ class EditorContentTest {
                 onNameChange = { k, v -> name = k to v },
             ),
         )
+        scrollTo(hasContentDescription("Quantity, ingredient 1"))
         composeRule.onNodeWithText("Qty").performTextInput("2")
         assertEquals(1L to "2", qty)
 
@@ -195,7 +206,7 @@ class EditorContentTest {
     }
 
     @Test
-    fun `rows reorder by long press so no drag handle icon is shown`() {
+    fun `drag handle icon is decorative so no reorder label is exposed`() {
         content(state())
         composeRule.onAllNodesWithContentDescription("Reorder").assertCountEquals(0)
         composeRule.onAllNodesWithContentDescription("Edit ingredients").assertCountEquals(0)
@@ -222,6 +233,7 @@ class EditorContentTest {
             state(rows = listOf(EditorRow(key = 1), EditorRow(key = 2))),
             EditorCallbacks(onMoveRow = { f, t -> moves += f to t }),
         )
+        scrollTo(rowWithMoveDownAction)
         composeRule.onNode(rowWithMoveDownAction)
             .performCustomAccessibilityActionWithLabel("Move down")
         assertEquals(listOf(1L to 2L), moves)
@@ -236,6 +248,7 @@ class EditorContentTest {
         )
         // A swipe on the row's semantics node lands on the text fields and is
         // consumed, so swipe across the row's measured bounds from the root.
+        scrollTo(rowWithRemoveAction)
         val b = composeRule.onNode(rowWithRemoveAction).getBoundsInRoot()
         composeRule.onRoot().performTouchInput {
             swipe(
@@ -255,6 +268,7 @@ class EditorContentTest {
             state(),
             EditorCallbacks(onRemoveRow = { removed = it }),
         )
+        scrollTo(rowWithRemoveAction)
         composeRule.onNode(rowWithRemoveAction)
             .performCustomAccessibilityActionWithLabel("Remove ingredient")
         assertEquals(1L, removed)
@@ -301,10 +315,13 @@ class EditorContentTest {
                 onPasteClick = { pasteClicked = true },
             ),
         )
+        scrollTo(hasText("Scan"))
         composeRule.onNodeWithText("Scan").assertIsDisplayed().performClick()
         assertTrue(scanClicked)
+        scrollTo(hasText("Paste"))
         composeRule.onNodeWithText("Paste").assertIsDisplayed().performClick()
         assertTrue(pasteClicked)
+        scrollTo(hasText("Type"))
         composeRule.onNodeWithText("Type").assertIsDisplayed()
     }
 
@@ -315,6 +332,7 @@ class EditorContentTest {
             state(rows = emptyList()),
             EditorCallbacks(onAddRow = { added = true; 99L }),
         )
+        scrollTo(hasText("Type"))
         composeRule.onNodeWithText("Type").assertIsDisplayed().performClick()
         assertTrue(added)
     }
@@ -351,6 +369,7 @@ class EditorContentTest {
                 }
             }
         }
+        scrollTo(hasContentDescription("Quantity, ingredient 1"))
         val qtyBounds = composeRule.onNodeWithContentDescription("Quantity, ingredient 1")
             .getBoundsInRoot()
         val nameBounds = composeRule.onNodeWithContentDescription("Ingredient name, row 1")

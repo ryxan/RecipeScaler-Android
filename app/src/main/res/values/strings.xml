@@ -31,6 +31,9 @@
     <string name="hint_quantity">Qty</string>
     <string name="hint_ingredient_name">Ingredient</string>
     <string name="editor_makes">Makes:</string>
+    <string name="editor_title_placeholder">e.g. Banana bread</string>
+    <string name="editor_empty_title">Add your ingredients</string>
+    <string name="editor_empty_subtitle">Scan a recipe card, paste from a website, or type it in.</string>
     <string name="header_name">Recipe title</string>
     <string name="header_ingredients">Ingredients</string>
     <string name="unit_picker_title">Unit</string>

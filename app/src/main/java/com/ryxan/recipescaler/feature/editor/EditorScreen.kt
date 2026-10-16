@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,18 +29,23 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.DragIndicator
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.DocumentScanner
 import androidx.compose.material.icons.outlined.Keyboard
+import androidx.compose.material.icons.outlined.PhotoLibrary
+import androidx.compose.material.icons.outlined.Restaurant
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -48,11 +54,14 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -63,6 +72,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -81,6 +91,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
@@ -99,12 +110,16 @@ import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ryxan.recipescaler.R
+import com.ryxan.recipescaler.core.designsystem.GradientButton
+import com.ryxan.recipescaler.core.designsystem.GradientExtendedFab
 import com.ryxan.recipescaler.core.designsystem.GradientTopAppBar
 import com.ryxan.recipescaler.core.designsystem.RescaleCard
 import com.ryxan.recipescaler.core.designsystem.RescaleSwipeToDelete
@@ -503,29 +518,27 @@ fun EditorContent(
         },
         floatingActionButton = {
             val canScale = state.canScale
-            ExtendedFloatingActionButton(
-                onClick = {
-                    if (canScale) {
-                        callbacks.onScale()
-                    } else {
+            if (canScale) {
+                GradientExtendedFab(
+                    onClick = callbacks.onScale,
+                    expanded = fabExpanded,
+                    icon = { Icon(Icons.Filled.Scale, contentDescription = null) },
+                    text = { Text(stringResource(R.string.action_scale)) },
+                )
+            } else {
+                ExtendedFloatingActionButton(
+                    onClick = {
                         scope.launch { snackbarHostState.showSnackbar(fabNeedIngredient) }
-                    }
-                },
-                expanded = fabExpanded,
-                modifier = Modifier.semantics { if (!canScale) disabled() },
-                containerColor = if (canScale) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-                },
-                contentColor = if (canScale) {
-                    MaterialTheme.colorScheme.onPrimary
-                } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                },
-                icon = { Icon(Icons.Filled.Scale, contentDescription = null) },
-                text = { Text(stringResource(R.string.action_scale)) },
-            )
+                    },
+                    expanded = fabExpanded,
+                    modifier = Modifier.semantics { disabled() },
+                    containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                    contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                    elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
+                    icon = { Icon(Icons.Filled.Scale, contentDescription = null) },
+                    text = { Text(stringResource(R.string.action_scale)) },
+                )
+            }
         },
     ) { innerPadding ->
         Column(
@@ -555,17 +568,16 @@ fun EditorContent(
                 contentPadding = PaddingValues(
                     start = 16.dp,
                     end = 16.dp,
-                    top = 8.dp,
-                    bottom = 88.dp,
+                    top = Spacing.m,
+                    bottom = 96.dp,
                 ),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(editorHeaders(state.rows), key = { it.name }) { section ->
                     when (section) {
-                        EditorHeader.TITLE_HEADER -> Text(
+                        EditorHeader.TITLE_HEADER -> SectionLabel(
                             stringResource(R.string.header_name),
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(start = Spacing.xs),
                         )
                         EditorHeader.TITLE -> OutlinedTextField(
                             value = state.title,
@@ -575,87 +587,142 @@ fun EditorContent(
                                 .semantics {
                                     contentDescription = titleCd
                                 },
+                            textStyle = MaterialTheme.typography.titleLarge,
+                            placeholder = {
+                                Text(
+                                    stringResource(R.string.editor_title_placeholder),
+                                    style = MaterialTheme.typography.titleLarge,
+                                )
+                            },
+                            shape = MaterialTheme.shapes.medium,
+                            colors = editorFieldColors(),
+                            keyboardOptions = KeyboardOptions(
+                                capitalization = KeyboardCapitalization.Words,
+                                imeAction = ImeAction.Next,
+                            ),
                             singleLine = true,
                         )
                         EditorHeader.YIELD -> {
                             val yieldError = state.yieldError
-                            Column {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                ) {
-                                    Text(
-                                        stringResource(R.string.editor_makes),
-                                        style = MaterialTheme.typography.bodyLarge,
-                                    )
-                                    OutlinedTextField(
-                                        value = state.yieldText,
-                                        onValueChange = callbacks.onYieldTextChange,
-                                        modifier = Modifier
-                                            .width(96.dp)
-                                            .semantics { contentDescription = yieldAmountCd },
-                                        placeholder = { Text("4") },
-                                        keyboardOptions = KeyboardOptions(
-                                            keyboardType = KeyboardType.Decimal,
-                                        ),
-                                        isError = yieldError,
-                                        singleLine = true,
-                                    )
-                                }
-                                if (yieldError) {
-                                    Text(
-                                        stringResource(R.string.msg_cant_read_example, state.yieldText),
-                                        color = MaterialTheme.colorScheme.error,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        modifier = Modifier.padding(start = 4.dp, top = 4.dp),
-                                    )
+                            RescaleCard(modifier = Modifier.fillMaxWidth()) {
+                                Column(Modifier.padding(horizontal = Spacing.l, vertical = Spacing.m)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                    ) {
+                                        Text(
+                                            stringResource(R.string.editor_makes),
+                                            style = MaterialTheme.typography.titleMedium,
+                                        )
+                                        OutlinedTextField(
+                                            value = state.yieldText,
+                                            onValueChange = callbacks.onYieldTextChange,
+                                            modifier = Modifier
+                                                .width(104.dp)
+                                                .semantics { contentDescription = yieldAmountCd },
+                                            placeholder = { Text("4") },
+                                            shape = MaterialTheme.shapes.small,
+                                            colors = editorFieldColors(),
+                                            keyboardOptions = KeyboardOptions(
+                                                keyboardType = KeyboardType.Decimal,
+                                            ),
+                                            isError = yieldError,
+                                            singleLine = true,
+                                        )
+                                    }
+                                    if (yieldError) {
+                                        Text(
+                                            stringResource(R.string.msg_cant_read_example, state.yieldText),
+                                            color = MaterialTheme.colorScheme.error,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            modifier = Modifier.padding(top = Spacing.xs),
+                                        )
+                                    }
                                 }
                             }
                         }
-                        EditorHeader.INGREDIENTS_HEADER -> Text(
+                        EditorHeader.INGREDIENTS_HEADER -> SectionLabel(
                             stringResource(R.string.header_ingredients),
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(start = Spacing.xs, top = Spacing.m),
                         )
-                        EditorHeader.EMPTY_STATE -> Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            FilledTonalButton(
-                                onClick = callbacks.onScanClick,
-                                modifier = Modifier.weight(1f),
+                        EditorHeader.EMPTY_STATE -> RescaleCard(modifier = Modifier.fillMaxWidth()) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(Spacing.l),
+                                horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
-                                Icon(
-                                    Icons.Outlined.DocumentScanner,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Restaurant,
+                                        contentDescription = null,
+                                        modifier = Modifier.padding(Spacing.m).size(28.dp),
+                                    )
+                                }
+                                Text(
+                                    stringResource(R.string.editor_empty_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(top = Spacing.m),
                                 )
-                                Text(stringResource(R.string.action_scan))
-                            }
-                            FilledTonalButton(
-                                onClick = callbacks.onPasteClick,
-                                modifier = Modifier.weight(1f),
-                            ) {
-                                Icon(
-                                    Icons.Outlined.ContentPaste,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
+                                Text(
+                                    stringResource(R.string.editor_empty_subtitle),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(top = Spacing.xs, bottom = Spacing.l),
                                 )
-                                Text(stringResource(R.string.action_paste))
-                            }
-                            FilledTonalButton(
-                                onClick = {
-                                    val key = state.rows.firstOrNull()?.key
-                                        ?: callbacks.onAddRow(null)
-                                    if (key >= 0) pendingFocus = FocusedField(key, RowField.QTY)
-                                },
-                                modifier = Modifier.weight(1f),
-                            ) {
-                                Icon(
-                                    Icons.Outlined.Keyboard,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
-                                )
-                                Text(stringResource(R.string.action_type))
+                                GradientButton(
+                                    onClick = callbacks.onScanClick,
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.DocumentScanner,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                    Spacer(Modifier.width(Spacing.s))
+                                    Text(stringResource(R.string.action_scan))
+                                }
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = Spacing.s),
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                                ) {
+                                    FilledTonalButton(
+                                        onClick = callbacks.onPasteClick,
+                                        modifier = Modifier.weight(1f),
+                                    ) {
+                                        Icon(
+                                            Icons.Outlined.ContentPaste,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp),
+                                        )
+                                        Spacer(Modifier.width(Spacing.s))
+                                        Text(stringResource(R.string.action_paste))
+                                    }
+                                    FilledTonalButton(
+                                        onClick = {
+                                            val key = state.rows.firstOrNull()?.key
+                                                ?: callbacks.onAddRow(null)
+                                            if (key >= 0) pendingFocus = FocusedField(key, RowField.QTY)
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                    ) {
+                                        Icon(
+                                            Icons.Outlined.Keyboard,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp),
+                                        )
+                                        Spacer(Modifier.width(Spacing.s))
+                                        Text(stringResource(R.string.action_type))
+                                    }
+                                }
                             }
                         }
                     }
@@ -673,6 +740,11 @@ fun EditorContent(
                                 row = row,
                                 position = idx + 1,
                                 isDragging = isDragging,
+                                dragHandle = Modifier.draggableHandle(
+                                    onDragStarted = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    },
+                                ),
                                 modifier = Modifier
                                     .longPressDraggableHandle(
                                         onDragStarted = {
@@ -738,14 +810,16 @@ fun EditorContent(
                     }
                 }
                 item(key = "add_row") {
-                    TextButton(
+                    FilledTonalButton(
                         onClick = {
                             val key = callbacks.onAddRow(null)
                             if (key >= 0) pendingFocus = FocusedField(key, RowField.QTY)
                         },
+                        modifier = Modifier.fillMaxWidth(),
                         enabled = state.rows.size < MAX_INGREDIENTS,
                     ) {
-                        Icon(Icons.Filled.Add, contentDescription = null)
+                        Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(Spacing.s))
                         Text(stringResource(R.string.action_add_ingredient))
                     }
                 }
@@ -789,6 +863,7 @@ private fun IngredientRow(
     row: EditorRow,
     position: Int,
     isDragging: Boolean,
+    dragHandle: Modifier,
     qtyValue: androidx.compose.runtime.MutableState<TextFieldValue>,
     modifier: Modifier = Modifier,
     requestFocus: RowField?,
@@ -819,70 +894,107 @@ private fun IngredientRow(
             shape = MaterialTheme.shapes.large,
         ),
     ) {
-        BoxWithConstraints(
-            Modifier
+        Row(
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(Spacing.m),
+                .padding(start = Spacing.xs, end = Spacing.m, top = Spacing.m, bottom = Spacing.m),
+            verticalAlignment = Alignment.Top,
         ) {
-            // Stack only when genuinely cramped: large font scale, or a row so
-            // narrow (split-screen, foldable cover) the name field couldn't fit
-            // beside qty+unit. ~260dp content ≈ <340dp screen.
-            val stacked = fontScale > 1.3f || maxWidth < 260.dp
-            if (stacked) {
-                Column {
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            // Visible reorder affordance; long-press on the row still drags too.
+            Box(
+                modifier = dragHandle
+                    .width(28.dp)
+                    .height(56.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Filled.DragIndicator,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                )
+            }
+            BoxWithConstraints(Modifier.weight(1f)) {
+                // Stack only when genuinely cramped: large font scale, or a row so
+                // narrow (split-screen, foldable cover) the name field couldn't fit
+                // beside qty+unit. Threshold is 24dp lower than before because the
+                // drag handle now takes 28dp (was ~260dp content ≈ <340dp screen).
+                val stacked = fontScale > 1.3f || maxWidth < 236.dp
+                if (stacked) {
+                    Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                            QtyField(
+                                value = qtyValue,
+                                isError = row.qtyError,
+                                contentDesc = qtyCd,
+                                modifier = Modifier.width(88.dp),
+                                focusRequester = qtyFocusRequester,
+                                onNext = onUnitClick,
+                                onFocusChanged = onFocusChanged,
+                                onQtyChange = onQtyChange,
+                            )
+                            UnitPickerButton(unit = row.unit, onClick = onUnitClick)
+                        }
+                        NameField(
+                            row = row,
+                            contentDesc = nameCd,
+                            modifier = Modifier.fillMaxWidth(),
+                            focusRequester = nameFocusRequester,
+                            onFocusChanged = onFocusChanged,
+                            onNameChange = onNameChange,
+                            onNext = onNext,
+                        )
+                    }
+                } else {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                        verticalAlignment = Alignment.Top,
+                    ) {
                         QtyField(
                             value = qtyValue,
                             isError = row.qtyError,
                             contentDesc = qtyCd,
-                            modifier = Modifier.width(88.dp),
+                            modifier = Modifier.width(80.dp),
                             focusRequester = qtyFocusRequester,
                             onNext = onUnitClick,
                             onFocusChanged = onFocusChanged,
                             onQtyChange = onQtyChange,
                         )
                         UnitPickerButton(unit = row.unit, onClick = onUnitClick)
+                        NameField(
+                            row = row,
+                            contentDesc = nameCd,
+                            modifier = Modifier.weight(1f),
+                            focusRequester = nameFocusRequester,
+                            onFocusChanged = onFocusChanged,
+                            onNameChange = onNameChange,
+                            onNext = onNext,
+                        )
                     }
-                    NameField(
-                        row = row,
-                        contentDesc = nameCd,
-                        modifier = Modifier.fillMaxWidth(),
-                        focusRequester = nameFocusRequester,
-                        onFocusChanged = onFocusChanged,
-                        onNameChange = onNameChange,
-                        onNext = onNext,
-                    )
-                }
-            } else {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.Top,
-                ) {
-                    QtyField(
-                        value = qtyValue,
-                        isError = row.qtyError,
-                        contentDesc = qtyCd,
-                        modifier = Modifier.width(88.dp),
-                        focusRequester = qtyFocusRequester,
-                        onNext = onUnitClick,
-                        onFocusChanged = onFocusChanged,
-                        onQtyChange = onQtyChange,
-                    )
-                    UnitPickerButton(unit = row.unit, onClick = onUnitClick)
-                    NameField(
-                        row = row,
-                        contentDesc = nameCd,
-                        modifier = Modifier.weight(1f),
-                        focusRequester = nameFocusRequester,
-                        onFocusChanged = onFocusChanged,
-                        onNameChange = onNameChange,
-                        onNext = onNext,
-                    )
                 }
             }
         }
     }
 }
+
+/** Small primary-colored label above a group of fields. */
+@Composable
+private fun SectionLabel(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = modifier,
+    )
+}
+
+/** Inset field look: lighter container than the card it sits on, hairline border until focused. */
+@Composable
+private fun editorFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+)
 
 @Composable
 private fun QtyField(
@@ -916,6 +1028,8 @@ private fun QtyField(
         keyboardActions = KeyboardActions(
             onNext = { onNext() },
         ),
+        shape = MaterialTheme.shapes.small,
+        colors = editorFieldColors(),
         singleLine = true,
     )
 }
@@ -925,17 +1039,17 @@ private fun UnitPickerButton(
     unit: KitchenUnit,
     onClick: () -> Unit,
 ) {
-    OutlinedButton(
+    FilledTonalButton(
         onClick = onClick,
         modifier = Modifier.height(56.dp),
-        shape = OutlinedTextFieldDefaults.shape,
-        contentPadding = PaddingValues(horizontal = 8.dp),
+        shape = MaterialTheme.shapes.small,
+        contentPadding = PaddingValues(start = 12.dp, end = 4.dp),
     ) {
         Text(unit.label)
         Icon(
             Icons.Filled.ArrowDropDown,
             contentDescription = null,
-            modifier = Modifier.size(18.dp),
+            modifier = Modifier.size(20.dp),
         )
     }
 }
@@ -980,8 +1094,13 @@ private fun NameField(
                 }
             }
         },
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+        keyboardOptions = KeyboardOptions(
+            capitalization = KeyboardCapitalization.Sentences,
+            imeAction = ImeAction.Next,
+        ),
         keyboardActions = KeyboardActions(onNext = { onNext() }),
+        shape = MaterialTheme.shapes.small,
+        colors = editorFieldColors(),
         maxLines = 3,
     )
 }
@@ -995,38 +1114,43 @@ private fun AccessoryBar(
     onNext: () -> Unit,
 ) {
     AnimatedVisibility(visible = visible) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (qtyFocused) {
-                    FRACTION_INSERTS.forEach { ch ->
-                        FilterChip(
-                            selected = false,
-                            onClick = { onFraction(ch) },
-                            label = { Text(ch) },
-                        )
+        Surface(color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+            Column {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.s, vertical = Spacing.xs),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        if (qtyFocused) {
+                            FRACTION_INSERTS.forEach { ch ->
+                                FilterChip(
+                                    selected = false,
+                                    onClick = { onFraction(ch) },
+                                    label = { Text(ch) },
+                                )
+                            }
+                        }
+                        BAR_UNITS.forEach { unit ->
+                            FilterChip(
+                                selected = false,
+                                onClick = { onUnit(unit) },
+                                label = { Text(unit.label) },
+                            )
+                        }
+                    }
+                    TextButton(onClick = onNext) {
+                        Text(stringResource(R.string.action_next))
                     }
                 }
-                BAR_UNITS.forEach { unit ->
-                    FilterChip(
-                        selected = false,
-                        onClick = { onUnit(unit) },
-                        label = { Text(unit.label) },
-                    )
-                }
-            }
-            TextButton(onClick = onNext) {
-                Text(stringResource(R.string.action_next))
             }
         }
     }
@@ -1040,7 +1164,7 @@ private fun UnitPickerSheet(
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp)) {
             Text(
                 stringResource(R.string.unit_picker_title),
                 style = MaterialTheme.typography.titleMedium,
@@ -1055,9 +1179,12 @@ private fun UnitPickerSheet(
                     stringResource(labelRes),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(vertical = 4.dp),
+                    modifier = Modifier.padding(top = Spacing.m, bottom = Spacing.xs),
                 )
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(0.dp),
+                ) {
                     KitchenUnit.entries
                         .filter { it.family == family }
                         .forEach { unit ->
@@ -1204,7 +1331,7 @@ internal fun ScanSourceSheet(
     callbacks: EditorCallbacks,
 ) {
     ModalBottomSheet(onDismissRequest = callbacks.onDismissDialog) {
-        Column(Modifier.padding(horizontal = 16.dp)) {
+        Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
             Text(
                 stringResource(R.string.scan_source_title),
                 style = MaterialTheme.typography.titleMedium,
@@ -1212,15 +1339,21 @@ internal fun ScanSourceSheet(
             )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.action_scan)) },
+                leadingContent = { Icon(Icons.Outlined.DocumentScanner, contentDescription = null) },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 modifier = Modifier.clickableEntry { callbacks.onScanDocument() },
             )
             ListItem(
                 headlineContent = { Text(stringResource(R.string.action_choose_photo)) },
+                leadingContent = { Icon(Icons.Outlined.PhotoLibrary, contentDescription = null) },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                 modifier = Modifier.clickableEntry { callbacks.onChooseGallery() },
             )
             if (state.aiAvailable) {
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.scan_use_ai)) },
+                    leadingContent = { Icon(Icons.Outlined.AutoAwesome, contentDescription = null) },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     supportingContent = {
                         Text(
                             when {
