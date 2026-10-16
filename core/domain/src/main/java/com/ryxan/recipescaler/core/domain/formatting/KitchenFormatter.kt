@@ -44,12 +44,14 @@ object KitchenFormatter {
     // Manual per-ingredient unit promotion (Scale screen "Promote to"). Volume
     // only; ignores the US/Metric system preference — the amount is normalised
     // through mL/tsp and rendered in [target] regardless of [unit]'s system.
+    // Every target is a larger unit than the common kitchen ladder (cup/Tbsp/
+    // tsp, mL), so each one has its own "at least 1 of [target]" threshold.
     // Returns null when [unit] or [target] isn't VOLUME, the target isn't a
     // promotable unit, or the amount is below 1 of [target].
 
     /** Units a volume row can be promoted to. */
     val PROMOTE_TARGETS: List<KitchenUnit> = listOf(
-        KitchenUnit.QUART, KitchenUnit.GALLON, KitchenUnit.ML, KitchenUnit.L,
+        KitchenUnit.QUART, KitchenUnit.GALLON, KitchenUnit.L,
     )
 
     fun formatIn(amount: Double, unit: KitchenUnit, target: KitchenUnit): String? {
@@ -78,12 +80,10 @@ object KitchenFormatter {
                 if (rest > 0.0) parts += usVolume(rest)
                 parts.joinToString(" ").ifEmpty { null }
             }
-            KitchenUnit.ML -> {
-                if (totalMl < 1.0) return null
-                "${roundHalfUp(totalMl)} mL"
-            }
             KitchenUnit.L -> {
-                if (totalMl < UnitConversions.ML_PER_L) return null
+                // Compare the rounded mL (what metricVolume renders) so float
+                // noise like 999.9999999999999 mL still counts as 1 L.
+                if (roundHalfUp(totalMl) < 1000L) return null
                 metricVolume(totalMl)
             }
             else -> null

@@ -612,7 +612,7 @@ class ScaleViewModelTest {
 
         val s = vm.uiState.filter { !it.isLoading }.first()
         assertEquals(
-            listOf(KitchenUnit.QUART, KitchenUnit.GALLON, KitchenUnit.ML, KitchenUnit.L),
+            listOf(KitchenUnit.QUART, KitchenUnit.GALLON, KitchenUnit.L),
             s.rows[0].promoteOptions.map { it.unit },
         )
         assertTrue(s.rows[1].promoteOptions.isEmpty())

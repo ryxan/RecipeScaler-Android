@@ -185,8 +185,19 @@ class KitchenFormatterTest {
         assertEquals(null, inUnit(500.0, KitchenUnit.ML, KitchenUnit.L))
     }
 
-    @Test fun `metric ml promotes to whole mL`() =
-        assertEquals("2500 mL", inUnit(2.5, KitchenUnit.L, KitchenUnit.ML))
+    @Test fun `mL is not a promote target`() {
+        assertEquals(null, inUnit(2.5, KitchenUnit.L, KitchenUnit.ML))
+        assertEquals(null, inUnit(2.0, KitchenUnit.CUP, KitchenUnit.ML))
+    }
+
+    @Test fun `L threshold uses the rounded mL`() {
+        // 999.6 mL renders as 1 L, so it counts as reaching 1 L.
+        assertEquals("1 L", inUnit(999.6, KitchenUnit.ML, KitchenUnit.L))
+        // Float noise just under 1 L (e.g. from qty * factor) still counts.
+        assertEquals("1 L", inUnit(0.9999999999999999, KitchenUnit.L, KitchenUnit.L))
+        // 999.4 mL rounds to 999 mL — below 1 L.
+        assertEquals(null, inUnit(999.4, KitchenUnit.ML, KitchenUnit.L))
+    }
 
     @Test fun `metric L promotes to L plus mL`() =
         assertEquals("10 L 416 mL", inUnit(10416.0, KitchenUnit.ML, KitchenUnit.L))

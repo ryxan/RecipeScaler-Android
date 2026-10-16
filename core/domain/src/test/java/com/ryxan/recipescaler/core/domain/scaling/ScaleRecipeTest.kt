@@ -264,33 +264,78 @@ class ScaleRecipeTest {
         assertEquals(null, row.promotedUnit)
     }
 
-    @Test fun `promote options are listed once the scaled amount reaches a cup`() {
+    @Test fun `promote options are listed per target once each reaches one unit`() {
         val s = success(
             ScaleRecipe.scale(
                 listOf(
                     ingredient("a", "1", "cup", "milk"),
                     ingredient("b", "44", "cup", "stock"),
                     ingredient("c", "2", "each", "eggs"),
-                    ingredient("d", "0.5", "cup", "cream"),
+                    ingredient("d", "3", "cup", "cream"),
+                    ingredient("e", "4", "cup", "water"),
                 ),
                 ScaleMode.ByFactor(1.0),
             )
         )
-        // 1 cup: only the mL target (below qt, gal, L).
-        assertEquals(listOf(KitchenUnit.ML), s.ingredients[0].promoteOptions.map { it.unit })
-        assertEquals("237 mL", s.ingredients[0].promoteOptions[0].previewText)
-        // 44 cup: qt, gal, mL and L all ≥ 1 unit.
+        // Below 1 qt and 1 L: nothing to promote to, so no options (no icon).
+        assertTrue(s.ingredients[0].promoteOptions.isEmpty())
+        assertTrue(s.ingredients[3].promoteOptions.isEmpty())
+        // 44 cup: qt, gal and L all ≥ 1 unit.
         assertEquals(
-            listOf(
-                KitchenUnit.QUART, KitchenUnit.GALLON,
-                KitchenUnit.ML, KitchenUnit.L,
-            ),
+            listOf(KitchenUnit.QUART, KitchenUnit.GALLON, KitchenUnit.L),
             s.ingredients[1].promoteOptions.map { it.unit },
         )
         assertEquals("11 qt", s.ingredients[1].promoteOptions[0].previewText)
-        // Non-volume and <1-cup rows get no options.
+        // Non-volume rows get no options.
         assertTrue(s.ingredients[2].promoteOptions.isEmpty())
-        assertTrue(s.ingredients[3].promoteOptions.isEmpty())
+        // 4 cup = 1 qt: qt is offered; gal (<1) is not.
+        assertEquals(listOf(KitchenUnit.QUART), s.ingredients[4].promoteOptions.map { it.unit })
+        assertEquals("1 qt", s.ingredients[4].promoteOptions[0].previewText)
+    }
+
+    @Test fun `promote options drop entries identical to the Auto text`() {
+        val s = success(
+            ScaleRecipe.scale(
+                listOf(
+                    ingredient("a", "500", "ml", "water"),
+                    ingredient("b", "1.5", "l", "stock"),
+                    ingredient("c", "2", "qt", "broth"),
+                ),
+                ScaleMode.ByFactor(1.0),
+            )
+        )
+        // 500 mL: below 1 qt and 1 L → no options.
+        assertTrue(s.ingredients[0].promoteOptions.isEmpty())
+        // 1.5 L: Auto is "1 L 500 mL", so the L option is a no-op and dropped.
+        assertEquals(listOf(KitchenUnit.QUART), s.ingredients[1].promoteOptions.map { it.unit })
+        // 2 qt: Auto is "2 qt", so the qt option is dropped; L remains.
+        assertEquals(listOf(KitchenUnit.L), s.ingredients[2].promoteOptions.map { it.unit })
+    }
+
+    @Test fun `promotion to the unit the row already shows is inactive`() {
+        val s = success(
+            ScaleRecipe.scale(
+                listOf(ingredient("a", "2", "qt", "broth")),
+                ScaleMode.ByFactor(1.0),
+                promoted = mapOf("a" to KitchenUnit.QUART),
+            )
+        )
+        val row = s.ingredients.first()
+        assertEquals("2 qt", row.displayText)
+        assertEquals(null, row.promotedUnit)
+    }
+
+    @Test fun `stale promotion below its threshold is not reported as active`() {
+        val s = success(
+            ScaleRecipe.scale(
+                listOf(ingredient("a", "3", "cup", "milk")),
+                ScaleMode.ByFactor(1.0),
+                promoted = mapOf("a" to KitchenUnit.QUART),
+            )
+        )
+        val row = s.ingredients.first()
+        assertEquals("3 cup", row.displayText)
+        assertEquals(null, row.promotedUnit)
     }
 
     // ── Copy output with blank rows ───────────────────────────────────────────

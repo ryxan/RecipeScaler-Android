@@ -184,7 +184,6 @@
     <string name="promote_option">%1$s — %2$s</string>
     <string name="promote_unit_quarts">Quarts</string>
     <string name="promote_unit_gallons">Gallons</string>
-    <string name="promote_unit_ml">Millilitres</string>
     <string name="promote_unit_litres">Litres</string>
 
     <!-- Recipe list -->

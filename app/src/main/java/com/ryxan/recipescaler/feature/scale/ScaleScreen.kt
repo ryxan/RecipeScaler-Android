@@ -909,7 +909,6 @@ private fun promoteUnitName(unit: KitchenUnit): String = stringResource(
     when (unit) {
         KitchenUnit.QUART -> R.string.promote_unit_quarts
         KitchenUnit.GALLON -> R.string.promote_unit_gallons
-        KitchenUnit.ML -> R.string.promote_unit_ml
         KitchenUnit.L -> R.string.promote_unit_litres
         else -> R.string.promote_to
     },

@@ -180,16 +180,22 @@ object ScaleRecipe {
         val kitchenUnit = KitchenUnit.fromKey(ingredient.unit)
 
         // "Promote to" applies in KITCHEN mode to volume rows only.
-        val promotedText =
-            if (prefs.mode == DisplayMode.KITCHEN && promotedTo != null && kitchenUnit != null) {
-                KitchenFormatter.formatIn(scaled, kitchenUnit, promotedTo)
-            } else {
-                null
-            }
-        val options = if (prefs.mode == DisplayMode.KITCHEN &&
+        val autoText = KitchenFormatter.format(scaled, ingredient.unit, prefs)
+        val isKitchenVolume = prefs.mode == DisplayMode.KITCHEN &&
             kitchenUnit != null && kitchenUnit.family == UnitFamily.VOLUME
-        ) {
-            promoteOptions(scaled, kitchenUnit)
+
+        // An override is active only if it actually changes the display; one
+        // that is below its threshold, or renders the same as Auto, is inactive
+        // (and not reported), so the UI never shows a promoted state it can't
+        // clear.
+        val promotedText = if (isKitchenVolume && promotedTo != null) {
+            KitchenFormatter.formatIn(scaled, kitchenUnit!!, promotedTo)
+                ?.takeIf { it != autoText }
+        } else {
+            null
+        }
+        val options = if (isKitchenVolume) {
+            promoteOptions(scaled, kitchenUnit!!, autoText)
         } else {
             emptyList()
         }
@@ -197,33 +203,28 @@ object ScaleRecipe {
         return ScaledIngredient(
             id = ingredient.id, name = ingredient.name, unit = ingredient.unit,
             originalQty = qty, scaledQty = scaled,
-            displayText = promotedText ?: KitchenFormatter.format(scaled, ingredient.unit, prefs),
+            displayText = promotedText ?: autoText,
             originalDisplayText = KitchenFormatter.format(qty, ingredient.unit, prefs),
             status = status,
-            promotedUnit = if (prefs.mode == DisplayMode.KITCHEN &&
-                promotedTo != null && kitchenUnit?.family == UnitFamily.VOLUME
-            ) {
-                promotedTo
-            } else {
-                null
-            },
+            promotedUnit = if (promotedText != null) promotedTo else null,
             promoteOptions = options,
         )
     }
 
     // ── "Promote to" options ──────────────────────────────────────────────────
     //
-    // Offered on KITCHEN-mode volume rows once the scaled amount reaches 1 cup;
-    // each listed target requires at least 1 of that unit (no "0 qt").
+    // Offered on KITCHEN-mode volume rows, one entry per target that has at
+    // least 1 of that unit (no "0 qt"). Entries that would render the same as
+    // the row's Auto text are dropped, so the menu only lists real changes.
 
-    private const val MIN_PROMOTE_TSP = 48.0 // 1 cup
-
-    private fun promoteOptions(amount: Double, unit: KitchenUnit): List<PromoteOption> {
-        val ml = UnitConversions.toMl(amount, unit) ?: return emptyList()
-        if (ml < MIN_PROMOTE_TSP * UnitConversions.ML_PER_TSP) return emptyList()
-        return KitchenFormatter.PROMOTE_TARGETS.mapNotNull { target ->
+    private fun promoteOptions(
+        amount: Double,
+        unit: KitchenUnit,
+        autoText: String,
+    ): List<PromoteOption> =
+        KitchenFormatter.PROMOTE_TARGETS.mapNotNull { target ->
             KitchenFormatter.formatIn(amount, unit, target)
+                ?.takeIf { it != autoText }
                 ?.let { PromoteOption(target, it) }
         }
-    }
 }
