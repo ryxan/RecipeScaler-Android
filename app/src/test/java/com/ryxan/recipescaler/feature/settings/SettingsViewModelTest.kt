@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -29,12 +30,14 @@ class SettingsViewModelTest {
         vm.setDisplayMode(DisplayMode.DECIMAL)
         vm.setThemeMode(ThemeMode.DARK)
         vm.setDynamicColor(false)
+        vm.setUiV2(true)
 
         val s = repo.settings.first()
         assertEquals(MeasurementSystem.METRIC, s.display.system)
         assertEquals(DisplayMode.DECIMAL, s.display.mode)
         assertEquals(ThemeMode.DARK, s.themeMode)
         assertFalse(s.dynamicColor)
+        assertTrue(s.uiV2)
 
         // WhileSubscribed: collecting the StateFlow picks up the repo's current value.
         val emitted = vm.settings.filter { it.themeMode == ThemeMode.DARK }.first()

@@ -83,9 +83,19 @@ val LocalRescaleExtendedColors = staticCompositionLocalOf {
     )
 }
 
+/**
+ * Whether the experimental "v2" UI is enabled (Settings → Theme). v2
+ * composables/styles live alongside v1 and read this to swap in; flipping the
+ * flag recomposes the whole tree since this is a static local.
+ */
+val LocalUiV2 = staticCompositionLocalOf { false }
+
 object RescaleTheme {
     val extendedColors: RescaleExtendedColors
         @Composable get() = LocalRescaleExtendedColors.current
+
+    val uiV2: Boolean
+        @Composable get() = LocalUiV2.current
 
     /** Top-start → bottom-end brand gradient. Always dark enough for [RescaleExtendedColors.onGradient] content. */
     val brandGradient: Brush
@@ -103,6 +113,7 @@ object RescaleTheme {
 fun RescaleTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false,
+    uiV2: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val dynamicActive = dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
@@ -138,7 +149,10 @@ fun RescaleTheme(
         )
     }
 
-    CompositionLocalProvider(LocalRescaleExtendedColors provides extendedColors) {
+    CompositionLocalProvider(
+        LocalRescaleExtendedColors provides extendedColors,
+        LocalUiV2 provides uiV2,
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             shapes = RescaleShapes,

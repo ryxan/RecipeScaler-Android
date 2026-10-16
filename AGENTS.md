@@ -27,6 +27,7 @@ Commands use `./gradlew`; on Windows that's `.\gradlew.bat`.
 - Write UI tests as Robolectric Compose tests against stateless `*Content` composables — screens keep a stateless `*Content` + stateful wrapper split
 - Reuse `:core:designsystem` components, `RescaleTheme`, and `Spacing` tokens for padding/gaps — not raw dp or ad-hoc M3 widgets
 - Put all user-facing text in `res/values/strings.xml` via `stringResource` — no hardcoded strings in composables
+- The v2 UI experiment (`ui-v2` branch): gate every new style/screen behind `RescaleTheme.uiV2` (the `LocalUiV2` local) — toggled by Settings → Theme → "New look (experimental)" (`AppSettings.uiV2`). v1 composables must stay untouched and active when the flag is off
 - Give every icon-only button a `contentDescription`; keep touch targets ≥48dp
 - Declare dependencies in `gradle/libs.versions.toml`, not inline in build files
 - Update `docs/plan.md` when a roadmap item ships: tick the checkbox, update the Progress table (status + commit SHAs), record spec decisions

@@ -63,6 +63,7 @@ fun SettingsScreen(
         onDisplayMode = viewModel::setDisplayMode,
         onThemeMode = viewModel::setThemeMode,
         onDynamicColor = viewModel::setDynamicColor,
+        onUiV2 = viewModel::setUiV2,
         showDynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
         versionName = BuildConfig.VERSION_NAME,
         onNavigateUp = onNavigateUp,
@@ -84,6 +85,7 @@ fun SettingsContent(
     onDisplayMode: (DisplayMode) -> Unit,
     onThemeMode: (ThemeMode) -> Unit,
     onDynamicColor: (Boolean) -> Unit,
+    onUiV2: (Boolean) -> Unit = {},
     showDynamicColor: Boolean,
     versionName: String,
     onNavigateUp: () -> Unit = {},
@@ -240,6 +242,25 @@ fun SettingsContent(
                             onCheckedChange = onDynamicColor,
                         )
                     }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clickable { onUiV2(!settings.uiV2) }
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings_ui_v2),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Switch(
+                        checked = settings.uiV2,
+                        onCheckedChange = onUiV2,
+                    )
                 }
             }
 

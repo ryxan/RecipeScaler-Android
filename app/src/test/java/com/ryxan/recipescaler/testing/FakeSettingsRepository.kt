@@ -29,4 +29,8 @@ class FakeSettingsRepository : SettingsRepository {
     override suspend fun setDynamicColor(v: Boolean) {
         _settings.update { it.copy(dynamicColor = v) }
     }
+
+    override suspend fun setUiV2(v: Boolean) {
+        _settings.update { it.copy(uiV2 = v) }
+    }
 }

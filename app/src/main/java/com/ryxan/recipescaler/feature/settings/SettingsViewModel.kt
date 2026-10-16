@@ -63,4 +63,8 @@ class SettingsViewModel @Inject constructor(
     fun setDynamicColor(v: Boolean) {
         viewModelScope.launch { repository.setDynamicColor(v) }
     }
+
+    fun setUiV2(v: Boolean) {
+        viewModelScope.launch { repository.setUiV2(v) }
+    }
 }

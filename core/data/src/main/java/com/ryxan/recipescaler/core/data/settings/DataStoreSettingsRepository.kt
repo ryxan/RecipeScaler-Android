@@ -28,6 +28,7 @@ class DataStoreSettingsRepository @Inject constructor(
         val DISPLAY_MODE = stringPreferencesKey("display_mode")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
+        val UI_V2 = booleanPreferencesKey("ui_v2")
     }
 
     private val defaults = AppSettings()
@@ -40,6 +41,7 @@ class DataStoreSettingsRepository @Inject constructor(
             ),
             themeMode = prefs.enumOr(Keys.THEME_MODE, defaults.themeMode),
             dynamicColor = prefs[Keys.DYNAMIC_COLOR] ?: defaults.dynamicColor,
+            uiV2 = prefs[Keys.UI_V2] ?: defaults.uiV2,
         )
     }
 
@@ -57,6 +59,10 @@ class DataStoreSettingsRepository @Inject constructor(
 
     override suspend fun setDynamicColor(v: Boolean) {
         dataStore.edit { it[Keys.DYNAMIC_COLOR] = v }
+    }
+
+    override suspend fun setUiV2(v: Boolean) {
+        dataStore.edit { it[Keys.UI_V2] = v }
     }
 
     /** Corrupt or unknown stored values fall back to [default] instead of crashing. */

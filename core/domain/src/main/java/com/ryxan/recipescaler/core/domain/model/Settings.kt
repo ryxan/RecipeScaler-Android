@@ -8,4 +8,5 @@ data class AppSettings(
     val display: DisplayPrefs = DisplayPrefs(),
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val dynamicColor: Boolean = false,
+    val uiV2: Boolean = false,
 )

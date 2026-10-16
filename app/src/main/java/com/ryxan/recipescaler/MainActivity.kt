@@ -39,6 +39,7 @@ class MainActivity : ComponentActivity() {
                     ThemeMode.DARK -> true
                 },
                 dynamicColor = settings.dynamicColor,
+                uiV2 = settings.uiV2,
             ) {
                 RescaleNavHost()
             }

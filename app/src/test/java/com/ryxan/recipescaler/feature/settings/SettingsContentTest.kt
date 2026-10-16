@@ -98,6 +98,30 @@ class SettingsContentTest {
     }
 
     @Test
+    fun `experimental ui switch calls onUiV2`() {
+        var toggled: Boolean? = null
+        composeRule.setContent {
+            RescaleTheme(dynamicColor = false) {
+                SettingsContent(
+                    settings = AppSettings(),
+                    onSystem = {},
+                    onDisplayMode = {},
+                    onThemeMode = {},
+                    onDynamicColor = {},
+                    onUiV2 = { toggled = it },
+                    showDynamicColor = false,
+                    versionName = "1.0-test",
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("New look (experimental)")
+            .performScrollTo()
+            .performClick()
+        assertEquals(true, toggled)
+    }
+
+    @Test
     fun `debug AI scan controls hidden without showDebug`() {
         content()
         composeRule.onAllNodesWithText("Debug").assertCountEquals(0)

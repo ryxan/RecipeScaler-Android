@@ -217,6 +217,7 @@
     <string name="settings_theme_light">Light</string>
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_dynamic_color">Dynamic color</string>
+    <string name="settings_ui_v2">New look (experimental)</string>
     <string name="settings_section_about">About</string>
     <string name="settings_privacy">Privacy policy</string>
     <string name="settings_version">Version %1$s</string>
