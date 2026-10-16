@@ -806,6 +806,7 @@ private fun ScaledRow(
 ) {
     val isChecked = checked == true
     val contentAlpha = if (isChecked) 0.55f else 1f
+    val hasPromoteChip = promoteEnabled && row.promoteOptions.isNotEmpty()
 
     Row(
         modifier = Modifier
@@ -821,9 +822,12 @@ private fun ScaledRow(
                     Modifier
                 },
             )
+            // Chip rows get no vertical padding: Surface(onClick) already
+            // enforces a 48dp touch target, and padding on top would make
+            // them taller than plain rows.
             .padding(
                 horizontal = Spacing.m,
-                vertical = Spacing.m,
+                vertical = if (hasPromoteChip) 0.dp else Spacing.m,
             ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.m),
@@ -912,7 +916,7 @@ private fun ScaledRow(
         }
 
         // Promote control (only when options exist)
-        if (promoteEnabled && row.promoteOptions.isNotEmpty()) {
+        if (hasPromoteChip) {
             PromoteChip(
                 row = row,
                 onPromote = onPromote,
