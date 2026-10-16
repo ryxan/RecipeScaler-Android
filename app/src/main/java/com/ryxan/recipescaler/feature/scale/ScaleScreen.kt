@@ -7,27 +7,29 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
@@ -39,11 +41,13 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.SwapVert
 import androidx.compose.material.icons.outlined.WarningAmber
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -61,7 +65,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -81,7 +89,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -108,13 +115,14 @@ import com.ryxan.recipescaler.core.domain.scaling.CopyFormat
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-/** Target-servings chips for the "Scale to" shortcuts row. */
-private val servingChips = listOf(1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24)
+/** Multiplier chips — each writes serves × n into "Scale to". */
+private val factorChips = listOf(1, 2, 3, 5)
 
 @Composable
 fun ScaleScreen(
     onNavigateUp: () -> Unit,
     onEdit: (Long) -> Unit,
+    onNavigateToSettings: () -> Unit = {},
     viewModel: ScaleViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -130,9 +138,10 @@ fun ScaleScreen(
         callbacks = ScaleCallbacks(
             onNavigateUp = onNavigateUp,
             onEdit = onEdit,
+            onSettings = onNavigateToSettings,
             onServes = viewModel::setServes,
             onScaleTo = viewModel::setScaleTo,
-            onServings = viewModel::applyServings,
+            onFactor = viewModel::applyFactor,
             onStep = viewModel::stepServings,
             onShowOriginal = viewModel::setShowOriginal,
             onCookMode = viewModel::toggleCookMode,
@@ -160,9 +169,10 @@ fun ScaleScreen(
 data class ScaleCallbacks(
     val onNavigateUp: () -> Unit = {},
     val onEdit: (Long) -> Unit = {},
+    val onSettings: () -> Unit = {},
     val onServes: (String) -> Unit = {},
     val onScaleTo: (String) -> Unit = {},
-    val onServings: (Int) -> Unit = {},
+    val onFactor: (Int) -> Unit = {},
     val onStep: (Int) -> Unit = {},
     val onShowOriginal: (Boolean) -> Unit = {},
     val onCookMode: () -> Unit = {},
@@ -241,6 +251,12 @@ fun ScaleContent(
                                 if (state.cookMode) R.string.action_cook_done
                                 else R.string.action_cook,
                             ),
+                        )
+                    }
+                    IconButton(onClick = callbacks.onSettings) {
+                        Icon(
+                            Icons.Filled.Settings,
+                            contentDescription = stringResource(R.string.title_settings),
                         )
                     }
                     if (!state.cookMode) {
@@ -380,111 +396,9 @@ fun ScaleContent(
                 }
             } else {
             if (!state.cookMode) {
-                item(key = "inputs") {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        val message = state.message
-                        OutlinedTextField(
-                            value = state.inputs.servesText,
-                            onValueChange = callbacks.onServes,
-                            modifier = Modifier.weight(1f),
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Decimal,
-                            ),
-                            label = { Text(stringResource(R.string.scale_label_serves)) },
-                            isError = message?.field == ScaleField.SERVES,
-                            supportingText = {
-                                if (message?.field == ScaleField.SERVES) {
-                                    Text(messageText(message))
-                                }
-                            },
-                            singleLine = true,
-                        )
-                        OutlinedTextField(
-                            value = state.inputs.scaleToText,
-                            onValueChange = callbacks.onScaleTo,
-                            modifier = Modifier.weight(1f),
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Decimal,
-                            ),
-                            label = { Text(stringResource(R.string.scale_label_scale_to)) },
-                            isError = message?.field == ScaleField.SCALE_TO,
-                            supportingText = {
-                                if (message?.field == ScaleField.SCALE_TO) {
-                                    Text(messageText(message))
-                                }
-                            },
-                            singleLine = true,
-                        )
-                    }
-                }
-
                 item(key = "controls") {
-                    val targetServings = state.derivedYieldAmount
-                        ?: QuantityParser.parse(state.inputs.scaleToText)
-                    val targetText = targetServings?.let { formatYield(it) } ?: "–"
-                    val currentTarget = stringResource(
-                        R.string.cd_target_servings,
-                        targetText,
-                        state.yieldLabel,
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .selectableGroup(),
-                        ) {
-                            items(servingChips, key = { it }) { n ->
-                                FilterChip(
-                                    selected = state.message == null &&
-                                        QuantityParser.parse(state.inputs.scaleToText)
-                                            ?.let { abs(it - n.toDouble()) < 1e-9 } == true,
-                                    onClick = { callbacks.onServings(n) },
-                                    label = { Text("$n") },
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor =
-                                            MaterialTheme.colorScheme.primaryContainer,
-                                    ),
-                                )
-                            }
-                        }
-                        IconButton(
-                            onClick = { callbacks.onStep(-1) },
-                            enabled = targetServings == null || targetServings >
-                                ScaleViewModel.MIN_SERVINGS + 1e-9,
-                        ) {
-                            Icon(
-                                Icons.Filled.Remove,
-                                contentDescription = stringResource(
-                                    R.string.action_decrease_servings,
-                                ),
-                            )
-                        }
-                        Text(
-                            text = targetText,
-                            style = MaterialTheme.typography.titleMedium,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .widthIn(min = 40.dp)
-                                .clearAndSetSemantics {
-                                    contentDescription = currentTarget
-                                },
-                        )
-                        IconButton(
-                            onClick = { callbacks.onStep(1) },
-                            enabled = targetServings == null || targetServings <
-                                ScaleViewModel.MAX_SERVINGS - 1e-9,
-                        ) {
-                            Icon(
-                                Icons.Filled.Add,
-                                contentDescription = stringResource(
-                                    R.string.action_increase_servings,
-                                ),
-                            )
-                        }
-                    }
+                    ScaleControls(state = state, callbacks = callbacks)
                 }
-
             } else {
                 item(key = "cook_hint") {
                     Text(
@@ -493,10 +407,9 @@ fun ScaleContent(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-            }
-
-            item(key = "summary") {
-                SummaryLine(state)
+                item(key = "summary") {
+                    SummaryLine(state)
+                }
             }
 
             item(key = "warning") {
@@ -575,6 +488,254 @@ fun ScaleContent(
                 }
             }
             }
+        }
+    }
+}
+
+/**
+ * Servings control card: a segmented − / target / + stepper, "MAKING: n"
+ * caption, ×-multiplier chips, and the "Scaled from original" line. Tapping
+ * the stepper value or the original-servings badge opens a free-form input
+ * dialog, since the stepper and chips only cover whole-number targets.
+ */
+@Composable
+private fun ScaleControls(
+    state: ScaleUiState,
+    callbacks: ScaleCallbacks,
+) {
+    var editingField by remember { mutableStateOf<ScaleField?>(null) }
+    val message = state.message
+    val targetServings = state.derivedYieldAmount
+        ?: QuantityParser.parse(state.inputs.scaleToText)
+    val targetText = targetServings?.let { formatYield(it) } ?: "–"
+    val currentTarget = stringResource(
+        R.string.cd_target_servings,
+        targetText,
+        state.yieldLabel,
+    )
+    val editServes = stringResource(R.string.cd_edit_serves)
+    val editTarget = stringResource(R.string.cd_edit_scale_to)
+    val canStepDown = targetServings == null ||
+        targetServings > ScaleViewModel.MIN_SERVINGS + 1e-9
+    val canStepUp = targetServings == null ||
+        targetServings < ScaleViewModel.MAX_SERVINGS - 1e-9
+
+    RescaleCard(Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Spacing.m),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Spacing.m),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .clip(MaterialTheme.shapes.large)
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.outlineVariant,
+                        MaterialTheme.shapes.large,
+                    ),
+            ) {
+                StepperButton(
+                    onClick = { callbacks.onStep(-1) },
+                    enabled = canStepDown,
+                    description = stringResource(R.string.action_decrease_servings),
+                    icon = { Icon(Icons.Filled.Remove, contentDescription = null) },
+                    modifier = Modifier.weight(1f),
+                )
+                VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable(onClickLabel = editTarget) {
+                            editingField = ScaleField.SCALE_TO
+                        }
+                        .semantics(mergeDescendants = true) {
+                            contentDescription = currentTarget
+                        },
+                ) {
+                    AnimatedContent(targetState = targetText, label = "target") { text ->
+                        Text(text, style = MaterialTheme.typography.displaySmall)
+                    }
+                }
+                VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                StepperButton(
+                    onClick = { callbacks.onStep(1) },
+                    enabled = canStepUp,
+                    description = stringResource(R.string.action_increase_servings),
+                    icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            Text(
+                text = stringResource(
+                    R.string.scale_making,
+                    targetText,
+                    state.yieldLabel,
+                ).uppercase(),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+                modifier = Modifier.selectableGroup(),
+            ) {
+                factorChips.forEach { n ->
+                    FilterChip(
+                        selected = message == null &&
+                            abs(state.factor - n.toDouble()) < 1e-9,
+                        onClick = { callbacks.onFactor(n) },
+                        label = { Text("${n}×") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor =
+                                MaterialTheme.colorScheme.primaryContainer,
+                        ),
+                    )
+                }
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val servesText = state.inputs.servesText.ifBlank { "–" }
+                Text(
+                    stringResource(R.string.scale_scaled_from_prefix),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.width(Spacing.xs))
+                // Small visual badge, full-size touch target around it.
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable(onClickLabel = editServes) {
+                            editingField = ScaleField.SERVES
+                        }
+                        .semantics(mergeDescendants = true) {
+                            contentDescription = "$servesText, $editServes"
+                        },
+                ) {
+                    Text(
+                        servesText,
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier
+                            .border(
+                                1.dp,
+                                MaterialTheme.colorScheme.outlineVariant,
+                                RoundedCornerShape(6.dp),
+                            )
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                    )
+                }
+                Spacer(Modifier.width(Spacing.xs))
+                Text(
+                    stringResource(
+                        R.string.scale_scaled_from_suffix,
+                        state.yieldLabel,
+                        formatYield(state.factor),
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            if (message != null) {
+                Text(
+                    text = messageText(message),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
+    }
+
+    val field = editingField
+    if (field != null) {
+        AlertDialog(
+            onDismissRequest = { editingField = null },
+            confirmButton = {
+                TextButton(onClick = { editingField = null }) {
+                    Text(stringResource(R.string.action_ok))
+                }
+            },
+            text = {
+                OutlinedTextField(
+                    value = when (field) {
+                        ScaleField.SERVES -> state.inputs.servesText
+                        ScaleField.SCALE_TO -> state.inputs.scaleToText
+                    },
+                    onValueChange = when (field) {
+                        ScaleField.SERVES -> callbacks.onServes
+                        ScaleField.SCALE_TO -> callbacks.onScaleTo
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal,
+                    ),
+                    label = {
+                        Text(
+                            stringResource(
+                                if (field == ScaleField.SERVES) {
+                                    R.string.scale_label_serves
+                                } else {
+                                    R.string.scale_label_scale_to
+                                },
+                            ),
+                        )
+                    },
+                    isError = message?.field == field,
+                    supportingText = {
+                        if (message?.field == field) {
+                            Text(messageText(message))
+                        }
+                    },
+                    singleLine = true,
+                )
+            },
+        )
+    }
+}
+
+/** One tappable segment of the stepper, greyed out when disabled. */
+@Composable
+private fun StepperButton(
+    onClick: () -> Unit,
+    enabled: Boolean,
+    description: String,
+    icon: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .fillMaxHeight()
+            .background(
+                if (enabled) {
+                    MaterialTheme.colorScheme.surfaceContainerHighest
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainer
+                },
+            )
+            .semantics(mergeDescendants = true) { contentDescription = description }
+            .clickable(enabled = enabled, onClick = onClick),
+    ) {
+        CompositionLocalProvider(
+            LocalContentColor provides if (enabled) {
+                MaterialTheme.colorScheme.onSurface
+            } else {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+            },
+        ) {
+            icon()
         }
     }
 }

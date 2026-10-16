@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Scale
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.ContentPaste
 import androidx.compose.material.icons.outlined.DocumentScanner
 import androidx.compose.material.icons.outlined.Keyboard
@@ -124,6 +125,7 @@ fun EditorScreen(
     onNavigateUp: () -> Unit,
     onScale: (Long) -> Unit,
     onNavigateToPro: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
     viewModel: EditorViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -205,6 +207,7 @@ fun EditorScreen(
         snackbarHostState = snackbarHostState,
         callbacks = EditorCallbacks(
             onNavigateUp = onNavigateUp,
+            onSettings = onNavigateToSettings,
             onScale = { scope.launch { viewModel.prepareToScale()?.let(onScale) } },
             onTitleChange = viewModel::onTitleChange,
             onYieldTextChange = viewModel::onYieldTextChange,
@@ -270,6 +273,7 @@ fun EditorScreen(
 /** Bundled callbacks so [EditorContent] stays easy to drive from UI tests. */
 data class EditorCallbacks(
     val onNavigateUp: () -> Unit = {},
+    val onSettings: () -> Unit = {},
     val onScale: () -> Unit = {},
     val onTitleChange: (String) -> Unit = {},
     val onYieldTextChange: (String) -> Unit = {},
@@ -450,6 +454,12 @@ fun EditorContent(
                         Icon(
                             Icons.Outlined.DocumentScanner,
                             contentDescription = stringResource(R.string.action_scan_recipe),
+                        )
+                    }
+                    IconButton(onClick = callbacks.onSettings) {
+                        Icon(
+                            Icons.Filled.Settings,
+                            contentDescription = stringResource(R.string.title_settings),
                         )
                     }
                     Box {

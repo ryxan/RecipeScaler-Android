@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DocumentScanner
 import androidx.compose.material.icons.filled.Draw
 import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -87,6 +88,7 @@ private const val PLAY_SUBSCRIPTIONS_URL = "https://play.google.com/store/accoun
 fun ProScreen(
     onNavigateUp: () -> Unit,
     onTryAiImport: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
     viewModel: ProViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -102,6 +104,7 @@ fun ProScreen(
         state = state,
         snackbarHostState = snackbarHostState,
         onNavigateUp = onNavigateUp,
+        onNavigateToSettings = onNavigateToSettings,
         onPurchase = { productId ->
             (context as? Activity)?.let { viewModel.purchase(it, productId) }
         },
@@ -121,6 +124,7 @@ fun ProContent(
     onRestore: () -> Unit = {},
     onRetry: () -> Unit = {},
     onNavigateUp: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
     onTryAiImport: () -> Unit = {},
     onBackToRecipes: () -> Unit = {},
     onManageSubscription: () -> Unit = {},
@@ -150,6 +154,14 @@ fun ProContent(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.action_back),
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = stringResource(R.string.title_settings),
                         )
                     }
                 },
@@ -569,13 +581,6 @@ private fun ProHero() {
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
         )
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(
-            text = stringResource(R.string.pro_welcome_subtitle),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
     }
 }
 
@@ -654,46 +659,33 @@ private fun UnlockedCard() {
             UnlockedBenefitRow(
                 icon = Icons.Filled.AutoAwesome,
                 title = stringResource(R.string.pro_benefit_ai),
-                subtitle = stringResource(R.string.pro_benefit_ai_detail),
             )
             UnlockedBenefitRow(
                 icon = Icons.Filled.Draw,
                 title = stringResource(R.string.pro_benefit_handwriting),
-                subtitle = stringResource(R.string.pro_benefit_handwriting_detail),
             )
             UnlockedBenefitRow(
                 icon = Icons.Filled.Block,
                 title = stringResource(R.string.pro_benefit_no_ads),
-                subtitle = stringResource(R.string.pro_benefit_no_ads_detail),
             )
         }
     }
 }
 
 @Composable
-private fun UnlockedBenefitRow(icon: ImageVector, title: String, subtitle: String) {
+private fun UnlockedBenefitRow(icon: ImageVector, title: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         IconBadge(
             icon = icon,
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         )
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 14.dp),
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+        Text(
+            text = title,
+            modifier = Modifier.padding(start = 14.dp),
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium,
+        )
     }
 }
 

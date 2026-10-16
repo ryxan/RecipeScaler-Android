@@ -3,14 +3,10 @@ package com.ryxan.recipescaler.feature.scale
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertCountEquals
-import androidx.compose.ui.test.hasScrollToIndexAction
-import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollToNode
-import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import com.ryxan.recipescaler.core.designsystem.RescaleTheme
@@ -90,19 +86,36 @@ class ScaleContentTest {
     }
 
     @Test
-    fun `renders title rows and summary`() {
+    fun `renders title rows and controls`() {
         content(state())
         composeRule.onNodeWithText("Bread").assertIsDisplayed()
         composeRule.onNodeWithText("2 cup").assertIsDisplayed()
         composeRule.onNodeWithText("Flour").assertIsDisplayed()
-        composeRule.onNodeWithText("×2 · Makes 8 servings").assertIsDisplayed()
+        composeRule.onNodeWithText("MAKING: 8 SERVINGS").assertIsDisplayed()
     }
 
     @Test
-    fun `shows the serves and scale to fields`() {
+    fun `the serves badge opens the serves dialog`() {
         content(state())
+        composeRule.onNodeWithContentDescription(
+            "Edit original servings",
+            substring = true,
+        ).performClick()
         composeRule.onNodeWithText("Serves").assertIsDisplayed()
+    }
+
+    @Test
+    fun `the stepper value opens the scale-to dialog`() {
+        content(state())
+        composeRule.onNodeWithContentDescription("Makes 8 servings").performClick()
         composeRule.onNodeWithText("Scale to (servings)").assertIsDisplayed()
+    }
+
+    @Test
+    fun `the scaled-from line shows serves and factor`() {
+        content(state())
+        composeRule.onNodeWithText("Scaled from original").assertIsDisplayed()
+        composeRule.onNodeWithText("servings (2× factor)").assertIsDisplayed()
     }
 
     @Test
@@ -114,23 +127,14 @@ class ScaleContentTest {
     }
 
     @Test
-    fun `the 24 chip is reachable by scrolling`() {
-        content(state())
-        composeRule.onNode(
-            hasScrollToIndexAction() and hasAnyAncestor(hasScrollToIndexAction()),
-        ).performScrollToNode(hasText("24"))
-        composeRule.onNodeWithText("24").assertIsDisplayed()
-    }
-
-    @Test
-    fun `tapping the 3 chip fires the servings callback`() {
-        var servings = 0
+    fun `tapping the 3x chip fires the factor callback`() {
+        var factor = 0
         content(
             state(factor = 1.0),
-            ScaleCallbacks(onServings = { servings = it }),
+            ScaleCallbacks(onFactor = { factor = it }),
         )
-        composeRule.onNodeWithText("3").performClick()
-        assertEquals(3, servings)
+        composeRule.onNodeWithText("3×").performClick()
+        assertEquals(3, factor)
     }
 
     @Test
@@ -180,8 +184,7 @@ class ScaleContentTest {
             ),
         )
         composeRule.onAllNodesWithText("Can't read 'abc'").assertCountEquals(1)
-        composeRule.onNodeWithText("(input not read)").assertIsDisplayed()
-        composeRule.onNodeWithText("×1").assertIsDisplayed()
+        composeRule.onNodeWithText("servings (1× factor)").assertIsDisplayed()
     }
 
     @Test
@@ -205,7 +208,8 @@ class ScaleContentTest {
         ).assertIsDisplayed()
         composeRule.onAllNodesWithText("Serves").assertCountEquals(0)
         composeRule.onAllNodesWithText("Scale to (servings)").assertCountEquals(0)
-        composeRule.onAllNodesWithText("3").assertCountEquals(0)
+        composeRule.onAllNodesWithText("3×").assertCountEquals(0)
+        composeRule.onAllNodesWithText("MAKING: 8 SERVINGS").assertCountEquals(0)
         composeRule.onAllNodesWithText("Show original amounts").assertCountEquals(0)
         // Summary and rows still visible.
         composeRule.onNodeWithText("×2 · Makes 8 servings").assertIsDisplayed()
@@ -228,6 +232,14 @@ class ScaleContentTest {
         content(state(recipeMissing = true))
         composeRule.onNodeWithText("This recipe no longer exists").assertIsDisplayed()
         composeRule.onAllNodesWithText("Flour").assertCountEquals(0)
+    }
+
+    @Test
+    fun `the settings action fires the callback`() {
+        var opened = false
+        content(state(), ScaleCallbacks(onSettings = { opened = true }))
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+        assertEquals(true, opened)
     }
 
     @Test

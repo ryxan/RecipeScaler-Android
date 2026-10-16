@@ -116,27 +116,27 @@ class ScaleViewModelTest {
     }
 
     @Test
-    fun `servings chip sets the scale-to target and keeps serves`() = runTest {
+    fun `factor chip writes serves times n and keeps serves`() = runTest {
         val repo = FakeRecipeRepository()
         val id = seeded(repo, yieldAmount = 15.0)
         val vm = vm(repo, FakeSettingsRepository(), id)
 
         vm.uiState.filter { !it.isLoading }.first()
-        vm.applyServings(1)
-        val s = vm.uiState.filter { abs(it.factor - 1.0 / 15) < 1e-9 }.first()
+        vm.applyFactor(3)
+        val s = vm.uiState.filter { it.factor == 3.0 }.first()
         assertEquals("15", s.inputs.servesText)
-        assertEquals("1", s.inputs.scaleToText)
+        assertEquals("45", s.inputs.scaleToText)
     }
 
     @Test
-    fun `servings chip on a blank serves defaults serves to 1`() = runTest {
+    fun `factor chip on a blank serves defaults serves to 1`() = runTest {
         val repo = FakeRecipeRepository()
         val id = seeded(repo)
         val vm = vm(repo, FakeSettingsRepository(), id)
 
         vm.uiState.filter { !it.isLoading }.first()
         vm.setServes("")
-        vm.applyServings(3)
+        vm.applyFactor(3)
         val s = vm.uiState.filter {
             !it.isLoading && it.inputs.servesText == "1" && it.inputs.scaleToText == "3"
         }.first()
@@ -472,14 +472,14 @@ class ScaleViewModelTest {
     }
 
     @Test
-    fun `servings chip persists the new target`() = runTest {
+    fun `factor chip persists the new target`() = runTest {
         val repo = FakeRecipeRepository()
         val id = seeded(repo)
         val scaleInputs = FakeScaleInputsRepository()
         val vm = vm(repo, FakeSettingsRepository(), id, scaleInputs)
 
         vm.uiState.filter { !it.isLoading }.first()
-        vm.applyServings(8)
+        vm.applyFactor(2)
         advanceUntilIdle()
 
         assertEquals(SavedScaleInputs("4", "8"), scaleInputs.savedFor(id))

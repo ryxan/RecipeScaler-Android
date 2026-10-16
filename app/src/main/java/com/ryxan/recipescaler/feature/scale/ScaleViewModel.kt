@@ -170,13 +170,13 @@ class ScaleViewModel @Inject constructor(
         }
     }
 
-    /** Sets "Scale to" to [n] servings; a blank/unreadable serves defaults to 1. */
-    fun applyServings(n: Int) = updateInputs { inp ->
+    /** Sets "Scale to" to serves × [mult]; a blank/unreadable serves defaults to 1. */
+    fun applyFactor(mult: Int) = updateInputs { inp ->
         val serves = QuantityParser.parse(inp.servesText)
         if (serves == null || serves <= 0) {
-            inp.copy(servesText = "1", scaleToText = n.toString())
+            inp.copy(servesText = "1", scaleToText = mult.toString())
         } else {
-            inp.copy(scaleToText = n.toString())
+            inp.copy(scaleToText = formatYield(serves * mult))
         }
     }
 
@@ -185,7 +185,7 @@ class ScaleViewModel @Inject constructor(
      * [MIN_SERVINGS]..[MAX_SERVINGS]. A fractional target snaps to the next
      * integer in the step direction; an unreadable target restarts from the
      * serves count, and an unreadable serves resets to 1 (same as
-     * [applyServings]).
+     * [applyFactor]).
      */
     fun stepServings(direction: Int) {
         val state = uiState.value

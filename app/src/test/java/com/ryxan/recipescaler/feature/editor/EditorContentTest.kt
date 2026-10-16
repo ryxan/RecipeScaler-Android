@@ -82,6 +82,14 @@ class EditorContentTest {
     }
 
     @Test
+    fun `the settings action fires the callback`() {
+        var opened = false
+        content(state(), EditorCallbacks(onSettings = { opened = true }))
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+        assertEquals(true, opened)
+    }
+
+    @Test
     fun `header says recipe title`() {
         content(state())
         composeRule.onNodeWithText("Recipe title").assertIsDisplayed()

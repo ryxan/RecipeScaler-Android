@@ -91,12 +91,14 @@ fun RescaleNavHost() {
                     }
                 },
                 onNavigateToPro = { navController.navigate(Pro) },
+                onNavigateToSettings = { navController.navigate(Settings) },
             )
         }
         composable<Scale> {
             ScaleScreen(
                 onNavigateUp = { navController.navigateUp() },
                 onEdit = { id -> navController.navigate(Editor(recipeId = id)) },
+                onNavigateToSettings = { navController.navigate(Settings) },
             )
         }
         composable<Settings> {
@@ -109,6 +111,7 @@ fun RescaleNavHost() {
             ProScreen(
                 onNavigateUp = { navController.navigateUp() },
                 onTryAiImport = { navController.navigate(Editor()) },
+                onNavigateToSettings = { navController.navigate(Settings) },
             )
         }
     }

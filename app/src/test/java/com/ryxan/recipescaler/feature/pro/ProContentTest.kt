@@ -2,6 +2,7 @@ package com.ryxan.recipescaler.feature.pro
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -31,6 +32,7 @@ class ProContentTest {
         onBackToRecipes: () -> Unit = {},
         onManageSubscription: () -> Unit = {},
         onRetry: () -> Unit = {},
+        onNavigateToSettings: () -> Unit = {},
     ) {
         composeRule.setContent {
             RescaleTheme(dynamicColor = false) {
@@ -42,6 +44,7 @@ class ProContentTest {
                     onBackToRecipes = onBackToRecipes,
                     onManageSubscription = onManageSubscription,
                     onRetry = onRetry,
+                    onNavigateToSettings = onNavigateToSettings,
                 )
             }
         }
@@ -53,10 +56,21 @@ class ProContentTest {
     )
 
     @Test
+    fun `the settings action fires the callback`() {
+        var opened = false
+        content(
+            ProUiState(loading = false),
+            onNavigateToSettings = { opened = true },
+        )
+        composeRule.onNodeWithContentDescription("Settings").performClick()
+        assertTrue(opened)
+    }
+
+    @Test
     fun `plans render with prices, the primary action and restore`() {
         content(ProUiState(products = products, loading = false))
 
-        composeRule.onNodeWithText("AI recipe import, every day").assertIsDisplayed()
+        composeRule.onNodeWithText("Unlimited AI recipe import").assertIsDisplayed()
         composeRule.onNodeWithText("$14.99").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("$3.99 / month").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Unlock for $14.99").assertIsDisplayed()
@@ -107,11 +121,10 @@ class ProContentTest {
     fun `pro user sees the celebration state with next steps`() {
         content(ProUiState(isPro = true, products = products, loading = false))
 
-        composeRule.onNodeWithText("You're Pro!").assertIsDisplayed()
-        composeRule.onNodeWithText("Thank you — everything is unlocked.").assertIsDisplayed()
+        composeRule.onNodeWithText("Thank you for purchasing Rescale Pro!").assertIsDisplayed()
         composeRule.onNodeWithText("What's unlocked").assertIsDisplayed()
         composeRule.onNodeWithText("No ads").performScrollTo().assertIsDisplayed()
-        composeRule.onNodeWithText("Scan your first recipe").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("Scan a recipe").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("Back to recipes").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("$3.99 / month").assertDoesNotExist()
         composeRule.onNodeWithText("Unlock for $14.99").assertDoesNotExist()
@@ -151,7 +164,7 @@ class ProContentTest {
             onTryAiImport = { called = true },
         )
 
-        composeRule.onNodeWithText("Scan your first recipe").performScrollTo().performClick()
+        composeRule.onNodeWithText("Scan a recipe").performScrollTo().performClick()
 
         assertTrue(called)
     }
