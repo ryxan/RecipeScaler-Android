@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectableGroup
@@ -65,6 +66,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
@@ -83,12 +86,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -97,6 +102,7 @@ import androidx.compose.ui.res.stringResource
 import android.content.ClipData
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -117,6 +123,9 @@ import kotlin.math.abs
 
 /** Multiplier chips — each writes serves × n into "Scale to". */
 private val factorChips = listOf(1, 2, 3, 5)
+
+/** Upper bound for the shared quantity column; longer quantities wrap. */
+private val MAX_QTY_WIDTH = 136.dp
 
 @Composable
 fun ScaleScreen(
@@ -470,13 +479,33 @@ fun ScaleContent(
 
             item(key = "results") {
                 RescaleCard(Modifier.fillMaxWidth()) {
-                    Column(
-                        modifier = Modifier.padding(Spacing.m),
-                        verticalArrangement = Arrangement.spacedBy(Spacing.m),
-                    ) {
-                        state.rows.forEach { row ->
+                    // Every row shares one quantity-column width — the widest
+                    // displayText in the list — so name columns start on a
+                    // single vertical line. Capped so an unusually long
+                    // quantity wraps instead of crushing the name.
+                    val textMeasurer = rememberTextMeasurer()
+                    val qtyStyle = MaterialTheme.typography.titleMedium.merge(
+                        fontFeatureSettings = "tnum",
+                    )
+                    val density = LocalDensity.current
+                    val qtyWidth = remember(state.rows) {
+                        state.rows.maxOfOrNull { row ->
+                            textMeasurer.measure(row.displayText, qtyStyle).size.width
+                        }?.let { with(density) { it.toDp() } }
+                            ?.coerceAtMost(MAX_QTY_WIDTH) ?: 0.dp
+                    }
+                    Column {
+                        state.rows.forEachIndexed { index, row ->
+                            if (index > 0) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(horizontal = Spacing.m),
+                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
+                                    thickness = 0.5.dp,
+                                )
+                            }
                             ScaledRow(
                                 row = row,
+                                qtyWidth = qtyWidth,
                                 showOriginal = state.showOriginal && !state.cookMode,
                                 checked = if (state.cookMode) row.id in state.checkedIds else null,
                                 onToggle = { callbacks.onToggleChecked(row.id) },
@@ -768,13 +797,16 @@ private fun SummaryLine(state: ScaleUiState) {
 @Composable
 private fun ScaledRow(
     row: ScaledIngredient,
+    qtyWidth: Dp,
     showOriginal: Boolean,
     checked: Boolean?,
     onToggle: () -> Unit,
     promoteEnabled: Boolean,
     onPromote: (KitchenUnit?) -> Unit,
 ) {
-    val struck = checked == true
+    val isChecked = checked == true
+    val contentAlpha = if (isChecked) 0.55f else 1f
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -788,32 +820,67 @@ private fun ScaledRow(
                 } else {
                     Modifier
                 },
+            )
+            .padding(
+                horizontal = Spacing.m,
+                vertical = Spacing.m,
             ),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
     ) {
+        // Cook-mode checkbox
+        if (checked != null) {
+            Checkbox(
+                checked = checked,
+                onCheckedChange = null, // handled by parent toggleable
+                modifier = Modifier.size(24.dp),
+            )
+        }
+
+        // Quantity — a shared fixed width (the widest in the list) keeps the
+        // name columns of every row on the same vertical line.
         AnimatedContent(
             targetState = row.displayText,
-            modifier = Modifier.animateContentSize(),
+            modifier = Modifier
+                .width(qtyWidth)
+                .alpha(contentAlpha)
+                .animateContentSize(),
             label = "qty",
         ) { text ->
             QuantityText(
                 text = text,
                 style = MaterialTheme.typography.titleMedium.merge(
-                    color = if (struck) MaterialTheme.colorScheme.onSurfaceVariant
-                    else Color.Unspecified,
-                    textDecoration = if (struck) TextDecoration.LineThrough else null,
+                    color = when {
+                        isChecked -> MaterialTheme.colorScheme.onSurfaceVariant
+                        row.status == ScaleStatus.UNPARSED ->
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        else -> MaterialTheme.colorScheme.onSurface
+                    },
+                    textDecoration = if (isChecked) TextDecoration.LineThrough else null,
                 ),
             )
         }
-        Column {
+
+        // Name + secondary captions
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .alpha(contentAlpha),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
             Text(
-                row.name,
+                text = row.name,
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (struck) MaterialTheme.colorScheme.onSurfaceVariant
-                else Color.Unspecified,
-                textDecoration = if (struck) TextDecoration.LineThrough else null,
+                color = if (isChecked) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
+                textDecoration = if (isChecked) TextDecoration.LineThrough else null,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
+
             val captions = buildList {
                 when (row.status) {
                     ScaleStatus.RANGE_LOW_END -> {
@@ -822,7 +889,9 @@ private fun ScaledRow(
                         }
                         add(stringResource(R.string.scale_from_range))
                     }
-                    ScaleStatus.UNPARSED -> add(stringResource(R.string.scale_not_scaled))
+                    ScaleStatus.UNPARSED -> {
+                        add(stringResource(R.string.scale_not_scaled))
+                    }
                     ScaleStatus.SCALED -> {
                         if (showOriginal) {
                             add(stringResource(R.string.scale_was, row.originalDisplayText))
@@ -833,37 +902,66 @@ private fun ScaledRow(
             }
             captions.forEach { caption ->
                 Text(
-                    caption,
+                    text = caption,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
+
+        // Promote control (only when options exist)
         if (promoteEnabled && row.promoteOptions.isNotEmpty()) {
-            Spacer(Modifier.weight(1f))
-            PromoteMenu(row = row, onPromote = onPromote)
+            PromoteChip(
+                row = row,
+                onPromote = onPromote,
+            )
         }
     }
 }
 
 @Composable
-private fun PromoteMenu(
+private fun PromoteChip(
     row: ScaledIngredient,
     onPromote: (KitchenUnit?) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
+
     Box {
-        IconButton(onClick = { expanded = true }) {
-            Icon(
-                Icons.Outlined.SwapVert,
-                contentDescription = stringResource(R.string.cd_promote_unit),
-                tint = if (row.promotedUnit != null) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-            )
+        Surface(
+            onClick = { expanded = true },
+            shape = MaterialTheme.shapes.small,
+            color = if (row.promotedUnit != null) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerHighest
+            },
+            contentColor = if (row.promotedUnit != null) {
+                MaterialTheme.colorScheme.onPrimaryContainer
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            tonalElevation = 0.dp,
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = Spacing.s, vertical = Spacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.SwapVert,
+                    contentDescription = stringResource(R.string.cd_promote_unit),
+                    modifier = Modifier.size(16.dp),
+                )
+                Text(
+                    text = row.promotedUnit?.let { promoteUnitName(it) }
+                        ?: stringResource(R.string.promote_to),
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            }
         }
+
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
