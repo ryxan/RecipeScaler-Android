@@ -13,4 +13,5 @@ interface SettingsRepository {
     suspend fun setThemeMode(v: ThemeMode)
     suspend fun setDynamicColor(v: Boolean)
     suspend fun setUiV2(v: Boolean)
+    suspend fun setShowScaleWarning(v: Boolean)
 }

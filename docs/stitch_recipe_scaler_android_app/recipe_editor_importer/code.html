@@ -1,0 +1,511 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Mise &amp; Measure - Recipe Editor &amp; Smart Importer</title>
+<!-- Google Fonts: Plus Jakarta Sans for M3 Typography -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS with Forms & Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Verbatim Tailwind Config Injection -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-secondary": "#ffffff",
+            "primary-fixed": "#ffdad4",
+            "on-tertiary-container": "#ccfdbe",
+            "surface-container-high": "#ffe2dc",
+            "surface-dim": "#f2d3cd",
+            "secondary-fixed-dim": "#e6c189",
+            "surface-bright": "#fff8f6",
+            "on-error-container": "#93000a",
+            "secondary-fixed": "#ffdeae",
+            "background": "#fff8f6",
+            "on-tertiary-fixed": "#002201",
+            "inverse-surface": "#3f2c28",
+            "surface-container-highest": "#fbdcd5",
+            "primary": "#9c2b1a",
+            "secondary-container": "#fed79e",
+            "tertiary-container": "#4c7744",
+            "error-container": "#ffdad6",
+            "on-secondary-fixed-variant": "#5c4216",
+            "surface-container-low": "#fff0ee",
+            "on-error": "#ffffff",
+            "primary-fixed-dim": "#ffb4a6",
+            "error": "#ba1a1a",
+            "on-primary": "#ffffff",
+            "on-surface-variant": "#58413d",
+            "on-tertiary": "#ffffff",
+            "on-primary-container": "#ffeae7",
+            "outline": "#8c716c",
+            "outline-variant": "#e0bfb9",
+            "inverse-primary": "#ffb4a6",
+            "surface-container-lowest": "#ffffff",
+            "surface": "#fff8f6",
+            "surface-variant": "#fbdcd5",
+            "tertiary": "#345e2e",
+            "tertiary-fixed": "#bff0b1",
+            "surface-container": "#ffe9e5",
+            "on-background": "#281714",
+            "inverse-on-surface": "#ffede9",
+            "on-primary-fixed": "#3f0300",
+            "primary-container": "#bd432f",
+            "on-primary-fixed-variant": "#891d0e",
+            "on-surface": "#281714",
+            "secondary": "#765a2c",
+            "on-secondary-container": "#785c2e",
+            "on-secondary-fixed": "#281900",
+            "tertiary-fixed-dim": "#a4d397",
+            "on-tertiary-fixed-variant": "#275022",
+            "surface-tint": "#aa3523"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-lg": "1.5rem",
+            "margin": "1rem",
+            "margin-desktop": "2rem",
+            "gutter": "1rem",
+            "margin-tablet": "1.5rem",
+            "space-md": "1rem",
+            "gutter-tablet": "1.5rem",
+            "space-xs": "0.25rem",
+            "gutter-desktop": "1.5rem",
+            "space-sm": "0.5rem",
+            "space-xl": "2rem"
+          },
+          "fontFamily": {
+            "title-md": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "title-lg": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "title-sm": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "display-md": ["Plus Jakarta Sans"],
+            "display-lg": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "display-sm": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "title-md": ["16px", { "lineHeight": "24px", "letterSpacing": "0.15px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "0.5px", "fontWeight": "400" }],
+            "label-sm": ["11px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "600" }],
+            "title-lg": ["22px", { "lineHeight": "28px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "headline-sm": ["24px", { "lineHeight": "32px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "title-sm": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.25px", "fontWeight": "400" }],
+            "display-md": ["45px", { "lineHeight": "52px", "letterSpacing": "0px", "fontWeight": "400" }],
+            "display-lg": ["57px", { "lineHeight": "64px", "letterSpacing": "-0.25px", "fontWeight": "400" }],
+            "headline-md": ["28px", { "lineHeight": "36px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "display-sm": ["36px", { "lineHeight": "44px", "letterSpacing": "0px", "fontWeight": "400" }],
+            "headline-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.4px", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    /* Hide scrollbars cleanly */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex justify-center antialiased selection:bg-primary-fixed-dim selection:text-on-primary-fixed">
+<!-- Mobile Canvas Device Shell (Android Screen Frame max-w-screen-md) -->
+<main class="w-full max-w-screen-md min-h-screen bg-background flex flex-col relative shadow-2xl">
+<!-- 1. Android Status Bar (Native Material 3 System Header) -->
+<header class="w-full h-10 px-6 flex items-center justify-between text-on-surface select-none z-30 pt-1">
+<span class="font-label-md text-label-md font-bold tracking-tight">9:41</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[17px]">network_wifi</span>
+<span class="material-symbols-outlined text-[17px]">signal_cellular_4_bar</span>
+<span class="material-symbols-outlined text-[18px]">battery_full</span>
+</div>
+</header>
+<!-- 2. M3 Top App Bar (Task-Focused with Back arrow & Trailing Save filled button) -->
+<nav class="sticky top-0 z-20 bg-surface flex items-center justify-between px-4 h-16 transition-colors duration-200">
+<div class="flex items-center gap-3">
+<button aria-label="Go Back" class="w-12 h-12 flex items-center justify-center rounded-full hover:bg-surface-container active:scale-95 transition-all text-on-surface" type="button">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<h1 class="font-title-lg text-title-lg text-on-surface font-semibold tracking-tight">Edit &amp; Import Recipe</h1>
+</div>
+<button class="h-10 px-5 rounded-full bg-primary text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-1.5 shadow-sm hover:bg-primary-container active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">check</span>
+<span class="">Save</span>
+</button>
+</nav>
+<!-- Scrollable Content Canvas -->
+<div class="flex-1 px-4 pb-32 space-y-6 pt-2 overflow-y-auto no-scrollbar">
+<!-- 3. Smart Import Card (Bento Container with Segmented Mode Switcher) -->
+<section class="rounded-3xl bg-surface-container-low p-4 sm:p-5 transition-all duration-200">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<h2 class="font-title-md text-title-md text-on-surface font-semibold">Smart Recipe Extraction</h2>
+</div>
+<!-- M3 Segmented Buttons / Tabs -->
+<div class="grid grid-cols-4 bg-surface-container rounded-full p-1 gap-1 text-center mb-4">
+<button class="py-2 px-1 rounded-full bg-surface text-primary font-label-md text-label-md font-semibold shadow-sm transition-all flex items-center justify-center gap-1" id="tab-scan" type="button">
+<span class="material-symbols-outlined text-[16px]">document_scanner</span>
+<span class="truncate">Scan Photo</span>
+<span class="px-1.5 py-0.2 rounded-full bg-primary-fixed text-on-primary-fixed-variant text-[10px] font-bold">AI</span>
+</button>
+<button class="py-2 px-1 rounded-full text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-all flex items-center justify-center gap-1" id="tab-url" type="button">
+<span class="material-symbols-outlined text-[16px]">link</span>
+<span class="truncate">URL</span>
+</button>
+<button class="py-2 px-1 rounded-full text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-all flex items-center justify-center gap-1" id="tab-paste" type="button">
+<span class="material-symbols-outlined text-[16px]">content_paste</span>
+<span class="truncate">Text</span>
+</button>
+<button class="py-2 px-1 rounded-full text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-all flex items-center justify-center gap-1" id="tab-manual" type="button">
+<span class="material-symbols-outlined text-[16px]">edit_note</span>
+<span class="truncate">Manual</span>
+</button>
+</div>
+<!-- URL Import Interface Input Group -->
+<div class="space-y-3"><div class="p-3.5 rounded-2xl bg-surface border border-outline-variant/30 flex flex-col gap-3 shadow-sm">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-start gap-2.5">
+<div class="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center text-primary flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[22px]">photo_camera</span>
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<span class="font-title-sm text-title-sm text-on-surface font-bold">Camera &amp; AI Handwritten Scanner</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container text-[11px] font-semibold">Gemini Vision</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Scan vintage index cards, cursive handwriting, or cookbook pages with multi-pass OCR &amp; baker's math calibration.</p>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2 pt-1">
+<button class="h-11 rounded-full bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">photo_camera</span>
+<span class="">Open Camera OCR</span>
+</button>
+<button class="h-11 rounded-full bg-surface-container-high hover:bg-secondary-container text-on-surface font-label-md text-label-md flex items-center justify-center gap-1.5 active:scale-95 transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">upload_file</span>
+<span class="">Upload Photo</span>
+</button>
+</div>
+</div>
+<div class="relative flex items-center">
+<div class="relative w-full">
+<input class="w-full h-12 pl-10 pr-24 rounded-2xl bg-surface text-on-surface font-body-sm text-body-sm border-0 ring-1 ring-outline-variant focus:ring-2 focus:ring-primary focus:bg-surface-container-lowest outline-none transition-all placeholder:text-on-surface-variant/50" id="import-url" placeholder="Or enter recipe URL to extract..." type="url" value="https://tartinebakery.com/journal/country-sourdough">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">link</span>
+</div>
+<button class="absolute right-1.5 px-3 h-8 rounded-full bg-surface-container-high hover:bg-secondary-container text-on-surface font-label-sm text-label-sm flex items-center gap-1 transition-all" type="button">
+<span class="material-symbols-outlined text-[13px]">content_paste</span>
+<span class="">Paste</span>
+</button>
+</div></div>
+</section>
+<!-- 4. Recipe Metadata Bento Section -->
+<section class="space-y-4">
+<!-- Title M3 Input -->
+<div class="relative rounded-2xl bg-surface-container-low px-4 pt-2.5 pb-2 border-b-2 border-primary transition-all">
+<label class="block font-label-sm text-label-sm text-primary font-semibold" for="recipe-title">Recipe Title</label>
+<input class="w-full bg-transparent border-0 p-0 text-on-surface font-headline-sm text-headline-sm focus:ring-0 outline-none" id="recipe-title" type="text" value="Artisan Rustic Sourdough">
+</div>
+<!-- Yield and Stepper + Times Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<!-- Yield Stepper Card -->
+<div class="p-3.5 rounded-2xl bg-surface-container-low flex items-center justify-between">
+<div>
+<span class="block font-label-sm text-label-sm text-on-surface-variant">Base Yield / Scaler Target</span>
+<span class="font-title-md text-title-md text-on-surface font-semibold" id="yield-count">2 Loaves (850g ea)</span>
+</div>
+<div class="flex items-center gap-1 bg-surface-container rounded-full p-1">
+<button aria-label="Decrease Yield" class="w-9 h-9 rounded-full bg-surface hover:bg-surface-container-high active:scale-90 flex items-center justify-center text-on-surface transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<span class="w-6 text-center font-label-lg text-label-lg text-on-surface font-bold">2</span>
+<button aria-label="Increase Yield" class="w-9 h-9 rounded-full bg-surface hover:bg-surface-container-high active:scale-90 flex items-center justify-center text-on-surface transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+<!-- Category Chip Selector -->
+<div class="p-3.5 rounded-2xl bg-surface-container-low flex flex-col justify-center">
+<span class="block font-label-sm text-label-sm text-on-surface-variant mb-1">Culinary Category</span>
+<div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+<span class="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-secondary-container text-on-secondary-container font-label-md text-label-md font-semibold">
+<span class="material-symbols-outlined text-[16px]">bakery_dining</span>
+<span class="">Bread / Sourdough</span>
+</span>
+<button class="px-2.5 py-1 rounded-lg border border-outline-variant text-on-surface-variant hover:bg-surface-container font-label-md text-label-md flex items-center gap-1 transition-all" type="button">
+<span class="">Change</span>
+<span class="material-symbols-outlined text-[14px]">expand_more</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Times Bento Bar -->
+<div class="grid grid-cols-2 gap-3">
+<div class="rounded-2xl bg-surface-container-low p-3.5 flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">timer</span>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant" for="prep-time">Active Prep</label>
+<input class="bg-transparent border-0 p-0 font-title-sm text-title-sm text-on-surface font-semibold focus:ring-0 outline-none w-24" id="prep-time" type="text" value="30 mins">
+</div>
+</div>
+<div class="rounded-2xl bg-surface-container-low p-3.5 flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[20px]">local_fire_department</span>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant" for="bake-time">Bake Time</label>
+<input class="bg-transparent border-0 p-0 font-title-sm text-title-sm text-on-surface font-semibold focus:ring-0 outline-none w-24" id="bake-time" type="text" value="45 mins">
+</div>
+</div>
+</div>
+</section>
+<!-- 5. Interactive Ingredient Parser & Editor -->
+<section class="space-y-3">
+<div class="flex items-center justify-between pt-2">
+<div>
+<h2 class="font-title-lg text-title-lg text-on-surface font-semibold">Ingredients</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Calibrated base weights (100% reference flour)</p>
+</div>
+<button class="h-9 px-4 rounded-full bg-surface-container-high hover:bg-secondary-container text-primary font-label-md text-label-md flex items-center gap-1 transition-all" type="button">
+<span class="material-symbols-outlined text-[16px]">add</span>
+<span class="">Add Item</span>
+</button>
+</div>
+<!-- Ingredient Items Stack -->
+<div class="space-y-2.5"><!-- Row 1: Bread Flour -->
+<div class="p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-colors duration-150 flex flex-col gap-2">
+  <div class="flex items-center gap-2">
+    <button aria-label="Reorder Bread Flour" class="cursor-grab active:cursor-grabbing text-on-surface-variant/60 hover:text-on-surface flex-shrink-0" type="button">
+      <span class="material-symbols-outlined text-[20px]">drag_indicator</span>
+    </button>
+    <div class="flex items-center gap-1.5 flex-shrink-0">
+      <input class="w-16 h-10 rounded-xl bg-surface text-on-surface font-title-sm text-title-sm text-center font-bold border-0 ring-1 ring-outline-variant focus:ring-2 focus:ring-primary outline-none px-1" type="number" value="500">
+      <div class="relative flex-shrink-0">
+        <select class="appearance-none h-10 pl-2.5 pr-6 rounded-xl bg-surface text-on-surface font-label-md text-label-md border-0 ring-1 ring-outline-variant focus:ring-2 focus:ring-primary outline-none cursor-pointer">
+          <option selected="">g</option>
+          <option>ml</option>
+          <option>cups</option>
+          <option>tbsp</option>
+          <option>oz</option>
+        </select>
+        <span class="material-symbols-outlined pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-on-surface-variant text-[16px]">arrow_drop_down</span>
+      </div>
+    </div>
+    <input class="flex-1 min-w-0 h-10 rounded-xl bg-surface px-3 text-on-surface font-body-md text-body-md border-0 ring-1 ring-outline-variant focus:ring-2 focus:ring-primary outline-none" type="text" value="Bread Flour (Unbleached)">
+    <button aria-label="Remove Ingredient" class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-error hover:bg-error-container/40 transition-all flex-shrink-0" type="button">
+      <span class="material-symbols-outlined text-[18px]">close</span>
+    </button>
+  </div>
+  <div class="flex items-center justify-between pl-7 pr-1 pt-0.5">
+    <span class="font-label-sm text-label-sm text-primary font-bold">100.0% Flour Basis</span>
+    <button class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm font-semibold transition-all" type="button">
+      <span class="material-symbols-outlined text-[13px]" style="font-variation-settings: 'FILL' 1;">lock</span>
+      <span class="">Basis Locked</span>
+    </button>
+  </div>
+</div>
+<!-- Row 2: Water -->
+<div class="p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-colors duration-150 flex flex-col gap-2">
+  <div class="flex items-center gap-2">
+    <button aria-label="Reorder Water" class="cursor-grab active:cursor-grabbing text-on-surface-variant/60 hover:text-on-surface flex-shrink-0" type="button">
+      <span class="material-symbols-outlined text-[20px]">drag_indicator</span>
+    </button>
+    <div class="flex items-center gap-1.5 flex-shrink-0">
+      <input class="w-16 h-10 rounded-xl bg-surface text-on-surface font-title-sm text-title-sm text-center font-bold border-0 ring-1 ring-outline-variant focus:ring-2 focus:ring-primary outline-none px-1" type="number" value="360">
+      <div class="relative flex-shrink-0">
+        <select class="appearance-none h-10 pl-2.5 pr-6 rounded-xl bg-surface text-on-surface font-label-md text-label-md border-0 ring-1 ring-outline-variant focus:ring-2 focus:ring-primary outline-none cursor-pointer">
+          <option selected="">g</option>
+          <option>ml</option>
+          <option>cups</option>
+          <option>tbsp</option>
+          <option>oz</option>
+        </select>
+        <span class="material-symbols-outlined pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-on-surface-variant text-[16px]">arrow_drop_down</span>
+      </div>
+    </div>
+    <input class="flex-1 min-w-0 h-10 rounded-xl bg-surface px-3 text-on-surface font-body-md text-body-md border-0 ring-1 ring-outline-variant focus:ring-2 focus:ring-primary outline-none" type="text" value="Water (85°F Tepid)">
+    <button aria-label="Remove Ingredient" class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-error hover:bg-error-container/40 transition-all flex-shrink-0" type="button">
+      <span class="material-symbols-outlined text-[18px]">close</span>
+    </button>
+  </div>
+  <div class="flex items-center justify-between pl-7 pr-1 pt-0.5">
+    <span class="font-label-sm text-label-sm text-secondary font-semibold">72.0% Hydration</span>
+    <button class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container font-label-sm text-label-sm font-semibold transition-all" type="button">
+      <span class="material-symbols-outlined text-[13px]">swap_vert</span>
+      <span class="">Scale Proportional</span>
+    </button>
+  </div>
+</div>
+<!-- Row 3: Active Levain -->
+<div class="p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-colors duration-150 flex flex-col gap-2">
+  <div class="flex items-center gap-2">
+    <button aria-label="Reorder Active Levain" class="cursor-grab active:cursor-grabbing text-on-surface-variant/60 hover:text-on-surface flex-shrink-0" type="button">
+      <span class="material-symbols-outlined text-[20px]">drag_indicator</span>
+    </button>
+    <div class="flex items-center gap-1.5 flex-shrink-0">
+      <input class="w-16 h-10 rounded-xl bg-surface text-on-surface font-title-sm text-title-sm text-center font-bold border-0 ring-1 ring-outline-variant focus:ring-2 focus:ring-primary outline-none px-1" type="number" value="100">
+      <div class="relative flex-shrink-0">
+        <select class="appearance-none h-10 pl-2.5 pr-6 rounded-xl bg-surface text-on-surface font-label-md text-label-md border-0 ring-1 ring-outline-variant focus:ring-2 focus:ring-primary outline-none cursor-pointer">
+          <option selected="">g</option>
+          <option>ml</option>
+          <option>cups</option>
+          <option>tbsp</option>
+          <option>oz</option>
+        </select>
+        <span class="material-symbols-outlined pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-on-surface-variant text-[16px]">arrow_drop_down</span>
+      </div>
+    </div>
+    <input class="flex-1 min-w-0 h-10 rounded-xl bg-surface px-3 text-on-surface font-body-md text-body-md border-0 ring-1 ring-outline-variant focus:ring-2 focus:ring-primary outline-none" type="text" value="Active Sourdough Levain">
+    <button aria-label="Remove Ingredient" class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-error hover:bg-error-container/40 transition-all flex-shrink-0" type="button">
+      <span class="material-symbols-outlined text-[18px]">close</span>
+    </button>
+  </div>
+  <div class="flex items-center justify-between pl-7 pr-1 pt-0.5">
+    <span class="font-label-sm text-label-sm text-secondary font-semibold">20.0% Inoculation</span>
+    <button class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container font-label-sm text-label-sm font-semibold transition-all" type="button">
+      <span class="material-symbols-outlined text-[13px]">swap_vert</span>
+      <span class="">Scale Proportional</span>
+    </button>
+  </div>
+</div>
+<!-- Row 4: Fine Sea Salt -->
+<div class="p-3 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-colors duration-150 flex flex-col gap-2">
+  <div class="flex items-center gap-2">
+    <button aria-label="Reorder Fine Sea Salt" class="cursor-grab active:cursor-grabbing text-on-surface-variant/60 hover:text-on-surface flex-shrink-0" type="button">
+      <span class="material-symbols-outlined text-[20px]">drag_indicator</span>
+    </button>
+    <div class="flex items-center gap-1.5 flex-shrink-0">
+      <input class="w-16 h-10 rounded-xl bg-surface text-on-surface font-title-sm text-title-sm text-center font-bold border-0 ring-1 ring-outline-variant focus:ring-2 focus:ring-primary outline-none px-1" type="number" value="10">
+      <div class="relative flex-shrink-0">
+        <select class="appearance-none h-10 pl-2.5 pr-6 rounded-xl bg-surface text-on-surface font-label-md text-label-md border-0 ring-1 ring-outline-variant focus:ring-2 focus:ring-primary outline-none cursor-pointer">
+          <option selected="">g</option>
+          <option>ml</option>
+          <option>cups</option>
+          <option>tbsp</option>
+          <option>oz</option>
+        </select>
+        <span class="material-symbols-outlined pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-on-surface-variant text-[16px]">arrow_drop_down</span>
+      </div>
+    </div>
+    <input class="flex-1 min-w-0 h-10 rounded-xl bg-surface px-3 text-on-surface font-body-md text-body-md border-0 ring-1 ring-outline-variant focus:ring-2 focus:ring-primary outline-none" type="text" value="Fine Sea Salt">
+    <button aria-label="Remove Ingredient" class="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-error hover:bg-error-container/40 transition-all flex-shrink-0" type="button">
+      <span class="material-symbols-outlined text-[18px]">close</span>
+    </button>
+  </div>
+  <div class="flex items-center justify-between pl-7 pr-1 pt-0.5">
+    <span class="font-label-sm text-label-sm text-secondary font-semibold">2.0% Salinity</span>
+    <button class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant hover:bg-secondary-container hover:text-on-secondary-container font-label-sm text-label-sm font-semibold transition-all" type="button">
+      <span class="material-symbols-outlined text-[13px]">swap_vert</span>
+      <span class="">Scale Proportional</span>
+    </button>
+  </div>
+</div></div>
+</section>
+<!-- 6. Preparation Steps Section -->
+<section class="space-y-3 pb-6">
+<div class="flex items-center justify-between">
+<h2 class="font-title-lg text-title-lg text-on-surface font-semibold">Preparation Steps</h2>
+<button class="h-8 px-3 rounded-full border border-outline-variant text-on-surface font-label-sm text-label-sm flex items-center gap-1 hover:bg-surface-container transition-all" type="button">
+<span class="material-symbols-outlined text-[15px]">add_circle</span>
+<span class="">Add Step</span>
+</button>
+</div>
+<div class="space-y-3">
+<!-- Step 1 -->
+<div class="p-3.5 rounded-2xl bg-surface-container-low flex items-start gap-3">
+<span class="w-7 h-7 rounded-full bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center font-bold flex-shrink-0 mt-0.5">1</span>
+<div class="flex-1">
+<p class="font-body-md text-body-md text-on-surface">Whisk together flour and 330g warm water until no dry patches remain. Autolyse covered for 45 minutes.</p>
+<span class="inline-block mt-2 font-label-sm text-label-sm text-secondary font-semibold">Timer: 45 mins</span>
+</div>
+<button aria-label="Reorder step 1" class="text-on-surface-variant/60 cursor-grab" type="button">
+<span class="material-symbols-outlined text-[20px]">drag_handle</span>
+</button>
+</div>
+<!-- Step 2 -->
+<div class="p-3.5 rounded-2xl bg-surface-container-low flex items-start gap-3">
+<span class="w-7 h-7 rounded-full bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center font-bold flex-shrink-0 mt-0.5">2</span>
+<div class="flex-1">
+<p class="font-body-md text-body-md text-on-surface">Incorporate active levain and remaining 30g water with salt using the Rubaud method until silky.</p>
+<span class="inline-block mt-2 font-label-sm text-label-sm text-secondary font-semibold">Timer: 10 mins</span>
+</div>
+<button aria-label="Reorder step 2" class="text-on-surface-variant/60 cursor-grab" type="button">
+<span class="material-symbols-outlined text-[20px]">drag_handle</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+<!-- 7. Docked Bottom Action Bar (Culinary Preview Trigger) -->
+<div class="fixed bottom-6 left-0 right-0 max-w-screen-md mx-auto px-4 z-40 pointer-events-none">
+<div class="pointer-events-auto bg-surface-container-high/95 backdrop-blur-md p-3 rounded-3xl shadow-lg flex items-center justify-between gap-3 border border-outline-variant/30">
+<div class="pl-2">
+<span class="block font-label-sm text-label-sm text-on-surface-variant">Live Weight Total</span>
+<span class="font-title-md text-title-md text-on-surface font-bold">970 g Total Batch</span>
+</div>
+<button class="h-12 px-6 rounded-full bg-primary hover:bg-primary-container active:scale-95 text-on-primary font-label-lg text-label-lg flex items-center gap-2 shadow transition-all" type="button">
+<span class="material-symbols-outlined text-[20px]">calculate</span>
+<span class="">Preview Scaled Recipe</span>
+</button>
+</div>
+</div>
+<!-- 8. Android Gesture Navigation Indicator Pill (At very bottom) -->
+<div class="w-full h-6 pb-2 flex items-center justify-center select-none z-50">
+<div class="w-32 h-1 bg-on-surface/40 rounded-full"></div>
+</div>
+</main>
+<script>
+    // Tab active states interaction for Smart Import
+    const tabUrl = document.getElementById('tab-url');
+    const tabPaste = document.getElementById('tab-paste');
+    const tabManual = document.getElementById('tab-manual');
+    const tabs = [tabUrl, tabPaste, tabManual];
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => {
+          t.className = 'py-2 rounded-full text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-all flex items-center justify-center gap-1';
+        });
+        tab.className = 'py-2 rounded-full bg-surface text-primary font-label-md text-label-md font-semibold shadow-sm transition-all flex items-center justify-center gap-1';
+      });
+    });
+  </script>
+
+
+</body></html>

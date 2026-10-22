@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mise & Measure - Scaler</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@100..900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "outline": "#8c716c",
+            "primary-fixed": "#ffdad4",
+            "surface": "#fff8f6",
+            "on-primary": "#ffffff",
+            "surface-variant": "#fbdcd5",
+            "tertiary-fixed": "#bff0b1",
+            "error": "#ba1a1a",
+            "on-primary-fixed": "#3f0300",
+            "on-tertiary-fixed": "#002201",
+            "on-primary-container": "#ffeae7",
+            "surface-container-low": "#fff0ee",
+            "inverse-on-surface": "#ffede9",
+            "on-error": "#ffffff",
+            "inverse-primary": "#ffb4a6",
+            "on-tertiary-fixed-variant": "#275022",
+            "inverse-surface": "#3f2c28",
+            "on-error-container": "#93000a",
+            "on-secondary": "#ffffff",
+            "secondary-container": "#fed79e",
+            "tertiary-fixed-dim": "#a4d397",
+            "primary": "#9c2b1a",
+            "surface-bright": "#fff8f6",
+            "tertiary": "#345e2e",
+            "on-surface": "#281714",
+            "primary-container": "#bd432f",
+            "surface-container-high": "#ffe2dc",
+            "surface-container-highest": "#fbdcd5",
+            "surface-tint": "#aa3523",
+            "outline-variant": "#e0bfb9",
+            "secondary-fixed": "#ffdeae",
+            "tertiary-container": "#4c7744",
+            "secondary": "#765a2c",
+            "surface-dim": "#f2d3cd",
+            "surface-container-lowest": "#ffffff",
+            "on-tertiary": "#ffffff",
+            "on-primary-fixed-variant": "#891d0e",
+            "primary-fixed-dim": "#ffb4a6",
+            "secondary-fixed-dim": "#e6c189",
+            "error-container": "#ffdad6",
+            "background": "#fff8f6",
+            "surface-container": "#ffe9e5",
+            "on-secondary-fixed-variant": "#5c4216",
+            "on-tertiary-container": "#ccfdbe",
+            "on-background": "#281714",
+            "on-secondary-container": "#785c2e",
+            "on-secondary-fixed": "#281900",
+            "on-surface-variant": "#58413d"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "fontFamily": {
+            "headline-sm": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "display-sm": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "display-lg": ["Plus Jakarta Sans"],
+            "display-md": ["Plus Jakarta Sans"],
+            "title-lg": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "title-md": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "title-sm": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "headline-sm": ["24px", { "lineHeight": "32px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "0.5px", "fontWeight": "400" }],
+            "display-sm": ["36px", { "lineHeight": "44px", "letterSpacing": "0px", "fontWeight": "400" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.4px", "fontWeight": "400" }],
+            "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "headline-md": ["28px", { "lineHeight": "36px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "headline-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.25px", "fontWeight": "400" }],
+            "label-sm": ["11px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "600" }],
+            "title-lg": ["22px", { "lineHeight": "28px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "title-md": ["16px", { "lineHeight": "24px", "letterSpacing": "0.15px", "fontWeight": "600" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "600" }],
+            "title-sm": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .material-symbols-outlined[data-weight="fill"] {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 20px;
+      width: 20px;
+      border-radius: 9999px;
+      background: #9c2b1a;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(189, 67, 47, 0.3);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface min-h-full font-body-md text-body-md antialiased selection:bg-surface-variant flex flex-col justify-between">
+<!-- TOP APP BAR -->
+<header class="sticky top-0 z-40 bg-surface dark:bg-surface transition-colors duration-200">
+<div class="flex justify-between items-center w-full px-4 h-16 max-w-screen-md mx-auto">
+<div class="flex items-center gap-3">
+<button aria-label="User profile photo" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors duration-150 active:scale-95">
+<span class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-title-sm text-title-sm">
+            MM
+          </span>
+</button>
+</div>
+<div class="text-center">
+<h1 class="text-title-lg font-title-lg text-on-surface dark:text-inverse-on-surface tracking-tight font-bold">
+          Mise & Measure
+        </h1>
+<p class="text-label-sm font-label-sm text-primary -mt-0.5">Baker's Precision Scaler</p>
+</div>
+<div class="flex items-center gap-1">
+<button aria-label="Search recipes" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors duration-150 active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant">search</span>
+</button>
+<button aria-label="Help" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface hover:bg-surface-container dark:hover:bg-surface-container-high transition-colors duration-150 active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant">help_outline</span>
+</button>
+</div>
+</div>
+</header>
+<!-- MAIN SCROLLABLE CONTENT CANVAS -->
+<main class="flex-1 w-full max-w-screen-md mx-auto px-4 pt-2 pb-28 flex flex-col gap-5">
+<!-- HERO EMPTY STATE ILLUSTRATION CARD -->
+<section class="bg-surface-container-low rounded-3xl p-6 flex flex-col items-center text-center relative overflow-hidden transition-all duration-200 shadow-[0px_1px_3px_rgba(189,67,47,0.08)]">
+<!-- Background subtle warm circular glow -->
+<div class="absolute -top-12 -right-12 w-48 h-48 bg-surface-container rounded-full blur-2xl pointer-events-none opacity-60"></div>
+<!-- Precision Culinary Scale Graphic -->
+<div class="relative w-36 h-36 my-2 flex items-center justify-center">
+<div class="w-32 h-32 rounded-full bg-surface-container flex items-center justify-center shadow-inner relative">
+<!-- Scale Platter Ring -->
+<div class="w-24 h-24 rounded-full border-4 border-dashed border-outline-variant flex flex-col items-center justify-center bg-surface-container-lowest">
+<span class="material-symbols-outlined text-primary text-3xl mb-0.5" data-weight="fill">scale</span>
+<span class="font-headline-sm text-headline-sm text-primary tracking-tighter">0.0<span class="font-label-sm text-label-sm ml-0.5">g</span></span>
+</div>
+<!-- Tare Indicator LED -->
+<span class="absolute top-2.5 right-6 flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+</span>
+</div>
+</div>
+<!-- Headline & Subhead -->
+<h2 class="text-headline-lg-mobile font-headline-lg-mobile text-on-surface mt-1 font-bold">
+        Nothing on the scale yet
+      </h2>
+<p class="text-body-md font-body-md text-on-surface-variant mt-2 max-w-sm">
+        Select a saved recipe, scan an index card, or calculate quick baker ratios on the fly.
+      </p>
+<!-- Primary Action Buttons Row -->
+<div class="w-full flex flex-col sm:flex-row items-center gap-3 mt-6">
+<button class="w-full sm:flex-1 h-12 bg-primary text-on-primary rounded-full px-5 flex items-center justify-center gap-2 font-label-lg text-label-lg shadow-sm hover:bg-primary-container active:scale-98 transition-all">
+<span class="material-symbols-outlined" data-weight="fill">menu_book</span>
+<span>Browse Saved Recipes</span>
+</button>
+<button class="w-full sm:flex-1 h-12 bg-secondary-container text-on-secondary-container rounded-full px-5 flex items-center justify-center gap-2 font-label-lg text-label-lg hover:bg-secondary-fixed active:scale-98 transition-all">
+<span class="material-symbols-outlined">photo_camera</span>
+<span>Scan & Import</span>
+<span class="bg-surface text-secondary text-label-sm font-label-sm px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+<span class="material-symbols-outlined text-xs" data-weight="fill">auto_awesome</span>
+            OCR
+          </span>
+</button>
+</div>
+</section>
+<!-- QUICK RATIO SCRATCHPAD (INTERACTIVE BAKER CALCULATOR) -->
+<section class="bg-surface-container-lowest rounded-3xl p-5 border border-outline-variant/40 shadow-[0px_2px_6px_rgba(189,67,47,0.06)]">
+<div class="flex items-center justify-between pb-3 border-b border-surface-container">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-lg">calculate</span>
+</div>
+<div>
+<h3 class="text-title-md font-title-md text-on-surface">Quick Ratio Scratchpad</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Real-time Baker's Percentages</p>
+</div>
+</div>
+<button class="text-label-md font-label-md text-secondary hover:text-primary transition-colors flex items-center gap-1 py-1 px-2 rounded-lg hover:bg-surface-container-low" id="resetScratchpad">
+<span class="material-symbols-outlined text-sm">refresh</span>
+          Reset
+        </button>
+</div>
+<!-- Baker Basis Input -->
+<div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+<!-- Flour Base Input -->
+<div class="bg-surface-container-low rounded-2xl p-3.5">
+<div class="flex items-center justify-between mb-1">
+<label class="text-label-md font-label-md text-on-surface-variant font-medium" for="flourInput">Flour Base (100%)</label>
+<span class="text-label-sm font-label-sm px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-bold">Base</span>
+</div>
+<div class="flex items-baseline gap-2 mt-2">
+<input class="w-24 bg-surface text-on-surface text-headline-sm font-headline-sm rounded-xl px-2.5 py-1 border border-outline-variant focus:outline-none focus:ring-2 focus:ring-primary text-right font-bold" id="flourInput" max="5000" min="50" step="25" type="number" value="500"/>
+<span class="text-title-md font-title-md text-on-surface-variant">grams</span>
+</div>
+</div>
+<!-- Dough Output Banner Summary -->
+<div class="bg-surface-container rounded-2xl p-3.5 flex flex-col justify-between">
+<div class="flex items-center justify-between text-label-md font-label-md text-on-surface-variant">
+<span>Total Dough Yield</span>
+<span class="material-symbols-outlined text-primary text-base">bakery_dining</span>
+</div>
+<div class="mt-2 flex items-baseline justify-between">
+<div>
+<span class="text-headline-md font-headline-md text-primary font-bold" id="totalDoughWeight">970</span>
+<span class="text-title-sm font-title-sm text-on-surface ml-0.5">g</span>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">~ 1 Large Boule</span>
+</div>
+</div>
+</div>
+<!-- Ingredient Ratio Adjusters -->
+<div class="mt-4 space-y-3">
+<!-- Hydration Slider / Stepper -->
+<div class="p-3 bg-surface rounded-2xl border border-surface-container flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-6 h-6 rounded-full bg-surface-container-high text-primary flex items-center justify-center text-xs">
+<span class="material-symbols-outlined text-sm">water_drop</span>
+</span>
+<span class="text-title-sm font-title-sm text-on-surface">Water / Hydration</span>
+</div>
+<div class="text-right">
+<span class="text-title-sm font-title-sm text-primary font-bold" id="hydrationPercent">72%</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant ml-1">(<span id="waterGrams">360</span>g)</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="w-8 h-8 rounded-full bg-surface-container-low text-on-surface hover:bg-surface-container flex items-center justify-center active:scale-95 transition-all" id="hydrationMinus">
+<span class="material-symbols-outlined text-sm">remove</span>
+</button>
+<input class="w-full h-1.5 bg-surface-variant rounded-lg appearance-none cursor-pointer accent-primary" id="hydrationSlider" max="95" min="55" type="range" value="72"/>
+<button class="w-8 h-8 rounded-full bg-surface-container-low text-on-surface hover:bg-surface-container flex items-center justify-center active:scale-95 transition-all" id="hydrationPlus">
+<span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+</div>
+<!-- Salt & Yeast Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<!-- Salt Stepper -->
+<div class="p-3 bg-surface rounded-2xl border border-surface-container flex items-center justify-between">
+<div>
+<div class="text-label-md font-label-md text-on-surface-variant">Salt</div>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="text-title-sm font-title-sm font-bold text-on-surface" id="saltPercent">2.0%</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant">(<span id="saltGrams">10</span>g)</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 bg-surface-container-low p-1 rounded-full">
+<button class="w-7 h-7 rounded-full bg-surface text-on-surface hover:bg-surface-container flex items-center justify-center active:scale-95" id="saltMinus">
+<span class="material-symbols-outlined text-xs">remove</span>
+</button>
+<button class="w-7 h-7 rounded-full bg-surface text-on-surface hover:bg-surface-container flex items-center justify-center active:scale-95" id="saltPlus">
+<span class="material-symbols-outlined text-xs">add</span>
+</button>
+</div>
+</div>
+<!-- Levain / Yeast Stepper -->
+<div class="p-3 bg-surface rounded-2xl border border-surface-container flex items-center justify-between">
+<div>
+<div class="text-label-md font-label-md text-on-surface-variant">Levain / Starter</div>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="text-title-sm font-title-sm font-bold text-on-surface" id="yeastPercent">20%</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant">(<span id="yeastGrams">100</span>g)</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 bg-surface-container-low p-1 rounded-full">
+<button class="w-7 h-7 rounded-full bg-surface text-on-surface hover:bg-surface-container flex items-center justify-center active:scale-95" id="yeastMinus">
+<span class="material-symbols-outlined text-xs">remove</span>
+</button>
+<button class="w-7 h-7 rounded-full bg-surface text-on-surface hover:bg-surface-container flex items-center justify-center active:scale-95" id="yeastPlus">
+<span class="material-symbols-outlined text-xs">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Scratchpad Footer Action -->
+<div class="mt-4 pt-3 border-t border-surface-container flex items-center justify-between">
+<span class="text-body-sm font-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-secondary">tune</span>
+          Baker's math verified
+        </span>
+<button class="text-primary font-label-lg text-label-lg hover:underline flex items-center gap-1 py-1 px-3 rounded-full hover:bg-surface-container-low transition-colors">
+<span>Convert to Full Recipe</span>
+<span class="material-symbols-outlined text-base">arrow_forward</span>
+</button>
+</div>
+</section>
+<!-- RECENTLY SCALED QUICK-PICK CAROUSEL -->
+<section class="mt-1">
+<div class="flex items-center justify-between mb-3 px-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">history</span>
+<h3 class="text-title-sm font-title-sm text-on-surface font-semibold">Recently Scaled in Kitchen</h3>
+</div>
+<span class="text-label-sm font-label-sm text-on-surface-variant">2 saved sessions</span>
+</div>
+<div class="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+<!-- Card 1 -->
+<div class="min-w-[260px] bg-surface-container-low rounded-2xl p-4 flex flex-col justify-between border border-surface-variant/40 hover:bg-surface-container transition-colors">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="text-label-sm font-label-sm bg-surface-variant text-on-surface-variant px-2 py-0.5 rounded-full font-medium">1.5x Multiplier</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant">2d ago</span>
+</div>
+<h4 class="text-title-sm font-title-sm text-on-surface font-bold line-clamp-1">Rustic Country Sourdough</h4>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-0.5">3 Loaves (2,250g total)</p>
+</div>
+<div class="mt-4 flex items-center justify-between pt-2 border-t border-surface-variant/50">
+<span class="text-label-sm font-label-sm text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">timer</span> 4h Bulk
+            </span>
+<button class="h-8 px-3 rounded-full bg-primary text-on-primary text-label-sm font-label-sm flex items-center gap-1 hover:bg-primary-container active:scale-95 transition-all">
+<span>Resume</span>
+<span class="material-symbols-outlined text-xs">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="min-w-[260px] bg-surface-container-low rounded-2xl p-4 flex flex-col justify-between border border-surface-variant/40 hover:bg-surface-container transition-colors">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="text-label-sm font-label-sm bg-surface-variant text-on-surface-variant px-2 py-0.5 rounded-full font-medium">2.0x Double</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant">Yesterday</span>
+</div>
+<h4 class="text-title-sm font-title-sm text-on-surface font-bold line-clamp-1">Cardamom Braided Babka</h4>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-0.5">2 Loaf Tins (1,100g total)</p>
+</div>
+<div class="mt-4 flex items-center justify-between pt-2 border-t border-surface-variant/50">
+<span class="text-label-sm font-label-sm text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">local_fire_department</span> 375°F
+            </span>
+<button class="h-8 px-3 rounded-full bg-primary text-on-primary text-label-sm font-label-sm flex items-center gap-1 hover:bg-primary-container active:scale-95 transition-all">
+<span>Resume</span>
+<span class="material-symbols-outlined text-xs">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Card 3 (Action card) -->
+<div class="min-w-[180px] bg-surface-container-highest/60 rounded-2xl p-4 flex flex-col items-center justify-center text-center border border-dashed border-outline-variant hover:bg-surface-container-high transition-colors cursor-pointer">
+<div class="w-10 h-10 rounded-full bg-surface flex items-center justify-center text-primary mb-2 shadow-sm">
+<span class="material-symbols-outlined">add</span>
+</div>
+<span class="text-label-md font-label-md text-on-surface font-bold">New Custom Ratio</span>
+<span class="text-body-sm font-body-sm text-on-surface-variant mt-0.5">Blank template</span>
+</div>
+</div>
+</section>
+</main>
+<!-- BOTTOM NAVIGATION BAR (Mandatory Shared Component Anchor) -->
+<!-- Active Tab: Scaler (Index 1) based on exact page identity -->
+<nav aria-label="Bottom Navigation" class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 px-2 pb-safe bg-surface dark:bg-surface max-w-screen-md mx-auto">
+<!-- 0: Recipes (Inactive) -->
+<a class="flex flex-col items-center justify-center gap-1 text-on-surface-variant dark:text-on-surface-variant px-5 py-1.5 hover:bg-surface-container-low dark:hover:bg-surface-container-high transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="text-label-sm font-label-sm">Recipes</span>
+</a>
+<!-- 1: Scaler (ACTIVE) -->
+<a aria-current="page" class="flex flex-col items-center justify-center gap-1 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary rounded-full px-5 py-1.5 hover:bg-surface-container-low dark:hover:bg-surface-container-high transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined" data-weight="fill">calculate</span>
+<span class="text-label-sm font-label-sm font-bold">Scaler</span>
+</a>
+<!-- 2: Pantry (Inactive) -->
+<a class="flex flex-col items-center justify-center gap-1 text-on-surface-variant dark:text-on-surface-variant px-5 py-1.5 hover:bg-surface-container-low dark:hover:bg-surface-container-high transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">kitchen</span>
+<span class="text-label-sm font-label-sm">Pantry</span>
+</a>
+<!-- 3: Settings (Inactive) -->
+<a class="flex flex-col items-center justify-center gap-1 text-on-surface-variant dark:text-on-surface-variant px-5 py-1.5 hover:bg-surface-container-low dark:hover:bg-surface-container-high transition-colors duration-150 active:scale-95" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-label-sm font-label-sm">Settings</span>
+</a>
+</nav>
+<!-- Interactive Math Script for Quick Scratchpad Calculator -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const flourInput = document.getElementById('flourInput');
+      const hydrationSlider = document.getElementById('hydrationSlider');
+      const hydrationPercent = document.getElementById('hydrationPercent');
+      const waterGrams = document.getElementById('waterGrams');
+      const saltPercent = document.getElementById('saltPercent');
+      const saltGrams = document.getElementById('saltGrams');
+      const yeastPercent = document.getElementById('yeastPercent');
+      const yeastGrams = document.getElementById('yeastGrams');
+      const totalDoughWeight = document.getElementById('totalDoughWeight');
+
+      let saltVal = 2.0;
+      let yeastVal = 20.0;
+
+      function updateCalculation() {
+        const flour = parseFloat(flourInput.value) || 0;
+        const hydration = parseFloat(hydrationSlider.value) || 0;
+
+        hydrationPercent.textContent = `${hydration}%`;
+        
+        const water = Math.round((flour * hydration) / 100);
+        const salt = Math.round((flour * saltVal) / 100);
+        const yeast = Math.round((flour * yeastVal) / 100);
+
+        waterGrams.textContent = water;
+        saltGrams.textContent = salt;
+        yeastGrams.textContent = yeast;
+
+        const total = Math.round(flour + water + salt + yeast);
+        totalDoughWeight.textContent = total;
+      }
+
+      flourInput.addEventListener('input', updateCalculation);
+      hydrationSlider.addEventListener('input', updateCalculation);
+
+      document.getElementById('hydrationMinus').addEventListener('click', () => {
+        hydrationSlider.value = Math.max(50, parseInt(hydrationSlider.value) - 1);
+        updateCalculation();
+      });
+
+      document.getElementById('hydrationPlus').addEventListener('click', () => {
+        hydrationSlider.value = Math.min(100, parseInt(hydrationSlider.value) + 1);
+        updateCalculation();
+      });
+
+      document.getElementById('saltMinus').addEventListener('click', () => {
+        saltVal = Math.max(0.5, parseFloat((saltVal - 0.2).toFixed(1)));
+        saltPercent.textContent = `${saltVal.toFixed(1)}%`;
+        updateCalculation();
+      });
+
+      document.getElementById('saltPlus').addEventListener('click', () => {
+        saltVal = Math.min(4.0, parseFloat((saltVal + 0.2).toFixed(1)));
+        saltPercent.textContent = `${saltVal.toFixed(1)}%`;
+        updateCalculation();
+      });
+
+      document.getElementById('yeastMinus').addEventListener('click', () => {
+        yeastVal = Math.max(5, yeastVal - 2);
+        yeastPercent.textContent = `${yeastVal}%`;
+        updateCalculation();
+      });
+
+      document.getElementById('yeastPlus').addEventListener('click', () => {
+        yeastVal = Math.min(40, yeastVal + 2);
+        yeastPercent.textContent = `${yeastVal}%`;
+        updateCalculation();
+      });
+
+      document.getElementById('resetScratchpad').addEventListener('click', () => {
+        flourInput.value = 500;
+        hydrationSlider.value = 72;
+        saltVal = 2.0;
+        yeastVal = 20.0;
+        saltPercent.textContent = "2.0%";
+        yeastPercent.textContent = "20%";
+        updateCalculation();
+      });
+
+      updateCalculation();
+    });
+  </script>
+</body></html>

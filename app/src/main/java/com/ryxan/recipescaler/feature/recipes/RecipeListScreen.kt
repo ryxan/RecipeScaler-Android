@@ -69,10 +69,26 @@ fun RecipeListScreen(
     onNewRecipe: () -> Unit,
     onQuickScale: (String) -> Unit,
     onNavigateToSettings: () -> Unit,
+    onScalerClick: () -> Unit = {},
     viewModel: RecipeListViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val quickScaleTitle = stringResource(R.string.quick_scale_title)
+    if (RescaleTheme.uiV2) {
+        RecipeListV2Content(
+            state = state,
+            onQueryChange = viewModel::onQueryChange,
+            onOpenRecipe = onOpenRecipe,
+            onNewRecipe = onNewRecipe,
+            onQuickScale = { onQuickScale(quickScaleTitle) },
+            onDelete = viewModel::delete,
+            onUndo = viewModel::undoDelete,
+            onDismissUndo = viewModel::dismissUndo,
+            onNavigateToSettings = onNavigateToSettings,
+            onScalerClick = onScalerClick,
+        )
+        return
+    }
     RecipeListContent(
         state = state,
         onQueryChange = viewModel::onQueryChange,
@@ -104,25 +120,7 @@ fun RecipeListContent(
     val fabExpanded by remember {
         derivedStateOf { listState.firstVisibleItemIndex == 0 }
     }
-    val undoLabel = stringResource(R.string.action_undo)
-    val deletedMessage = state.pendingUndo?.let {
-        if (it.title.isBlank()) stringResource(R.string.snackbar_recipe_deleted)
-        else stringResource(R.string.snackbar_deleted_titled, it.title)
-    }
-    LaunchedEffect(state.pendingUndo?.id) {
-        if (deletedMessage != null) {
-            when (
-                snackbarHostState.showSnackbar(
-                    message = deletedMessage,
-                    actionLabel = undoLabel,
-                    duration = SnackbarDuration.Long,
-                )
-            ) {
-                SnackbarResult.ActionPerformed -> onUndo()
-                SnackbarResult.Dismissed -> onDismissUndo()
-            }
-        }
-    }
+    UndoDeleteSnackbar(state, snackbarHostState, onUndo, onDismissUndo)
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -229,6 +227,35 @@ fun RecipeListContent(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+/** Shows the undo-delete snackbar whenever [state.pendingUndo] is set. Shared by the v1 and v2 list content. */
+@Composable
+internal fun UndoDeleteSnackbar(
+    state: RecipeListUiState,
+    snackbarHostState: SnackbarHostState,
+    onUndo: () -> Unit,
+    onDismissUndo: () -> Unit,
+) {
+    val undoLabel = stringResource(R.string.action_undo)
+    val deletedMessage = state.pendingUndo?.let {
+        if (it.title.isBlank()) stringResource(R.string.snackbar_recipe_deleted)
+        else stringResource(R.string.snackbar_deleted_titled, it.title)
+    }
+    LaunchedEffect(state.pendingUndo?.id) {
+        if (deletedMessage != null) {
+            when (
+                snackbarHostState.showSnackbar(
+                    message = deletedMessage,
+                    actionLabel = undoLabel,
+                    duration = SnackbarDuration.Long,
+                )
+            ) {
+                SnackbarResult.ActionPerformed -> onUndo()
+                SnackbarResult.Dismissed -> onDismissUndo()
             }
         }
     }

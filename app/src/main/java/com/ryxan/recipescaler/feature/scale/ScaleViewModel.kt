@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ryxan.recipescaler.core.data.di.ApplicationScope
 import com.ryxan.recipescaler.core.domain.formatting.DisplayMode
-import com.ryxan.recipescaler.core.domain.formatting.DisplayPrefs
 import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
+import com.ryxan.recipescaler.core.domain.model.AppSettings
 import com.ryxan.recipescaler.core.domain.model.KitchenUnit
 import com.ryxan.recipescaler.core.domain.model.Recipe
 import com.ryxan.recipescaler.core.domain.model.SavedScaleInputs
@@ -132,7 +132,7 @@ class ScaleViewModel @Inject constructor(
         showOriginal,
         combine(cookMode, checkedIds) { c, ids -> c to ids.toSet() },
     ) { recipe, settings, inp, original, (cook, checked) ->
-        buildState(recipe, settings.display, inp, original, cook, checked)
+        buildState(recipe, settings, inp, original, cook, checked)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ScaleUiState())
 
     // ── Inputs ────────────────────────────────────────────────────────────────
@@ -244,7 +244,7 @@ class ScaleViewModel @Inject constructor(
 
     private fun buildState(
         recipe: Recipe?,
-        prefs: DisplayPrefs,
+        settings: AppSettings,
         rawInputs: ScaleInputs?,
         original: Boolean,
         cook: Boolean,
@@ -260,6 +260,7 @@ class ScaleViewModel @Inject constructor(
             )
         }
 
+        val prefs = settings.display
         val items = recipe.ingredients.map { it.toScaleItem() }
         val inp = rawInputs ?: defaultInputs(recipe)
 
@@ -307,7 +308,7 @@ class ScaleViewModel @Inject constructor(
             message = message,
             factor = factor,
             derivedYieldAmount = if (serves != null && serves > 0) serves * factor else null,
-            showScaleWarning = warning,
+            showScaleWarning = warning && settings.showScaleWarning,
             rows = rows,
             showOriginal = original,
             cookMode = cook,

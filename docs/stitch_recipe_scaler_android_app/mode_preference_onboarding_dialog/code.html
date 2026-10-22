@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mise &amp; Measure - Choose Your Kitchen Style</title>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS with Forms & Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "tertiary-fixed-dim": "#a4d397",
+            "error-container": "#ffdad6",
+            "background": "#fff8f6",
+            "primary-fixed": "#ffdad4",
+            "on-primary": "#ffffff",
+            "secondary-container": "#fed79e",
+            "on-secondary": "#ffffff",
+            "primary-fixed-dim": "#ffb4a6",
+            "inverse-on-surface": "#ffede9",
+            "surface-bright": "#fff8f6",
+            "on-tertiary": "#ffffff",
+            "surface-container-highest": "#fbdcd5",
+            "on-background": "#281714",
+            "secondary-fixed-dim": "#e6c189",
+            "surface-tint": "#aa3523",
+            "on-surface-variant": "#58413d",
+            "outline": "#8c716c",
+            "inverse-primary": "#ffb4a6",
+            "on-secondary-container": "#785c2e",
+            "surface-container": "#ffe9e5",
+            "surface-container-high": "#ffe2dc",
+            "surface-dim": "#f2d3cd",
+            "on-primary-fixed": "#3f0300",
+            "tertiary-fixed": "#bff0b1",
+            "outline-variant": "#e0bfb9",
+            "on-error": "#ffffff",
+            "secondary": "#765a2c",
+            "on-error-container": "#93000a",
+            "on-secondary-fixed": "#281900",
+            "on-primary-fixed-variant": "#891d0e",
+            "tertiary-container": "#4c7744",
+            "secondary-fixed": "#ffdeae",
+            "primary-container": "#bd432f",
+            "surface-container-low": "#fff0ee",
+            "tertiary": "#345e2e",
+            "on-tertiary-fixed": "#002201",
+            "on-tertiary-fixed-variant": "#275022",
+            "surface-variant": "#fbdcd5",
+            "on-tertiary-container": "#ccfdbe",
+            "primary": "#9c2b1a",
+            "on-surface": "#281714",
+            "surface-container-lowest": "#ffffff",
+            "on-secondary-fixed-variant": "#5c4216",
+            "surface": "#fff8f6",
+            "inverse-surface": "#3f2c28",
+            "on-primary-container": "#ffeae7",
+            "error": "#ba1a1a"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "2xl": "1rem",
+            "3xl": "1.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xs": "0.25rem",
+            "gutter-desktop": "1.5rem",
+            "margin": "1rem",
+            "space-lg": "1.5rem",
+            "space-xl": "2rem",
+            "margin-desktop": "2rem",
+            "space-sm": "0.5rem",
+            "gutter-tablet": "1.5rem",
+            "margin-tablet": "1.5rem",
+            "gutter": "1rem",
+            "space-md": "1rem"
+          },
+          "fontFamily": {
+            "label-md": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "display-lg": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "display-sm": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "title-sm": ["Plus Jakarta Sans"],
+            "title-md": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "display-md": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Plus Jakarta Sans"],
+            "title-lg": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "0.5px", "fontWeight": "400" }],
+            "display-lg": ["57px", { "lineHeight": "64px", "letterSpacing": "-0.25px", "fontWeight": "400" }],
+            "headline-sm": ["24px", { "lineHeight": "32px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "display-sm": ["36px", { "lineHeight": "44px", "letterSpacing": "0px", "fontWeight": "400" }],
+            "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.25px", "fontWeight": "400" }],
+            "title-sm": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "600" }],
+            "title-md": ["16px", { "lineHeight": "24px", "letterSpacing": "0.15px", "fontWeight": "600" }],
+            "label-sm": ["11px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "600" }],
+            "headline-md": ["28px", { "lineHeight": "36px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.4px", "fontWeight": "400" }],
+            "display-md": ["45px", { "lineHeight": "52px", "letterSpacing": "0px", "fontWeight": "400" }],
+            "headline-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "title-lg": ["22px", { "lineHeight": "28px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .material-symbols-outlined.fill-1 {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    /* Android M3 elevation shadows tinted with warm clay */
+    .elevation-level-1 {
+      box-shadow: 0px 1px 3px rgba(189, 67, 47, 0.08);
+    }
+    .elevation-level-2 {
+      box-shadow: 0px 2px 6px rgba(189, 67, 47, 0.12);
+    }
+    .elevation-level-3 {
+      box-shadow: 0px 4px 14px rgba(144, 42, 24, 0.16);
+    }
+    .elevation-level-5 {
+      box-shadow: 0px 10px 32px rgba(144, 42, 24, 0.22);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased min-h-full flex flex-col justify-between selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- Background Kitchen Workspace Layer (Simulated culinary desktop behind dialog) -->
+<div class="fixed inset-0 pointer-events-none opacity-40 overflow-hidden z-0">
+<div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-surface-container-high blur-3xl"></div>
+<div class="absolute top-1/2 -right-20 w-80 h-80 rounded-full bg-secondary-container/40 blur-3xl"></div>
+<div class="absolute bottom-10 left-1/3 w-96 h-96 rounded-full bg-surface-variant blur-3xl"></div>
+</div>
+<!-- App Header Anchor (Strict Shared Component representation) -->
+<header class="w-full bg-surface transition-colors duration-200 z-10">
+<div class="flex justify-between items-center w-full px-4 h-16 max-w-screen-md mx-auto">
+<div class="flex items-center gap-3">
+<!-- Leading Avatar -->
+<div class="w-9 h-9 rounded-full bg-surface-container-highest flex items-center justify-center text-primary font-bold text-label-md overflow-hidden ring-2 ring-outline-variant/40">
+<span class="material-symbols-outlined text-primary" data-icon="account_circle">account_circle</span>
+</div>
+<div class="flex flex-col">
+<span class="text-title-lg font-title-lg text-on-surface font-extrabold tracking-tight">Mise &amp; Measure</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant -mt-0.5">Culinary Workstation</span>
+</div>
+</div>
+<button aria-label="Search recipes" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container active:scale-95 transition-colors duration-150 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+</button>
+</div>
+</header>
+<!-- Main Content Stage hosting Material 3 Modal / Bottom Sheet -->
+<main class="relative z-10 flex-1 flex items-end sm:items-center justify-center px-0 sm:px-4 py-0 sm:py-6">
+<!-- M3 Scrim Backdrop -->
+<div class="fixed inset-0 bg-on-background/25 backdrop-blur-[2px] transition-opacity duration-300 -z-10"></div>
+<!-- M3 Bottom Sheet / Modal Dialog Container -->
+<section aria-labelledby="dialog-title" aria-modal="true" class="w-full max-w-xl bg-surface-container-lowest rounded-t-3xl sm:rounded-3xl p-6 sm:p-8 elevation-level-5 flex flex-col gap-6 max-h-[92vh] overflow-y-auto transform transition-all duration-300 ease-out" role="dialog">
+<!-- Android M3 Drag Handle (Visible mobile cue) -->
+<div class="w-10 h-1.5 bg-outline-variant rounded-full mx-auto -mt-2 mb-1 sm:hidden"></div>
+<!-- Header & Guidance Header -->
+<div class="flex flex-col gap-2 text-center sm:text-left">
+<div class="inline-flex items-center gap-2 self-center sm:self-start bg-secondary-container/70 text-on-secondary-container px-3 py-1 rounded-full text-label-sm font-label-sm">
+<span class="material-symbols-outlined text-sm font-bold" data-icon="tune">tune</span>
+<span>First-time setup</span>
+</div>
+<h1 class="text-headline-md font-headline-md sm:text-headline-lg font-headline-lg text-on-surface tracking-tight" id="dialog-title">
+          How do you measure?
+        </h1>
+<p class="text-body-md font-body-md text-on-surface-variant">
+          Select your default culinary baseline. Ingredients, conversions, and scale timers will automatically configure to your rhythm.
+        </p>
+</div>
+<!-- Mode Selector: Asymmetric Interactive Cards -->
+<div aria-label="Kitchen measurement styles" class="flex flex-col gap-3.5" role="radiogroup">
+<!-- Option 1: Bakers & Precision Mode (Selected by default) -->
+<label class="relative flex flex-col p-4 sm:p-5 rounded-2xl cursor-pointer transition-all duration-200 border-2 border-primary bg-surface-container-low elevation-level-2 group select-none" id="card-bakers">
+<input checked="" class="sr-only" name="kitchen_style" onchange="updateSelection('bakers')" type="radio" value="bakers"/>
+<div class="flex items-start justify-between gap-3">
+<div class="flex items-start gap-3.5">
+<!-- Icon Tile -->
+<div class="w-12 h-12 rounded-xl bg-primary-container text-on-primary flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined fill-1 text-2xl" data-icon="bakery_dining" style="font-variation-settings: 'FILL' 1;">bakery_dining</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="text-title-md font-title-md text-on-surface">Bakers &amp; Precision Mode</span>
+<span class="bg-primary/10 text-primary px-2 py-0.5 rounded-md text-label-sm font-label-sm font-semibold tracking-wide">
+                    Artisan
+                  </span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-1 leading-snug">
+                  Strict weight-based drafting tailored for sourdough, viennoiserie, hydration ratios, and patisserie science.
+                </p>
+</div>
+</div>
+<!-- Radio Indicator -->
+<div class="w-6 h-6 rounded-full border-2 border-primary bg-primary flex items-center justify-center shrink-0 transition-transform active:scale-90">
+<span class="w-2.5 h-2.5 rounded-full bg-on-primary"></span>
+</div>
+</div>
+<!-- Culinary Metric Chips Row -->
+<div class="mt-4 pt-3.5 border-t border-outline-variant/50 flex flex-wrap gap-1.5 items-center">
+<span class="text-label-sm font-label-sm text-on-surface-variant font-medium mr-1">Includes:</span>
+<span class="bg-surface-container text-on-surface-variant px-2.5 py-1 rounded-lg text-label-sm font-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="scale">scale</span> Grams (g) &amp; ml
+            </span>
+<span class="bg-surface-container text-on-surface-variant px-2.5 py-1 rounded-lg text-label-sm font-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="percent">percent</span> 100% Flour Base %
+            </span>
+<span class="bg-surface-container text-on-surface-variant px-2.5 py-1 rounded-lg text-label-sm font-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="speed">speed</span> ±0.1g Micro-scaling
+            </span>
+</div>
+</label>
+<!-- Option 2: Everyday Home Cook Mode -->
+<label class="relative flex flex-col p-4 sm:p-5 rounded-2xl cursor-pointer transition-all duration-200 border-2 border-transparent bg-surface-container-lowest hover:bg-surface-container-low elevation-level-1 group select-none" id="card-cook">
+<input class="sr-only" name="kitchen_style" onchange="updateSelection('homecook')" type="radio" value="homecook"/>
+<div class="flex items-start justify-between gap-3">
+<div class="flex items-start gap-3.5">
+<!-- Icon Tile -->
+<div class="w-12 h-12 rounded-xl bg-surface-container-high text-secondary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-2xl" data-icon="skillet">skillet</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="text-title-md font-title-md text-on-surface">Everyday Home Cook Mode</span>
+<span class="bg-secondary-container/50 text-on-secondary-container px-2 py-0.5 rounded-md text-label-sm font-label-sm font-semibold tracking-wide">
+                    Fast &amp; Fluid
+                  </span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-1 leading-snug">
+                  Intuitive volume measurements, quick pan fractions, and smart rounding for weeknight suppers and braises.
+                </p>
+</div>
+</div>
+<!-- Radio Indicator -->
+<div class="w-6 h-6 rounded-full border-2 border-outline flex items-center justify-center shrink-0">
+<span class="w-2.5 h-2.5 rounded-full bg-transparent"></span>
+</div>
+</div>
+<!-- Culinary Metric Chips Row -->
+<div class="mt-4 pt-3.5 border-t border-outline-variant/30 flex flex-wrap gap-1.5 items-center">
+<span class="text-label-sm font-label-sm text-on-surface-variant font-medium mr-1">Includes:</span>
+<span class="bg-surface-container-low text-on-surface-variant px-2.5 py-1 rounded-lg text-label-sm font-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="coffee">coffee</span> Volume Cups &amp; Tbsp
+            </span>
+<span class="bg-surface-container-low text-on-surface-variant px-2.5 py-1 rounded-lg text-label-sm font-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="pie_chart">pie_chart</span> ¼, ⅓, ½ Fractions
+            </span>
+<span class="bg-surface-container-low text-on-surface-variant px-2.5 py-1 rounded-lg text-label-sm font-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="auto_awesome">auto_awesome</span> Smart Rounding
+            </span>
+</div>
+</label>
+</div>
+<!-- M3 Checkbox Setting -->
+<div class="flex items-center gap-3 pt-1">
+<label class="relative flex items-center cursor-pointer min-h-[48px] min-w-[48px] -ml-2 pl-2">
+<input checked="" class="w-5 h-5 rounded text-primary border-outline focus:ring-primary focus:ring-offset-0 bg-surface cursor-pointer" id="remember-pref" type="checkbox"/>
+<span class="ml-3 text-body-sm font-body-sm text-on-surface select-none">
+            Remember my choice <span class="text-on-surface-variant">(can change anytime in Settings)</span>
+</span>
+</label>
+</div>
+<!-- Action Stack: Filled Primary Button + Text Button -->
+<div class="flex flex-col gap-2.5 pt-1">
+<!-- M3 Filled Button -->
+<button class="w-full h-12 rounded-full bg-primary-container text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-2 hover:bg-primary active:scale-[0.98] transition-all duration-150 elevation-level-1" id="btn-continue" type="button">
+<span>Continue to Kitchen</span>
+<span class="material-symbols-outlined text-lg" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<!-- M3 Text / Outlined Secondary Choice -->
+<button class="w-full h-11 rounded-full text-primary hover:bg-surface-container text-label-lg font-label-lg flex items-center justify-center transition-colors duration-150" type="button">
+          Decide per recipe
+        </button>
+</div>
+<!-- Micro Helper Note -->
+<div class="text-center text-label-sm font-label-sm text-outline flex items-center justify-center gap-1.5 -mt-2 pb-1">
+<span class="material-symbols-outlined text-xs" data-icon="lock_reset">lock_reset</span>
+<span>Auto-conversions update instantaneously when you toggle scales.</span>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar (Docked Persistent Shared Component from JSON) -->
+<nav aria-label="Bottom Bar Navigation" class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 px-2 pb-safe bg-surface max-w-screen-md mx-auto">
+<!-- Destination 1: Recipes -->
+<a class="flex flex-col items-center justify-center gap-1 text-on-surface-variant px-5 py-1.5 rounded-full hover:bg-surface-container-low transition-colors duration-150 active:scale-95" href="#recipes">
+<span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+<span class="text-label-sm font-label-sm">Recipes</span>
+</a>
+<!-- Destination 2: Scaler (Primary Task Active Anchor) -->
+<a aria-current="page" class="flex flex-col items-center justify-center gap-1 bg-secondary-container text-on-secondary-container rounded-full px-5 py-1.5 active:scale-95 transition-transform duration-150" href="#scaler">
+<span class="material-symbols-outlined fill-1" data-icon="calculate" style="font-variation-settings: 'FILL' 1;">calculate</span>
+<span class="text-label-sm font-label-sm font-bold">Scaler</span>
+</a>
+<!-- Destination 3: Pantry -->
+<a class="flex flex-col items-center justify-center gap-1 text-on-surface-variant px-5 py-1.5 rounded-full hover:bg-surface-container-low transition-colors duration-150 active:scale-95" href="#pantry">
+<span class="material-symbols-outlined" data-icon="kitchen">kitchen</span>
+<span class="text-label-sm font-label-sm">Pantry</span>
+</a>
+<!-- Destination 4: Settings -->
+<a class="flex flex-col items-center justify-center gap-1 text-on-surface-variant px-5 py-1.5 rounded-full hover:bg-surface-container-low transition-colors duration-150 active:scale-95" href="#settings">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-label-sm font-label-sm">Settings</span>
+</a>
+</nav>
+<!-- Script for Interactive Visual States -->
+<script>
+    function updateSelection(mode) {
+      const cardBakers = document.getElementById('card-bakers');
+      const cardCook = document.getElementById('card-cook');
+      const bakersRadioDot = cardBakers.querySelector('div.w-6 span');
+      const bakersRadioCircle = cardBakers.querySelector('div.w-6');
+      const cookRadioDot = cardCook.querySelector('div.w-6 span');
+      const cookRadioCircle = cardCook.querySelector('div.w-6');
+
+      if (mode === 'bakers') {
+        // Bakers active styling
+        cardBakers.className = 'relative flex flex-col p-4 sm:p-5 rounded-2xl cursor-pointer transition-all duration-200 border-2 border-primary bg-surface-container-low elevation-level-2 group select-none';
+        bakersRadioCircle.className = 'w-6 h-6 rounded-full border-2 border-primary bg-primary flex items-center justify-center shrink-0 transition-transform active:scale-90';
+        bakersRadioDot.className = 'w-2.5 h-2.5 rounded-full bg-on-primary';
+
+        // Cook inactive styling
+        cardCook.className = 'relative flex flex-col p-4 sm:p-5 rounded-2xl cursor-pointer transition-all duration-200 border-2 border-transparent bg-surface-container-lowest hover:bg-surface-container-low elevation-level-1 group select-none';
+        cookRadioCircle.className = 'w-6 h-6 rounded-full border-2 border-outline flex items-center justify-center shrink-0';
+        cookRadioDot.className = 'w-2.5 h-2.5 rounded-full bg-transparent';
+      } else {
+        // Cook active styling
+        cardCook.className = 'relative flex flex-col p-4 sm:p-5 rounded-2xl cursor-pointer transition-all duration-200 border-2 border-primary bg-surface-container-low elevation-level-2 group select-none';
+        cookRadioCircle.className = 'w-6 h-6 rounded-full border-2 border-primary bg-primary flex items-center justify-center shrink-0 transition-transform active:scale-90';
+        cookRadioDot.className = 'w-2.5 h-2.5 rounded-full bg-on-primary';
+
+        // Bakers inactive styling
+        cardBakers.className = 'relative flex flex-col p-4 sm:p-5 rounded-2xl cursor-pointer transition-all duration-200 border-2 border-transparent bg-surface-container-lowest hover:bg-surface-container-low elevation-level-1 group select-none';
+        bakersRadioCircle.className = 'w-6 h-6 rounded-full border-2 border-outline flex items-center justify-center shrink-0';
+        bakersRadioDot.className = 'w-2.5 h-2.5 rounded-full bg-transparent';
+      }
+    }
+  </script>
+</body></html>

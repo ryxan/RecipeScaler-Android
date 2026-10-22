@@ -31,6 +31,7 @@ class SettingsViewModelTest {
         vm.setThemeMode(ThemeMode.DARK)
         vm.setDynamicColor(false)
         vm.setUiV2(true)
+        vm.setShowScaleWarning(true)
 
         val s = repo.settings.first()
         assertEquals(MeasurementSystem.METRIC, s.display.system)
@@ -38,6 +39,7 @@ class SettingsViewModelTest {
         assertEquals(ThemeMode.DARK, s.themeMode)
         assertFalse(s.dynamicColor)
         assertTrue(s.uiV2)
+        assertTrue(s.showScaleWarning)
 
         // WhileSubscribed: collecting the StateFlow picks up the repo's current value.
         val emitted = vm.settings.filter { it.themeMode == ThemeMode.DARK }.first()

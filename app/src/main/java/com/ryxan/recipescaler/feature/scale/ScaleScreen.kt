@@ -74,6 +74,7 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -110,6 +111,7 @@ import com.ryxan.recipescaler.R
 import com.ryxan.recipescaler.core.designsystem.GradientTopAppBar
 import com.ryxan.recipescaler.core.designsystem.QuantityText
 import com.ryxan.recipescaler.core.designsystem.RescaleCard
+import com.ryxan.recipescaler.core.designsystem.RescaleTheme
 import com.ryxan.recipescaler.core.designsystem.Spacing
 import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
 import com.ryxan.recipescaler.core.domain.model.KitchenUnit
@@ -122,7 +124,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 /** Multiplier chips — each writes serves × n into "Scale to". */
-private val factorChips = listOf(1, 2, 3, 5)
+internal val factorChips = listOf(1, 2, 3, 5)
 
 /** Upper bound for the shared quantity column; longer quantities wrap. */
 private val MAX_QTY_WIDTH = 136.dp
@@ -132,47 +134,58 @@ fun ScaleScreen(
     onNavigateUp: () -> Unit,
     onEdit: (Long) -> Unit,
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToRecipes: () -> Unit = {},
+    onScalerClick: () -> Unit = {},
+    /** Fired when the recipe is gone (e.g. deleted) so callers can drop it. */
+    onRecipeMissing: () -> Unit = {},
     viewModel: ScaleViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(state.recipeMissing) {
+        if (state.recipeMissing) onRecipeMissing()
+    }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
     val context = LocalContext.current
     val copied = stringResource(R.string.msg_copied)
 
-    ScaleContent(
-        state = state,
-        snackbarHostState = snackbarHostState,
-        callbacks = ScaleCallbacks(
-            onNavigateUp = onNavigateUp,
-            onEdit = onEdit,
-            onSettings = onNavigateToSettings,
-            onServes = viewModel::setServes,
-            onScaleTo = viewModel::setScaleTo,
-            onFactor = viewModel::applyFactor,
-            onStep = viewModel::stepServings,
-            onShowOriginal = viewModel::setShowOriginal,
-            onCookMode = viewModel::toggleCookMode,
-            onToggleChecked = viewModel::toggleChecked,
-            onPromote = viewModel::promote,
-            onMeasurementSystem = viewModel::setMeasurementSystem,
-            onCopy = { format ->
-                scope.launch {
-                    clipboard.setClipEntry(
-                        ClipEntry(ClipData.newPlainText(null, viewModel.copyText(format))),
-                    )
-                    snackbarHostState.showSnackbar(copied)
-                }
-            },
-            onShare = {
-                val send = Intent(Intent.ACTION_SEND)
-                    .setType("text/plain")
-                    .putExtra(Intent.EXTRA_TEXT, viewModel.copyText(CopyFormat.PLAIN))
-                context.startActivity(Intent.createChooser(send, null))
-            },
-        ),
+    val callbacks = ScaleCallbacks(
+        onNavigateUp = onNavigateUp,
+        onEdit = onEdit,
+        onSettings = onNavigateToSettings,
+        onServes = viewModel::setServes,
+        onScaleTo = viewModel::setScaleTo,
+        onFactor = viewModel::applyFactor,
+        onStep = viewModel::stepServings,
+        onShowOriginal = viewModel::setShowOriginal,
+        onCookMode = viewModel::toggleCookMode,
+        onToggleChecked = viewModel::toggleChecked,
+        onPromote = viewModel::promote,
+        onMeasurementSystem = viewModel::setMeasurementSystem,
+        onRecipes = onNavigateToRecipes,
+        onScaler = onScalerClick,
+        onCopy = { format ->
+            scope.launch {
+                clipboard.setClipEntry(
+                    ClipEntry(ClipData.newPlainText(null, viewModel.copyText(format))),
+                )
+                snackbarHostState.showSnackbar(copied)
+            }
+        },
+        onShare = {
+            val send = Intent(Intent.ACTION_SEND)
+                .setType("text/plain")
+                .putExtra(Intent.EXTRA_TEXT, viewModel.copyText(CopyFormat.PLAIN))
+            context.startActivity(Intent.createChooser(send, null))
+        },
     )
+
+    if (RescaleTheme.uiV2) {
+        ScaleV2Content(state = state, callbacks = callbacks, snackbarHostState = snackbarHostState)
+    } else {
+        ScaleContent(state = state, callbacks = callbacks, snackbarHostState = snackbarHostState)
+    }
 }
 
 data class ScaleCallbacks(
@@ -190,6 +203,10 @@ data class ScaleCallbacks(
     val onCopy: (CopyFormat) -> Unit = {},
     val onShare: () -> Unit = {},
     val onMeasurementSystem: (MeasurementSystem) -> Unit = {},
+    /** v2 bottom nav: Recipes tab → pop back to the recipe list root. */
+    val onRecipes: () -> Unit = {},
+    /** v2 bottom nav: Scaler tab → back to the scaler home (tab root). */
+    val onScaler: () -> Unit = {},
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -1007,7 +1024,7 @@ private fun PromoteChip(
 }
 
 @Composable
-private fun promoteUnitName(unit: KitchenUnit): String = stringResource(
+internal fun promoteUnitName(unit: KitchenUnit): String = stringResource(
     when (unit) {
         KitchenUnit.QUART -> R.string.promote_unit_quarts
         KitchenUnit.GALLON -> R.string.promote_unit_gallons
@@ -1017,7 +1034,7 @@ private fun promoteUnitName(unit: KitchenUnit): String = stringResource(
 )
 
 @Composable
-private fun messageText(message: ScaleMessage): String = when (message) {
+internal fun messageText(message: ScaleMessage): String = when (message) {
     is ScaleMessage.CantRead -> stringResource(R.string.msg_cant_read, message.text)
     is ScaleMessage.EnterAmountAboveZero -> stringResource(R.string.err_amount_above_zero)
 }

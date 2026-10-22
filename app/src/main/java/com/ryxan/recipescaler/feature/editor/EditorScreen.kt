@@ -123,6 +123,7 @@ import com.ryxan.recipescaler.core.designsystem.GradientExtendedFab
 import com.ryxan.recipescaler.core.designsystem.GradientTopAppBar
 import com.ryxan.recipescaler.core.designsystem.RescaleCard
 import com.ryxan.recipescaler.core.designsystem.RescaleSwipeToDelete
+import com.ryxan.recipescaler.core.designsystem.RescaleTheme
 import com.ryxan.recipescaler.core.designsystem.Spacing
 import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
@@ -217,10 +218,7 @@ fun EditorScreen(
         }
     }
 
-    EditorContent(
-        state = state,
-        snackbarHostState = snackbarHostState,
-        callbacks = EditorCallbacks(
+    val editorCallbacks = EditorCallbacks(
             onNavigateUp = onNavigateUp,
             onSettings = onNavigateToSettings,
             onScale = { scope.launch { viewModel.prepareToScale()?.let(onScale) } },
@@ -281,8 +279,13 @@ fun EditorScreen(
             onWatchAd = {
                 (context as? Activity)?.let(viewModel::watchAdForScans)
             },
-        ),
     )
+
+    if (RescaleTheme.uiV2) {
+        EditorV2Content(state = state, callbacks = editorCallbacks, snackbarHostState = snackbarHostState)
+    } else {
+        EditorContent(state = state, callbacks = editorCallbacks, snackbarHostState = snackbarHostState)
+    }
 }
 
 /** Bundled callbacks so [EditorContent] stays easy to drive from UI tests. */
@@ -319,8 +322,8 @@ data class EditorCallbacks(
     val onWatchAd: () -> Unit = {},
 )
 
-private enum class RowField { QTY, NAME }
-private data class FocusedField(val rowKey: Long, val field: RowField)
+internal enum class RowField { QTY, NAME }
+internal data class FocusedField(val rowKey: Long, val field: RowField)
 
 /** LazyColumn sections above the ingredient rows, in display order. */
 private enum class EditorHeader { TITLE_HEADER, TITLE, YIELD, INGREDIENTS_HEADER, EMPTY_STATE }
@@ -859,7 +862,7 @@ fun EditorContent(
 }
 
 @Composable
-private fun IngredientRow(
+internal fun IngredientRow(
     row: EditorRow,
     position: Int,
     isDragging: Boolean,
@@ -990,14 +993,14 @@ private fun SectionLabel(text: String, modifier: Modifier = Modifier) {
 
 /** Inset field look: lighter container than the card it sits on, hairline border until focused. */
 @Composable
-private fun editorFieldColors() = OutlinedTextFieldDefaults.colors(
+internal fun editorFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
     unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
     unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
 )
 
 @Composable
-private fun QtyField(
+internal fun QtyField(
     value: androidx.compose.runtime.MutableState<TextFieldValue>,
     isError: Boolean,
     contentDesc: String,
@@ -1035,7 +1038,7 @@ private fun QtyField(
 }
 
 @Composable
-private fun UnitPickerButton(
+internal fun UnitPickerButton(
     unit: KitchenUnit,
     onClick: () -> Unit,
 ) {
@@ -1055,7 +1058,7 @@ private fun UnitPickerButton(
 }
 
 @Composable
-private fun NameField(
+internal fun NameField(
     row: EditorRow,
     contentDesc: String,
     modifier: Modifier,
@@ -1106,7 +1109,7 @@ private fun NameField(
 }
 
 @Composable
-private fun AccessoryBar(
+internal fun AccessoryBar(
     visible: Boolean,
     qtyFocused: Boolean,
     onFraction: (String) -> Unit,
@@ -1158,7 +1161,7 @@ private fun AccessoryBar(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-private fun UnitPickerSheet(
+internal fun UnitPickerSheet(
     selected: KitchenUnit,
     onSelect: (KitchenUnit) -> Unit,
     onDismiss: () -> Unit,
@@ -1202,7 +1205,7 @@ private fun UnitPickerSheet(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun EditorDialogs(state: EditorUiState, callbacks: EditorCallbacks) {
+internal fun EditorDialogs(state: EditorUiState, callbacks: EditorCallbacks) {
     when (val dialog = state.dialog) {
         EditorDialog.PasteText -> {
             val clipboard = LocalClipboard.current

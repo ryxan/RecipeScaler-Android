@@ -67,4 +67,8 @@ class SettingsViewModel @Inject constructor(
     fun setUiV2(v: Boolean) {
         viewModelScope.launch { repository.setUiV2(v) }
     }
+
+    fun setShowScaleWarning(v: Boolean) {
+        viewModelScope.launch { repository.setShowScaleWarning(v) }
+    }
 }

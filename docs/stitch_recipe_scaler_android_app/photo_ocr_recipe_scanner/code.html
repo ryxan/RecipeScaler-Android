@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mise &amp; Measure - Photo &amp; OCR Recipe Scanner</title>
+<!-- Tailwind CSS with Forms and Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "primary-fixed": "#ffdad4",
+            "on-secondary-fixed": "#281900",
+            "surface-container-highest": "#fbdcd5",
+            "tertiary-fixed": "#bff0b1",
+            "on-error-container": "#93000a",
+            "surface-container-high": "#ffe2dc",
+            "on-tertiary-fixed-variant": "#275022",
+            "error-container": "#ffdad6",
+            "surface-dim": "#f2d3cd",
+            "on-tertiary": "#ffffff",
+            "outline-variant": "#e0bfb9",
+            "tertiary-fixed-dim": "#a4d397",
+            "on-primary-fixed-variant": "#891d0e",
+            "on-primary-fixed": "#3f0300",
+            "on-secondary-container": "#785c2e",
+            "surface-container": "#ffe9e5",
+            "on-primary-container": "#ffeae7",
+            "secondary-fixed": "#ffdeae",
+            "secondary-container": "#fed79e",
+            "secondary": "#765a2c",
+            "on-error": "#ffffff",
+            "surface-variant": "#fbdcd5",
+            "tertiary-container": "#4c7744",
+            "inverse-on-surface": "#ffede9",
+            "on-tertiary-fixed": "#002201",
+            "primary-container": "#bd432f",
+            "on-tertiary-container": "#ccfdbe",
+            "on-secondary": "#ffffff",
+            "surface-tint": "#aa3523",
+            "on-background": "#281714",
+            "primary": "#9c2b1a",
+            "inverse-surface": "#3f2c28",
+            "surface-bright": "#fff8f6",
+            "primary-fixed-dim": "#ffb4a6",
+            "on-surface": "#281714",
+            "surface-container-low": "#fff0ee",
+            "on-secondary-fixed-variant": "#5c4216",
+            "background": "#fff8f6",
+            "inverse-primary": "#ffb4a6",
+            "tertiary": "#345e2e",
+            "on-primary": "#ffffff",
+            "surface": "#fff8f6",
+            "on-surface-variant": "#58413d",
+            "surface-container-lowest": "#ffffff",
+            "secondary-fixed-dim": "#e6c189",
+            "outline": "#8c716c",
+            "error": "#ba1a1a"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "margin-desktop": "2rem",
+            "space-xl": "2rem",
+            "gutter": "1rem",
+            "gutter-desktop": "1.5rem",
+            "margin": "1rem",
+            "space-lg": "1.5rem",
+            "space-sm": "0.5rem",
+            "margin-tablet": "1.5rem",
+            "gutter-tablet": "1.5rem",
+            "space-md": "1rem",
+            "space-xs": "0.25rem"
+          },
+          "fontFamily": {
+            "title-lg": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "display-lg": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "display-sm": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "title-sm": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "display-md": ["Plus Jakarta Sans"],
+            "title-md": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "title-lg": ["22px", { "lineHeight": "28px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "label-sm": ["11px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "600" }],
+            "display-lg": ["57px", { "lineHeight": "64px", "letterSpacing": "-0.25px", "fontWeight": "400" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "0.5px", "fontWeight": "400" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "600" }],
+            "display-sm": ["36px", { "lineHeight": "44px", "letterSpacing": "0px", "fontWeight": "400" }],
+            "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.25px", "fontWeight": "400" }],
+            "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.4px", "fontWeight": "400" }],
+            "headline-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "headline-md": ["28px", { "lineHeight": "36px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "title-sm": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "600" }],
+            "headline-sm": ["24px", { "lineHeight": "32px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "display-md": ["45px", { "lineHeight": "52px", "letterSpacing": "0px", "fontWeight": "400" }],
+            "title-md": ["16px", { "lineHeight": "24px", "letterSpacing": "0.15px", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .material-symbols-outlined.fill {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    /* Custom scanline simulation */
+    @keyframes scanline {
+      0% { transform: translateY(0%); opacity: 0.8; }
+      50% { opacity: 0.3; }
+      100% { transform: translateY(260px); opacity: 0.8; }
+    }
+    .animate-scan {
+      animation: scanline 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface antialiased min-h-screen flex flex-col items-center selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Main Mobile Frame Container adhering to 8dp grid & Android Compact Spec -->
+<div class="w-full max-w-md min-h-screen bg-surface flex flex-col relative pb-10 shadow-2xl">
+<!-- 1. Native Android Status Bar (9:41, Wi-Fi, 5G, Battery) -->
+<div class="w-full px-6 pt-3 pb-1 flex justify-between items-center text-on-surface select-none z-30">
+<span class="font-label-md text-label-md font-semibold tracking-tight">9:41</span>
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-[16px]">wifi</span>
+<span class="material-symbols-outlined text-[16px]">signal_cellular_alt</span>
+<div class="w-5 h-2.5 border border-on-surface rounded-sm p-0.5 flex items-center">
+<div class="h-full w-3.5 bg-on-surface rounded-2xs"></div>
+</div>
+</div>
+</div>
+<!-- M3 Top App Bar: Linear/Task screen (suppresses global bottom shell as per Destination Rule) -->
+<header class="w-full px-4 h-16 flex items-center justify-between bg-surface z-20">
+<div class="flex items-center gap-3">
+<button aria-label="Go back" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container active:scale-95 transition-all text-on-surface">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-bold block leading-none">Mise &amp; Measure</span>
+<h1 class="font-title-lg text-title-lg font-bold text-on-surface leading-snug">Scan &amp; Import Recipe</h1>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<button aria-label="Flashlight Toggle" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container active:scale-95 transition-colors text-on-surface-variant" id="flashToggle">
+<span class="material-symbols-outlined" data-icon="flash_on">flash_on</span>
+</button>
+<button aria-label="OCR Help Tips" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container active:scale-95 transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+</div>
+</header>
+<!-- 2. Mode Selector / Import Source Tabs (M3 Horizontal Pills) -->
+<nav aria-label="Import modes" class="px-4 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar">
+<button class="px-4 py-2 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-label-md font-semibold flex items-center gap-1.5 shadow-sm shrink-0">
+<span class="material-symbols-outlined text-[18px]" data-icon="photo_camera">photo_camera</span>
+        Camera Viewfinder
+      </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface-variant font-label-md text-label-md font-semibold flex items-center gap-1.5 transition-colors shrink-0">
+<span class="material-symbols-outlined text-[18px]" data-icon="photo_library">photo_library</span>
+        Gallery Upload
+      </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface-variant font-label-md text-label-md font-semibold flex items-center gap-1.5 transition-colors shrink-0">
+<span class="material-symbols-outlined text-[18px]" data-icon="note_alt">note_alt</span>
+        Recipe Card
+      </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface-variant font-label-md text-label-md font-semibold flex items-center gap-1.5 transition-colors shrink-0">
+<span class="material-symbols-outlined text-[18px]" data-icon="document_scanner">document_scanner</span>
+        Document Mode
+      </button>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 px-4 pt-2 pb-6 space-y-4">
+<!-- 3. Active Camera Viewfinder & OCR Scanner Viewport -->
+<section class="relative w-full aspect-[4/3] rounded-3xl overflow-hidden bg-inverse-surface shadow-md border-2 border-surface-container-high">
+<!-- Background camera capture feed showing an authentic vintage index card -->
+<div class="absolute inset-0 bg-cover bg-center" data-alt="A textured vintage kitchen index card resting on a dark rustic wooden butcher block table with subtle natural side lighting. The aged paper features authentic cursive blue ink handwriting titled Grandma Claras Cardamom Braid dated 1968, surrounded by culinary elements like a pinch bowl of raw spices and flour dusting in warm terracotta and rich amber tones." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBXR11o--AoCUpZNjWXkQtyp7LLCr8oneeDFvkaTFRzdYR_-KCljqLKzHmy3IpHb5rupdZnZFxhPSMcYLwd8t-SsAL4ivhXedvRzSr8fe1_pc-FX42-R9qeRRedo9WgOSAxY5lzVjR1-ZRG3BlMKUbAULVpnChiQtU2Vt4yTx9iGTrislZfWNu6OB7JhH2_oYm7lMnsnPsmjPWlhPZPK3AVxeDHxcem_rXm4GCYEUxwS6OZ95_MebNZ')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30"></div>
+<!-- Live Scanline Effect -->
+<div class="absolute inset-x-4 top-2 h-0.5 bg-gradient-to-r from-transparent via-primary-container to-transparent animate-scan z-10 pointer-events-none shadow-[0_0_8px_rgba(189,67,47,0.8)]"></div>
+<!-- OCR Viewfinder Brackets & Text Overlay Boxes -->
+<div class="absolute inset-4 border border-white/30 rounded-2xl pointer-events-none flex flex-col justify-between p-3">
+<!-- Corner Accents -->
+<div class="flex justify-between items-start">
+<span class="w-4 h-4 border-t-2 border-l-2 border-secondary-fixed rounded-tl"></span>
+<div class="bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full flex items-center gap-1.5 border border-white/20">
+<span class="w-2 h-2 rounded-full bg-tertiary-container animate-pulse"></span>
+<span class="text-white font-label-sm text-label-sm font-semibold tracking-wide">OCR READY</span>
+</div>
+<span class="w-4 h-4 border-t-2 border-r-2 border-secondary-fixed rounded-tr"></span>
+</div>
+<!-- Bounding Boxes simulated over handwritten recipe text -->
+<div class="space-y-2 my-auto">
+<!-- Title Box -->
+<div class="bg-primary-container/20 border border-primary-container/80 backdrop-blur-[2px] rounded px-2 py-1 max-w-[85%] flex items-center justify-between">
+<span class="text-white font-label-sm text-label-sm font-medium drop-shadow-sm truncate">Grandma Clara’s Cardamom Braid</span>
+<span class="material-symbols-outlined text-secondary-fixed text-[14px]">auto_awesome</span>
+</div>
+<!-- Ingredient line 1 -->
+<div class="bg-primary/20 border border-primary/70 backdrop-blur-[2px] rounded px-2 py-0.5 max-w-[70%] flex items-center justify-between">
+<span class="text-white font-label-sm text-label-sm font-medium drop-shadow-sm">3 cups unbleached flour</span>
+<span class="text-secondary-fixed font-label-sm text-[10px]">99%</span>
+</div>
+<!-- Ingredient line 2 -->
+<div class="bg-primary/20 border border-primary/70 backdrop-blur-[2px] rounded px-2 py-0.5 max-w-[60%] flex items-center justify-between">
+<span class="text-white font-label-sm text-label-sm font-medium drop-shadow-sm">1/2 cup melted butter</span>
+<span class="text-secondary-fixed font-label-sm text-[10px]">97%</span>
+</div>
+</div>
+<div class="flex justify-between items-end">
+<span class="w-4 h-4 border-b-2 border-l-2 border-secondary-fixed rounded-bl"></span>
+<div class="text-white/80 font-label-sm text-label-sm font-medium">Keep recipe steady inside frame</div>
+<span class="w-4 h-4 border-b-2 border-r-2 border-secondary-fixed rounded-br"></span>
+</div>
+</div>
+<!-- Viewfinder Controls (Bottom Overlay) -->
+<div class="absolute bottom-3 inset-x-0 flex items-center justify-around px-8 z-20">
+<button aria-label="Upload photo from storage" class="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all border border-white/20">
+<span class="material-symbols-outlined" data-icon="image">image</span>
+</button>
+<!-- Large Shutter Button -->
+<button aria-label="Capture Recipe Photo" class="w-16 h-16 rounded-full bg-primary-container text-on-primary-container p-1 shadow-lg active:scale-90 transition-transform flex items-center justify-center ring-4 ring-white/40">
+<div class="w-full h-full rounded-full border-2 border-surface flex items-center justify-center bg-primary">
+<span class="material-symbols-outlined text-[28px] text-on-primary" data-icon="photo_camera">photo_camera</span>
+</div>
+</button>
+<button aria-label="Switch camera angle" class="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all border border-white/20">
+<span class="material-symbols-outlined" data-icon="flip_camera_ios">flip_camera_ios</span>
+</button>
+</div>
+</section>
+<!-- 4. AI Handwriting Accuracy & Enhancement Engine Banner / Interactive Switch -->
+<section class="bg-surface-container-low rounded-2xl p-4 border border-outline-variant/30 space-y-3">
+<div class="flex items-start justify-between gap-3">
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary fill" data-icon="psychology">psychology</span>
+<h2 class="font-title-md text-title-md font-bold text-on-surface">AI Handwritten Engine</h2>
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm text-label-sm font-semibold">Gemini Vision</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+              Deciphers cursive handwriting, faded vintage index cards, ingredient abbreviations, and messy margins with high culinary accuracy.
+            </p>
+</div>
+<!-- M3 Custom Switch (Active) -->
+<label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-12 h-7 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-primary after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Presets Selection Pills -->
+<div class="pt-2 border-t border-outline-variant/20 flex flex-wrap gap-1.5 items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-semibold mr-1">Preset Profile:</span>
+<button class="px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold border border-secondary/30">
+            ✓ Heirloom Cursive
+          </button>
+<button class="px-3 py-1 rounded-full bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors">
+            Cookbook Print
+          </button>
+<button class="px-3 py-1 rounded-full bg-surface-container text-on-surface-variant hover:bg-surface-container-high font-label-sm text-label-sm transition-colors">
+            Kitchen Scribble
+          </button>
+</div>
+</section>
+<!-- 5. Live Extracted Draft / Parsed Preview Sheet -->
+<section class="bg-surface-container-lowest rounded-3xl p-5 border border-outline-variant/40 shadow-sm space-y-4">
+<!-- Section Header with Match Metric -->
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/20">
+<div>
+<span class="font-label-sm text-label-sm font-bold text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="check_circle">check_circle</span>
+              LIVE EXTRACTION PREVIEW
+            </span>
+<h3 class="font-title-md text-title-md font-bold text-on-surface">Grandma Clara’s Cardamom Braid (1968)</h3>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-sm text-label-sm font-bold shadow-xs">
+            98% AI Match
+          </span>
+</div>
+<!-- Smart Conversion Badges / AI Callouts -->
+<div class="grid grid-cols-1 gap-2">
+<div class="p-2.5 rounded-xl bg-surface-container-low flex items-center gap-2.5 text-on-surface border border-outline-variant/30">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="scale">scale</span>
+<div class="flex-1">
+<p class="font-label-md text-label-md font-semibold text-on-surface">Auto-converted legacy volume to Baker's Grams</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Density factors matched for All-Purpose Flour &amp; European Butter.</p>
+</div>
+</div>
+<div class="p-2.5 rounded-xl bg-surface-container-low flex items-center gap-2.5 text-on-surface border border-outline-variant/30">
+<span class="material-symbols-outlined text-secondary text-[20px]" data-icon="spellcheck">spellcheck</span>
+<div class="flex-1">
+<p class="font-label-md text-label-md font-semibold text-on-surface">Cursive ambiguity resolved</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Parsed smudge as: <span class="font-semibold text-primary">1 tsp freshly ground cardamom seeds</span></p>
+</div>
+</div>
+</div>
+<!-- Ingredients Table with High Precision Scaling View -->
+<div class="space-y-1">
+<div class="flex items-center justify-between px-2 pb-1 text-on-surface-variant font-label-sm text-label-sm font-semibold">
+<span>SCANNED INGREDIENT</span>
+<span>STANDARDIZED (METRIC)</span>
+</div>
+<div class="divide-y divide-outline-variant/20 rounded-xl bg-surface-container-low/50 overflow-hidden">
+<!-- Item 1 -->
+<div class="p-3 flex items-center justify-between hover:bg-surface-container transition-colors">
+<div class="space-y-0.5">
+<p class="font-body-md text-body-md font-semibold text-on-surface">3 cups unbleached flour</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant italic">OCR Card: "3 C. flour (Robin Hood)"</p>
+</div>
+<div class="text-right">
+<span class="font-title-sm text-title-sm font-bold text-primary">360 g</span>
+<span class="block font-label-sm text-label-sm text-on-surface-variant">Dry base</span>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="p-3 flex items-center justify-between hover:bg-surface-container transition-colors">
+<div class="space-y-0.5">
+<p class="font-body-md text-body-md font-semibold text-on-surface">1/2 cup melted butter</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant italic">OCR Card: "1/2 stick + 2 Tbsp butter"</p>
+</div>
+<div class="text-right">
+<span class="font-title-sm text-title-sm font-bold text-primary">115 g</span>
+<span class="block font-label-sm text-label-sm text-on-surface-variant">Fats</span>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="p-3 flex items-center justify-between hover:bg-surface-container transition-colors">
+<div class="space-y-0.5">
+<p class="font-body-md text-body-md font-semibold text-on-surface">1 packet active dry yeast</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant italic">OCR Card: "1 envelope Fleishmanns"</p>
+</div>
+<div class="text-right">
+<span class="font-title-sm text-title-sm font-bold text-primary">7 g</span>
+<span class="block font-label-sm text-label-sm text-on-surface-variant">Leavener</span>
+</div>
+</div>
+<!-- Item 4 -->
+<div class="p-3 flex items-center justify-between hover:bg-surface-container transition-colors">
+<div class="space-y-0.5">
+<p class="font-body-md text-body-md font-semibold text-on-surface">1 tsp ground cardamom</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant italic">OCR Card: "1 t. crushed cardamom"</p>
+</div>
+<div class="text-right">
+<span class="font-title-sm text-title-sm font-bold text-primary">2.5 g</span>
+<span class="block font-label-sm text-label-sm text-on-surface-variant">Spice</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Inline Quick Edit or Add Step Actions -->
+<div class="flex items-center justify-between pt-1">
+<button class="inline-flex items-center gap-1.5 text-primary hover:text-primary-container font-label-md text-label-md font-bold transition-colors">
+<span class="material-symbols-outlined text-[18px]" data-icon="edit_note">edit_note</span>
+            Edit Extracted Fields
+          </button>
+<span class="font-body-sm text-body-sm text-on-surface-variant">4 ingredients detected</span>
+</div>
+</section>
+<!-- 6. Bottom Persistent CTA Actions -->
+<section class="pt-2 pb-2 space-y-3">
+<div class="flex items-center gap-3">
+<!-- Secondary Action: Retake -->
+<button class="flex-1 h-12 rounded-full border border-outline-variant bg-transparent text-primary hover:bg-surface-container font-label-lg text-label-lg font-semibold flex items-center justify-center gap-2 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]" data-icon="refresh">refresh</span>
+            Retake Photo
+          </button>
+<!-- Primary Action: Import to Recipe Editor -->
+<button class="flex-[1.5] h-12 rounded-full bg-primary-container text-on-primary-container shadow-sm hover:brightness-105 active:scale-95 font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 transition-all">
+<span>Import to Editor</span>
+<span class="material-symbols-outlined text-[20px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<p class="text-center font-body-sm text-body-sm text-on-surface-variant/80">
+          Recipe will open in <strong>Mise &amp; Measure</strong> Scaler with 1x/2x/4x calculation enabled.
+        </p>
+</section>
+</main>
+<!-- Android Gesture Pill Navigation Anchor -->
+<div class="w-full flex justify-center py-2">
+<div class="w-32 h-1 bg-on-surface-variant/40 rounded-full"></div>
+</div>
+</div>
+<script>
+    // Lightweight interaction for the flashlight toggle
+    const flashBtn = document.getElementById('flashToggle');
+    if (flashBtn) {
+      flashBtn.addEventListener('click', () => {
+        const icon = flashBtn.querySelector('.material-symbols-outlined');
+        if (icon) {
+          const isFlash = icon.textContent.trim() === 'flash_on';
+          icon.textContent = isFlash ? 'flash_off' : 'flash_on';
+          flashBtn.classList.toggle('text-primary');
+        }
+      });
+    }
+  </script>
+</body></html>

@@ -39,6 +39,7 @@ import com.ryxan.recipescaler.BuildConfig
 import com.ryxan.recipescaler.R
 import com.ryxan.recipescaler.core.designsystem.GradientTopAppBar
 import com.ryxan.recipescaler.core.designsystem.RescaleCard
+import com.ryxan.recipescaler.core.designsystem.RescaleTheme
 import com.ryxan.recipescaler.core.designsystem.SectionHeader
 import com.ryxan.recipescaler.core.designsystem.Spacing
 import com.ryxan.recipescaler.core.domain.formatting.DisplayMode
@@ -51,12 +52,38 @@ import com.ryxan.recipescaler.core.domain.model.ThemeMode
 fun SettingsScreen(
     onNavigateUp: () -> Unit,
     onNavigateToPro: () -> Unit = {},
+    onNavigateToRecipes: () -> Unit = {},
+    onScalerClick: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val isPro by viewModel.isPro.collectAsStateWithLifecycle()
     val debugPro by viewModel.debugPro.collectAsStateWithLifecycle()
     val aiScansRemaining by viewModel.aiScansRemaining.collectAsStateWithLifecycle()
+    if (RescaleTheme.uiV2) {
+        SettingsV2Content(
+            settings = settings,
+            onSystem = viewModel::setMeasurementSystem,
+            onDisplayMode = viewModel::setDisplayMode,
+            onThemeMode = viewModel::setThemeMode,
+            onDynamicColor = viewModel::setDynamicColor,
+            onUiV2 = viewModel::setUiV2,
+            onShowScaleWarning = viewModel::setShowScaleWarning,
+            showDynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
+            versionName = BuildConfig.VERSION_NAME,
+            onNavigateUp = onNavigateUp,
+            isPro = isPro,
+            onProClick = onNavigateToPro,
+            onNavigateToRecipes = onNavigateToRecipes,
+            onScalerClick = onScalerClick,
+            showDebug = true, // TODO: restore BuildConfig.DEBUG before closed testing / production
+            debugPro = debugPro,
+            onDebugPro = viewModel::setDebugPro,
+            aiScansRemaining = aiScansRemaining,
+            onSetAiScans = viewModel::setAiScans,
+        )
+        return
+    }
     SettingsContent(
         settings = settings,
         onSystem = viewModel::setMeasurementSystem,
@@ -64,6 +91,7 @@ fun SettingsScreen(
         onThemeMode = viewModel::setThemeMode,
         onDynamicColor = viewModel::setDynamicColor,
         onUiV2 = viewModel::setUiV2,
+        onShowScaleWarning = viewModel::setShowScaleWarning,
         showDynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
         versionName = BuildConfig.VERSION_NAME,
         onNavigateUp = onNavigateUp,
@@ -86,6 +114,7 @@ fun SettingsContent(
     onThemeMode: (ThemeMode) -> Unit,
     onDynamicColor: (Boolean) -> Unit,
     onUiV2: (Boolean) -> Unit = {},
+    onShowScaleWarning: (Boolean) -> Unit = {},
     showDynamicColor: Boolean,
     versionName: String,
     onNavigateUp: () -> Unit = {},
@@ -199,6 +228,25 @@ fun SettingsContent(
                         text = stringResource(R.string.settings_display_decimal),
                         selected = settings.display.mode == DisplayMode.DECIMAL,
                         onClick = { onDisplayMode(DisplayMode.DECIMAL) },
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clickable { onShowScaleWarning(!settings.showScaleWarning) }
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings_scale_warning),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Switch(
+                        checked = settings.showScaleWarning,
+                        onCheckedChange = onShowScaleWarning,
                     )
                 }
             }
@@ -340,7 +388,7 @@ fun SettingsContent(
     }
 }
 
-private const val PRIVACY_POLICY_URL = "https://ryxan.ca/rescale-privacy.html"
+internal const val PRIVACY_POLICY_URL = "https://ryxan.ca/rescale-privacy.html"
 
 @Composable
 private fun SettingsCard(content: @Composable () -> Unit) {

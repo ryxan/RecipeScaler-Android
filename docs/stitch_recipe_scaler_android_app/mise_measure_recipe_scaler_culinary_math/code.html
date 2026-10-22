@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mise &amp; Measure - Recipe Scaler &amp; Culinary Math</title>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS with Forms and Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-secondary": "#ffffff",
+            "primary-fixed": "#ffdad4",
+            "on-tertiary-container": "#ccfdbe",
+            "surface-container-high": "#ffe2dc",
+            "surface-dim": "#f2d3cd",
+            "secondary-fixed-dim": "#e6c189",
+            "surface-bright": "#fff8f6",
+            "on-error-container": "#93000a",
+            "secondary-fixed": "#ffdeae",
+            "background": "#fff8f6",
+            "on-tertiary-fixed": "#002201",
+            "inverse-surface": "#3f2c28",
+            "surface-container-highest": "#fbdcd5",
+            "primary": "#9c2b1a",
+            "secondary-container": "#fed79e",
+            "tertiary-container": "#4c7744",
+            "error-container": "#ffdad6",
+            "on-secondary-fixed-variant": "#5c4216",
+            "surface-container-low": "#fff0ee",
+            "on-error": "#ffffff",
+            "primary-fixed-dim": "#ffb4a6",
+            "error": "#ba1a1a",
+            "on-primary": "#ffffff",
+            "on-surface-variant": "#58413d",
+            "on-tertiary": "#ffffff",
+            "on-primary-container": "#ffeae7",
+            "outline": "#8c716c",
+            "outline-variant": "#e0bfb9",
+            "inverse-primary": "#ffb4a6",
+            "surface-container-lowest": "#ffffff",
+            "surface": "#fff8f6",
+            "surface-variant": "#fbdcd5",
+            "tertiary": "#345e2e",
+            "tertiary-fixed": "#bff0b1",
+            "surface-container": "#ffe9e5",
+            "on-background": "#281714",
+            "inverse-on-surface": "#ffede9",
+            "on-primary-fixed": "#3f0300",
+            "primary-container": "#bd432f",
+            "on-primary-fixed-variant": "#891d0e",
+            "on-surface": "#281714",
+            "secondary": "#765a2c",
+            "on-secondary-container": "#785c2e",
+            "on-secondary-fixed": "#281900",
+            "tertiary-fixed-dim": "#a4d397",
+            "on-tertiary-fixed-variant": "#275022",
+            "surface-tint": "#aa3523"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "2xl": "1rem",
+            "3xl": "1.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-lg": "1.5rem",
+            "margin": "1rem",
+            "margin-desktop": "2rem",
+            "gutter": "1rem",
+            "margin-tablet": "1.5rem",
+            "space-md": "1rem",
+            "gutter-tablet": "1.5rem",
+            "space-xs": "0.25rem",
+            "gutter-desktop": "1.5rem",
+            "space-sm": "0.5rem",
+            "space-xl": "2rem"
+          },
+          "fontFamily": {
+            "title-md": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "title-lg": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "title-sm": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "display-md": ["Plus Jakarta Sans"],
+            "display-lg": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "display-sm": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "title-md": ["16px", { "lineHeight": "24px", "letterSpacing": "0.15px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "0.5px", "fontWeight": "400" }],
+            "label-sm": ["11px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "600" }],
+            "title-lg": ["22px", { "lineHeight": "28px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "headline-sm": ["24px", { "lineHeight": "32px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "title-sm": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.25px", "fontWeight": "400" }],
+            "display-md": ["45px", { "lineHeight": "52px", "letterSpacing": "0px", "fontWeight": "400" }],
+            "display-lg": ["57px", { "lineHeight": "64px", "letterSpacing": "-0.25px", "fontWeight": "400" }],
+            "headline-md": ["28px", { "lineHeight": "36px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "display-sm": ["36px", { "lineHeight": "44px", "letterSpacing": "0px", "fontWeight": "400" }],
+            "headline-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.4px", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .material-symbols-fill {
+      font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    }
+    /* Hide scrollbars for smooth touch swipe carousels */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* M3 elevation warm tints */
+    .elevation-1 {
+      box-shadow: 0px 1px 3px rgba(189, 67, 47, 0.08);
+    }
+    .elevation-2 {
+      box-shadow: 0px 3px 8px rgba(189, 67, 47, 0.12);
+    }
+    .elevation-fab {
+      box-shadow: 0px 4px 12px rgba(144, 42, 24, 0.18);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface antialiased selection:bg-secondary-container selection:text-on-secondary-container min-h-screen pb-24">
+<!-- Mobile Canvas Frame Wrapper -->
+<div class="max-w-md mx-auto relative bg-surface min-h-screen flex flex-col shadow-2xl overflow-x-hidden">
+<!-- 1. Android Status Bar (Native Feel) -->
+<div class="w-full h-8 px-6 pt-2 pb-1 flex justify-between items-center text-on-surface select-none z-50">
+<span class="font-label-sm text-label-sm font-semibold tracking-tight">9:41</span>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[15px]" data-icon="wifi">wifi</span>
+<span class="material-symbols-outlined text-[15px]" data-icon="signal_cellular_alt">signal_cellular_alt</span>
+<span class="material-symbols-outlined text-[17px] rotate-90" data-icon="battery_full" data-weight="fill" style="font-variation-settings: 'FILL' 1;">battery_full</span>
+</div>
+</div>
+<!-- 2. TopAppBar Component (from Shared Components JSON) -->
+<header class="bg-surface transition-colors duration-200">
+<div class="flex justify-between items-center w-full px-4 h-16 max-w-screen-md mx-auto">
+<!-- Leading: Culinary User Avatar -->
+<button class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden hover:bg-surface-container transition-colors duration-150 active:scale-95 border-2 border-surface-container-highest">
+<img class="w-full h-full object-cover" data-alt="Close-up candid portrait of an artisanal pastry chef wearing a crisp terracotta linen apron in a naturally lit, sun-drenched professional kitchen filled with wooden prep tables and copper cookware. The warmth of the room highlights flour-dusted hands and a focused, welcoming expression." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhFEew_nPQ8em7dPgtW8Y7wncCCcn7L8ODA9kkEDo9xdoxPeCZyw5Uye_yOFmuFpzNUpRmDSn2MimHaVqkQXeajzmIfCosaJ3hdC8kvtmVGkm_hfZQX8Nnchz6z1FS3vKd_yMV0phvjwOGg4d1h9aJdG4whWCYB1lxY_015952lTHKT5uOMi5sI3hxigbrgDC5rw6YMtfkdJP3nxOAruejahfo3n17A7llzdbAQnDP3lvUbZ7R0luX"/>
+</button>
+<!-- Headline: Mise & Measure -->
+<h1 class="text-title-lg font-title-lg text-on-surface font-bold tracking-tight text-center">Mise &amp; Measure</h1>
+<!-- Trailing: Search Icon -->
+<button aria-label="Search recipes" class="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors duration-150 active:scale-95">
+<span class="material-symbols-outlined text-2xl" data-icon="search">search</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 px-4 pt-1 space-y-5">
+<!-- 3. M3 Search & Expressive Input Field -->
+<section class="relative">
+<div class="flex items-center w-full h-14 bg-surface-container-low rounded-full px-4 gap-3 elevation-1 focus-within:ring-2 focus-within:ring-primary focus-within:bg-surface-container transition-all">
+<span class="material-symbols-outlined text-outline" data-icon="search">search</span>
+<input class="w-full bg-transparent border-none text-on-surface placeholder:text-outline font-body-md text-body-md focus:outline-none focus:ring-0 p-0" placeholder="Search recipes, ingredients..." type="text"/>
+<button aria-label="Voice input or scale filter" class="w-8 h-8 rounded-full flex items-center justify-center text-outline hover:text-on-surface active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-xl" data-icon="tune">tune</span>
+</button>
+</div>
+</section>
+<!-- 4. Filter Chips (Horizontal M3 Selection States) -->
+<section class="relative -mx-4 px-4 overflow-x-auto no-scrollbar py-1">
+<div class="flex items-center gap-2 w-max">
+<!-- Active Filter Chip -->
+<button class="flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-secondary-container text-on-secondary-container font-label-md text-label-md font-semibold active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-base" data-icon="check" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check</span>
+<span>All Recipes</span>
+</button>
+<!-- Inactive Filter Chip 1 -->
+<button class="flex items-center gap-1.5 h-8 px-3.5 rounded-lg border border-outline-variant text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low active:scale-95 transition-colors">
+<span class="material-symbols-outlined text-base text-secondary" data-icon="bakery_dining">bakery_dining</span>
+<span>Baking &amp; Dough</span>
+</button>
+<!-- Inactive Filter Chip 2 -->
+<button class="flex items-center gap-1.5 h-8 px-3.5 rounded-lg border border-outline-variant text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low active:scale-95 transition-colors">
+<span class="material-symbols-outlined text-base text-secondary" data-icon="soup_kitchen">soup_kitchen</span>
+<span>Sauces</span>
+</button>
+<!-- Inactive Filter Chip 3 -->
+<button class="flex items-center gap-1.5 h-8 px-3.5 rounded-lg border border-outline-variant text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low active:scale-95 transition-colors">
+<span class="material-symbols-outlined text-base text-secondary" data-icon="groups">groups</span>
+<span>Large Batch</span>
+</button>
+<!-- Inactive Filter Chip 4 -->
+<button class="flex items-center gap-1.5 h-8 px-3.5 rounded-lg border border-outline-variant text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-low active:scale-95 transition-colors">
+<span class="material-symbols-outlined text-base text-secondary" data-icon="straighten">straighten</span>
+<span>Metric Only</span>
+</button>
+</div>
+</section>
+<!-- 5. "Recently Scaled" Culinary Math Carousel (Utility Strip) -->
+<section class="space-y-2.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="history_toggle_off">history_toggle_off</span>
+<h2 class="font-title-sm text-title-sm text-on-surface">Recently Scaled</h2>
+</div>
+<button class="font-label-md text-label-md text-primary font-semibold hover:underline">View All</button>
+</div>
+<div class="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4 pb-1">
+<!-- Scaled Badge Item 1 -->
+<div class="flex-shrink-0 w-64 p-3 bg-surface-container rounded-2xl elevation-1 flex items-center justify-between">
+<div class="space-y-0.5 max-w-[170px]">
+<p class="font-label-md text-label-md text-on-surface truncate font-semibold">Artisan Sourdough</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                scaled to 4 loaves
+              </p>
+</div>
+<div class="h-9 px-2.5 bg-secondary-container text-on-secondary-container rounded-full flex items-center font-label-md text-label-md font-bold">
+              2.0x
+            </div>
+</div>
+<!-- Scaled Badge Item 2 -->
+<div class="flex-shrink-0 w-64 p-3 bg-surface-container rounded-2xl elevation-1 flex items-center justify-between">
+<div class="space-y-0.5 max-w-[170px]">
+<p class="font-label-md text-label-md text-on-surface truncate font-semibold">Classic Beef Bourguignon</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                scaled to 9 portions
+              </p>
+</div>
+<div class="h-9 px-2.5 bg-primary-fixed text-on-primary-fixed rounded-full flex items-center font-label-md text-label-md font-bold">
+              1.5x
+            </div>
+</div>
+<!-- Scaled Badge Item 3 -->
+<div class="flex-shrink-0 w-64 p-3 bg-surface-container rounded-2xl elevation-1 flex items-center justify-between">
+<div class="space-y-0.5 max-w-[170px]">
+<p class="font-label-md text-label-md text-on-surface truncate font-semibold">Cacio e Pepe</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                scaled 0.5x
+              </p>
+</div>
+<div class="h-9 px-2.5 bg-surface-container-high text-on-surface-variant rounded-full flex items-center font-label-md text-label-md font-bold">
+              0.5x
+            </div>
+</div>
+</div>
+</section>
+<!-- 6. Recipe Feed Section (Material 3 Rich Cards) -->
+<section class="space-y-4 pt-1">
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Precision Recipes</h2>
+<span class="font-body-sm text-body-sm text-outline">18 indexed formulas</span>
+</div>
+<!-- Recipe Card 1: Rustic Sourdough Boule -->
+<article class="bg-surface-container-low rounded-3xl overflow-hidden elevation-1 hover:elevation-2 transition-shadow duration-200">
+<div class="relative h-44 w-full bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="An artisanal loaf of rustic sourdough boule resting on a solid butcher block table with crisp blistered crust and delicate flour dust. Moody morning kitchen light filters through a window, illuminating golden terracotta tones, natural crumb texture, and steam rising from a fresh serrated knife incision." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyTwteJTCge5Z4a8SfceKnbZljTyIiQKEWm5jE61qaRvAL8M_CHtkr08z1pimLVHKwIICI5Af0ePc11EJ_ueDzOsFlFc26TLXLnaPksu-H481_NVdb9nipG8s57uh0pS8DdSkRDxpUbLgewUeJHstdiskHpp_kupQx8vX7jOIGyn9KeUDpKAj_GzCWAqmvjW8OvojD-xr4afFODqBld9yvTWbR7SXfEFYxEg1w0uPCvTn3j1hNZ0D2"/>
+<div class="absolute top-3 left-3 flex gap-2">
+<span class="bg-surface/90 backdrop-blur-sm text-primary font-label-sm text-label-sm font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-primary" data-icon="bakery_dining">bakery_dining</span>
+                Baking
+              </span>
+<span class="bg-surface/90 backdrop-blur-sm text-on-surface-variant font-label-sm text-label-sm font-medium px-2 py-1 rounded-full">
+                72% Hydration
+              </span>
+</div>
+<button class="absolute top-3 right-3 w-9 h-9 rounded-full bg-surface/80 backdrop-blur-sm flex items-center justify-center text-on-surface hover:bg-surface active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-lg" data-icon="bookmark">bookmark</span>
+</button>
+</div>
+<div class="p-4 space-y-3">
+<div class="space-y-1">
+<div class="flex items-center justify-between">
+<h3 class="font-title-lg text-title-lg text-on-surface font-semibold">Rustic Sourdough Boule</h3>
+<span class="font-label-md text-label-md text-tertiary bg-tertiary-fixed/60 px-2 py-0.5 rounded-md font-medium">Bakers %</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Cold ferment sourdough formula with active hydration calculator.</p>
+</div>
+<!-- Recipe Meta Pills -->
+<div class="flex items-center flex-wrap gap-2 pt-0.5">
+<span class="inline-flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm bg-surface-container px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-sm" data-icon="timer">timer</span>
+                24 hrs total
+              </span>
+<span class="inline-flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm bg-surface-container px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-sm" data-icon="scale">scale</span>
+                Base: 2 loaves (900g)
+              </span>
+<span class="inline-flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm bg-surface-container px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-sm" data-icon="network_intelligence">network_intelligence</span>
+                Advanced
+              </span>
+</div>
+<!-- Action Cluster -->
+<div class="flex items-center justify-between pt-2">
+<button class="h-10 px-5 rounded-full bg-secondary-container hover:bg-secondary-fixed text-on-secondary-container font-label-lg text-label-lg font-semibold flex items-center gap-2 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-base" data-icon="calculate">calculate</span>
+<span>Scale Now</span>
+</button>
+<div class="flex items-center gap-1">
+<button aria-label="Share recipe" class="w-10 h-10 rounded-full flex items-center justify-center text-outline hover:text-on-surface hover:bg-surface-container active:scale-95 transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="share">share</span>
+</button>
+<button aria-label="More options" class="w-10 h-10 rounded-full flex items-center justify-center text-outline hover:text-on-surface hover:bg-surface-container active:scale-95 transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</article>
+<!-- Recipe Card 2: Tuscan Braised Short Ribs -->
+<article class="bg-surface-container-low rounded-3xl overflow-hidden elevation-1 hover:elevation-2 transition-shadow duration-200">
+<div class="relative h-44 w-full bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="A heavy cast iron Dutch oven with rich, mahogany glazed Tuscan braised beef short ribs simmering in deep red wine reduction, garnished with rosemary sprigs and fresh thyme. Warm moody domestic kitchen lighting casts a deep persimmon and ember glow over seasoned cookware and toasted country bread." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEmntb9jDJrHJ6Fx7W-0qju8Q61BllmcFP9qgHSbp2RgfAOoQJdpv-IT9O9etRdPaKFdGsQmPdrr83PNqRyM57WLy65rSEr7SxKCUZTa7EKlT43pslozAtr660MsZ99pGKTR4HGr0JNzlwe6-tMEBaL8jk-vz4weS7lK3FVY4Jh8b4WY5phQATRdcTu8xMTqj-R4FimybgYa_Z96PbjgLCW4ExGZDSuBThi2yO5Nah1njdhKxaK0Zr"/>
+<div class="absolute top-3 left-3 flex gap-2">
+<span class="bg-surface/90 backdrop-blur-sm text-primary font-label-sm text-label-sm font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-primary" data-icon="dinner_dining">dinner_dining</span>
+                Dinner
+              </span>
+<span class="bg-surface/90 backdrop-blur-sm text-on-surface-variant font-label-sm text-label-sm font-medium px-2 py-1 rounded-full">
+                Linear Scaler
+              </span>
+</div>
+<button class="absolute top-3 right-3 w-9 h-9 rounded-full bg-surface/80 backdrop-blur-sm flex items-center justify-center text-on-surface hover:bg-surface active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-lg" data-icon="bookmark">bookmark</span>
+</button>
+</div>
+<div class="p-4 space-y-3">
+<div class="space-y-1">
+<div class="flex items-center justify-between">
+<h3 class="font-title-lg text-title-lg text-on-surface font-semibold">Tuscan Braised Short Ribs</h3>
+<span class="font-label-md text-label-md text-secondary font-medium">Braising</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Slow-simmered bone-in ribs with aromatics and wine reduction.</p>
+</div>
+<!-- Recipe Meta Pills -->
+<div class="flex items-center flex-wrap gap-2 pt-0.5">
+<span class="inline-flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm bg-surface-container px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-sm" data-icon="timer">timer</span>
+                3.5 hrs
+              </span>
+<span class="inline-flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm bg-surface-container px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-sm" data-icon="groups">groups</span>
+                Base: 6 servings
+              </span>
+<span class="inline-flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm bg-surface-container px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-sm" data-icon="speed">speed</span>
+                Moderate
+              </span>
+</div>
+<!-- Action Cluster -->
+<div class="flex items-center justify-between pt-2">
+<button class="h-10 px-5 rounded-full bg-secondary-container hover:bg-secondary-fixed text-on-secondary-container font-label-lg text-label-lg font-semibold flex items-center gap-2 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-base" data-icon="calculate">calculate</span>
+<span>Scale Now</span>
+</button>
+<div class="flex items-center gap-1">
+<button aria-label="Share recipe" class="w-10 h-10 rounded-full flex items-center justify-center text-outline hover:text-on-surface hover:bg-surface-container active:scale-95 transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="share">share</span>
+</button>
+<button aria-label="More options" class="w-10 h-10 rounded-full flex items-center justify-center text-outline hover:text-on-surface hover:bg-surface-container active:scale-95 transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</article>
+<!-- Recipe Card 3: Silky Hollandaise & Emulsions -->
+<article class="bg-surface-container-low rounded-3xl overflow-hidden elevation-1 hover:elevation-2 transition-shadow duration-200">
+<div class="relative h-44 w-full bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Gourmet presentation of golden, silky hollandaise sauce drizzled slowly from a stainless steel culinary saucier spoon over tender poached eggs and crisp asparagus. Warm, soft kitchen studio lighting accentuates the glossy emulsion texture against a neutral stoneware countertop." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDR_Mbdq9kcnEvNIRWiuTcl7UgYiAMjIzwccZeBSQyHJemO86jzUZnRNJK_d-1Nl4nSiTOaB53cxEHq1UOOXCgqgi8X1oglYuMUjHEL542zKG3N8NlEfroFevMWij6fiwyDdc3akLgxUd6AaFNLphYXEkNU76zEtX95fmBqt9UixI4HeJYESwa-AzQdNxMIO5WKgn9vx1T84uCGkm23BJlOFZeU61fzF_zrjZWguSTc4YZZOBDcyDD3"/>
+<div class="absolute top-3 left-3 flex gap-2">
+<span class="bg-surface/90 backdrop-blur-sm text-primary font-label-sm text-label-sm font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-primary" data-icon="soup_kitchen">soup_kitchen</span>
+                Sauce
+              </span>
+<span class="bg-surface/90 backdrop-blur-sm text-on-surface-variant font-label-sm text-label-sm font-medium px-2 py-1 rounded-full">
+                Emulsion Ratio
+              </span>
+</div>
+<button class="absolute top-3 right-3 w-9 h-9 rounded-full bg-surface/80 backdrop-blur-sm flex items-center justify-center text-on-surface hover:bg-surface active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-lg" data-icon="bookmark">bookmark</span>
+</button>
+</div>
+<div class="p-4 space-y-3">
+<div class="space-y-1">
+<div class="flex items-center justify-between">
+<h3 class="font-title-lg text-title-lg text-on-surface font-semibold">Silky Hollandaise &amp; Emulsions</h3>
+<span class="font-label-md text-label-md text-tertiary font-medium">Egg/Butter Ratio</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Temperature-sensitive emulsion with yolk ratio auto-balancer.</p>
+</div>
+<!-- Recipe Meta Pills -->
+<div class="flex items-center flex-wrap gap-2 pt-0.5">
+<span class="inline-flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm bg-surface-container px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-sm" data-icon="timer">timer</span>
+                15 mins
+              </span>
+<span class="inline-flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm bg-surface-container px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-sm" data-icon="water_drop">water_drop</span>
+                Base: 8 servings (300ml)
+              </span>
+<span class="inline-flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm bg-surface-container px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-sm" data-icon="nest_thermostat">nest_thermostat</span>
+                Temp Critical
+              </span>
+</div>
+<!-- Action Cluster -->
+<div class="flex items-center justify-between pt-2">
+<button class="h-10 px-5 rounded-full bg-secondary-container hover:bg-secondary-fixed text-on-secondary-container font-label-lg text-label-lg font-semibold flex items-center gap-2 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-base" data-icon="calculate">calculate</span>
+<span>Scale Now</span>
+</button>
+<div class="flex items-center gap-1">
+<button aria-label="Share recipe" class="w-10 h-10 rounded-full flex items-center justify-center text-outline hover:text-on-surface hover:bg-surface-container active:scale-95 transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="share">share</span>
+</button>
+<button aria-label="More options" class="w-10 h-10 rounded-full flex items-center justify-center text-outline hover:text-on-surface hover:bg-surface-container active:scale-95 transition-colors">
+<span class="material-symbols-outlined text-xl" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</article>
+</section>
+<!-- Culinary Math Quick Tools Card (Bento Style) -->
+<section class="p-4 bg-surface-container rounded-3xl space-y-3 mt-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="science">science</span>
+<h3 class="font-title-md text-title-md text-on-surface">Kitchen Unit Converter</h3>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-semibold">Live Mode</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Instantly convert volumetric flour, sugar, and liquid measurements to metric grams.</p>
+<div class="grid grid-cols-2 gap-2 pt-1">
+<div class="p-3 bg-surface rounded-2xl flex flex-col justify-between">
+<span class="font-body-sm text-body-sm text-outline">All-Purpose Flour</span>
+<div class="mt-2 flex items-baseline justify-between">
+<span class="font-title-lg text-title-lg font-bold text-on-surface">1 Cup</span>
+<span class="font-label-md text-label-md font-semibold text-primary">= 120g</span>
+</div>
+</div>
+<div class="p-3 bg-surface rounded-2xl flex flex-col justify-between">
+<span class="font-body-sm text-body-sm text-outline">Granulated Sugar</span>
+<div class="mt-2 flex items-baseline justify-between">
+<span class="font-title-lg text-title-lg font-bold text-on-surface">1 Cup</span>
+<span class="font-label-md text-label-md font-semibold text-primary">= 200g</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- 7. Extended Floating Action Button (M3 Contextual Action) -->
+<div class="fixed bottom-24 right-4 z-40 max-w-md mx-auto pointer-events-none">
+<button class="pointer-events-auto h-14 px-5 rounded-full bg-primary-container text-on-primary-container font-label-lg text-label-lg font-semibold flex items-center gap-2.5 elevation-fab hover:brightness-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-2xl" data-icon="add">add</span>
+<span>Import / Add</span>
+</button>
+</div>
+<!-- 8. Bottom Navigation Bar Component (from Shared Components JSON) -->
+<!-- Destination count: 4 | Labels: "Recipes", "Scaler", "Pantry", "Settings" -->
+<!-- Active Destination: "Recipes" (Direct Match to Home Recipe Scaler Feed) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-20 px-2 pb-safe bg-surface dark:bg-surface max-w-screen-md mx-auto">
+<!-- Destination 1: Recipes (ACTIVE) -->
+<a class="flex flex-col items-center justify-center gap-1 bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary rounded-full px-5 py-1.5 transition-colors duration-150 active:scale-95" href="#recipes">
+<span class="material-symbols-outlined text-2xl" data-icon="menu_book" data-weight="fill" style="font-variation-settings: 'FILL' 1;">menu_book</span>
+<span class="text-label-sm font-label-sm">Recipes</span>
+</a>
+<!-- Destination 2: Scaler (INACTIVE) -->
+<a class="flex flex-col items-center justify-center gap-1 text-on-surface-variant dark:text-on-surface-variant px-5 py-1.5 hover:bg-surface-container-low transition-colors duration-150 active:scale-95" href="#scaler">
+<span class="material-symbols-outlined text-2xl" data-icon="calculate">calculate</span>
+<span class="text-label-sm font-label-sm">Scaler</span>
+</a>
+<!-- Destination 3: Pantry (INACTIVE) -->
+<a class="flex flex-col items-center justify-center gap-1 text-on-surface-variant dark:text-on-surface-variant px-5 py-1.5 hover:bg-surface-container-low transition-colors duration-150 active:scale-95" href="#pantry">
+<span class="material-symbols-outlined text-2xl" data-icon="kitchen">kitchen</span>
+<span class="text-label-sm font-label-sm">Pantry</span>
+</a>
+<!-- Destination 4: Settings (INACTIVE) -->
+<a class="flex flex-col items-center justify-center gap-1 text-on-surface-variant dark:text-on-surface-variant px-5 py-1.5 hover:bg-surface-container-low transition-colors duration-150 active:scale-95" href="#settings">
+<span class="material-symbols-outlined text-2xl" data-icon="settings">settings</span>
+<span class="text-label-sm font-label-sm">Settings</span>
+</a>
+</nav>
+<!-- 9. Android Gesture Bar (Bottom Inset indicator) -->
+<div class="fixed bottom-1 left-0 right-0 max-w-md mx-auto flex justify-center z-50 pointer-events-none">
+<div class="w-32 h-1 bg-on-surface/40 rounded-full"></div>
+</div>
+</div>
+</body></html>

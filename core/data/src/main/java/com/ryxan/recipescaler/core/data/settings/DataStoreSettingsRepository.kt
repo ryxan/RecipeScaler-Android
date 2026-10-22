@@ -29,6 +29,7 @@ class DataStoreSettingsRepository @Inject constructor(
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val DYNAMIC_COLOR = booleanPreferencesKey("dynamic_color")
         val UI_V2 = booleanPreferencesKey("ui_v2")
+        val SHOW_SCALE_WARNING = booleanPreferencesKey("show_scale_warning")
     }
 
     private val defaults = AppSettings()
@@ -42,6 +43,7 @@ class DataStoreSettingsRepository @Inject constructor(
             themeMode = prefs.enumOr(Keys.THEME_MODE, defaults.themeMode),
             dynamicColor = prefs[Keys.DYNAMIC_COLOR] ?: defaults.dynamicColor,
             uiV2 = prefs[Keys.UI_V2] ?: defaults.uiV2,
+            showScaleWarning = prefs[Keys.SHOW_SCALE_WARNING] ?: defaults.showScaleWarning,
         )
     }
 
@@ -63,6 +65,10 @@ class DataStoreSettingsRepository @Inject constructor(
 
     override suspend fun setUiV2(v: Boolean) {
         dataStore.edit { it[Keys.UI_V2] = v }
+    }
+
+    override suspend fun setShowScaleWarning(v: Boolean) {
+        dataStore.edit { it[Keys.SHOW_SCALE_WARNING] = v }
     }
 
     /** Corrupt or unknown stored values fall back to [default] instead of crashing. */

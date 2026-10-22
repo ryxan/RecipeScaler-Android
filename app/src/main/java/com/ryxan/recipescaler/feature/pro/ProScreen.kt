@@ -100,20 +100,38 @@ fun ProScreen(
         viewModel.messages.collect { snackbarHostState.showSnackbar(it) }
     }
 
-    ProContent(
-        state = state,
-        snackbarHostState = snackbarHostState,
-        onNavigateUp = onNavigateUp,
-        onNavigateToSettings = onNavigateToSettings,
-        onPurchase = { productId ->
-            (context as? Activity)?.let { viewModel.purchase(it, productId) }
-        },
-        onRestore = viewModel::restore,
-        onRetry = viewModel::retry,
-        onTryAiImport = onTryAiImport,
-        onBackToRecipes = onNavigateUp,
-        onManageSubscription = { uriHandler.openUri(PLAY_SUBSCRIPTIONS_URL) },
-    )
+    val purchase: (String) -> Unit = { productId ->
+        (context as? Activity)?.let { viewModel.purchase(it, productId) }
+    }
+    val manageSubscription = { uriHandler.openUri(PLAY_SUBSCRIPTIONS_URL) }
+
+    if (RescaleTheme.uiV2) {
+        ProV2Content(
+            state = state,
+            snackbarHostState = snackbarHostState,
+            onNavigateUp = onNavigateUp,
+            onNavigateToSettings = onNavigateToSettings,
+            onPurchase = purchase,
+            onRestore = viewModel::restore,
+            onRetry = viewModel::retry,
+            onTryAiImport = onTryAiImport,
+            onBackToRecipes = onNavigateUp,
+            onManageSubscription = manageSubscription,
+        )
+    } else {
+        ProContent(
+            state = state,
+            snackbarHostState = snackbarHostState,
+            onNavigateUp = onNavigateUp,
+            onNavigateToSettings = onNavigateToSettings,
+            onPurchase = purchase,
+            onRestore = viewModel::restore,
+            onRetry = viewModel::retry,
+            onTryAiImport = onTryAiImport,
+            onBackToRecipes = onNavigateUp,
+            onManageSubscription = manageSubscription,
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

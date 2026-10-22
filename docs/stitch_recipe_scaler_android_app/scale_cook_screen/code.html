@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mise & Measure - Interactive Recipe Scale</title>
+<!-- Google Fonts: Plus Jakarta Sans & Material Symbols -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@100..900&display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-secondary": "#ffffff",
+            "primary-fixed": "#ffdad4",
+            "on-tertiary-container": "#ccfdbe",
+            "surface-container-high": "#ffe2dc",
+            "surface-dim": "#f2d3cd",
+            "secondary-fixed-dim": "#e6c189",
+            "surface-bright": "#fff8f6",
+            "on-error-container": "#93000a",
+            "secondary-fixed": "#ffdeae",
+            "background": "#fff8f6",
+            "on-tertiary-fixed": "#002201",
+            "inverse-surface": "#3f2c28",
+            "surface-container-highest": "#fbdcd5",
+            "primary": "#9c2b1a",
+            "secondary-container": "#fed79e",
+            "tertiary-container": "#4c7744",
+            "error-container": "#ffdad6",
+            "on-secondary-fixed-variant": "#5c4216",
+            "surface-container-low": "#fff0ee",
+            "on-error": "#ffffff",
+            "primary-fixed-dim": "#ffb4a6",
+            "error": "#ba1a1a",
+            "on-primary": "#ffffff",
+            "on-surface-variant": "#58413d",
+            "on-tertiary": "#ffffff",
+            "on-primary-container": "#ffeae7",
+            "outline": "#8c716c",
+            "outline-variant": "#e0bfb9",
+            "inverse-primary": "#ffb4a6",
+            "surface-container-lowest": "#ffffff",
+            "surface": "#fff8f6",
+            "surface-variant": "#fbdcd5",
+            "tertiary": "#345e2e",
+            "tertiary-fixed": "#bff0b1",
+            "surface-container": "#ffe9e5",
+            "on-background": "#281714",
+            "inverse-on-surface": "#ffede9",
+            "on-primary-fixed": "#3f0300",
+            "primary-container": "#bd432f",
+            "on-primary-fixed-variant": "#891d0e",
+            "on-surface": "#281714",
+            "secondary": "#765a2c",
+            "on-secondary-container": "#785c2e",
+            "on-secondary-fixed": "#281900",
+            "tertiary-fixed-dim": "#a4d397",
+            "on-tertiary-fixed-variant": "#275022",
+            "surface-tint": "#aa3523"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-lg": "1.5rem",
+            "margin": "1rem",
+            "margin-desktop": "2rem",
+            "gutter": "1rem",
+            "margin-tablet": "1.5rem",
+            "space-md": "1rem",
+            "gutter-tablet": "1.5rem",
+            "space-xs": "0.25rem",
+            "gutter-desktop": "1.5rem",
+            "space-sm": "0.5rem",
+            "space-xl": "2rem"
+          },
+          "fontFamily": {
+            "title-md": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "title-lg": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "title-sm": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "display-md": ["Plus Jakarta Sans"],
+            "display-lg": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "display-sm": ["Plus Jakarta Sans"],
+            "headline-lg-mobile": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "title-md": ["16px", { "lineHeight": "24px", "letterSpacing": "0.15px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "0.5px", "fontWeight": "400" }],
+            "label-sm": ["11px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "600" }],
+            "title-lg": ["22px", { "lineHeight": "28px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "headline-sm": ["24px", { "lineHeight": "32px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "title-sm": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "600" }],
+            "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.25px", "fontWeight": "400" }],
+            "display-md": ["45px", { "lineHeight": "52px", "letterSpacing": "0px", "fontWeight": "400" }],
+            "display-lg": ["57px", { "lineHeight": "64px", "letterSpacing": "-0.25px", "fontWeight": "400" }],
+            "headline-md": ["28px", { "lineHeight": "36px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "display-sm": ["36px", { "lineHeight": "44px", "letterSpacing": "0px", "fontWeight": "400" }],
+            "headline-lg-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1px", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.5px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.4px", "fontWeight": "400" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      line-height: 1;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    /* Hide scrollbar for smooth chip scrolling */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .touch-target {
+      min-height: 48px;
+      min-width: 48px;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface antialiased selection:bg-secondary-container min-h-screen flex flex-col justify-between max-w-md mx-auto shadow-2xl relative overflow-x-hidden">
+<!-- TOP APP BAR CONTAINER & SYSTEM BAR -->
+<header class="sticky top-0 z-40 bg-surface/95 backdrop-blur-md">
+<!-- Android Native Status Bar -->
+<div class="w-full h-7 px-5 flex items-center justify-between text-on-surface select-none pt-1">
+<span class="font-label-md text-label-md font-semibold tracking-tight">9:41</span>
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">wifi</span>
+<span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">signal_cellular_alt</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">battery_full</span>
+</div>
+</div>
+<!-- M3 Top App Bar -->
+<div class="flex justify-between items-center w-full px-4 h-16 transition-colors duration-200">
+<div class="flex items-center gap-2">
+<button aria-label="Go back" class="touch-target flex items-center justify-center rounded-full hover:bg-surface-container active:scale-95 transition-transform duration-150 text-on-surface">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<div class="flex flex-col">
+<span class="font-title-lg text-title-lg text-on-surface font-bold tracking-tight">Scale: Rustic Sourdough</span>
+<span class="font-label-sm text-label-sm text-secondary font-medium">Naturally Leavened Country Loaf</span>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<button class="touch-target flex items-center justify-center rounded-full hover:bg-surface-container active:scale-95 transition-transform duration-150 text-on-surface-variant" id="unitToggleBtn" title="Toggle Units">
+<span class="material-symbols-outlined text-[22px]">balance</span>
+</button>
+<button aria-label="Save to Favorites" class="touch-target flex items-center justify-center rounded-full hover:bg-surface-container active:scale-95 transition-transform duration-150 text-primary" id="favoriteBtn">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</button>
+</div>
+</div>
+</header>
+<!-- MAIN SCROLLABLE CONTENT -->
+<main class="flex-1 px-4 pb-28 pt-1 flex flex-col gap-4">
+<!-- HERO SCALE CONTROLLER SECTION (Level 2 Tonal Surface Container) -->
+<section class="bg-surface-container rounded-3xl p-5 shadow-sm transition-all duration-300">
+<!-- Top Meta Info & Lock Indicator -->
+<div class="flex items-center justify-between mb-4">
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container text-on-secondary-container">
+<span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">lock</span>
+<span class="font-label-sm text-label-sm font-semibold">Hydration locked at 72%</span>
+</div>
+<button class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:bg-surface active:scale-95 transition-transform" id="unitSwitchChip">
+<span class="material-symbols-outlined text-[14px]">swap_horiz</span>
+<span class="font-label-sm text-label-sm font-semibold" id="unitModeLabel">Grams (g)</span>
+</button>
+</div>
+<!-- Target Servings Interactive Stepper Counter -->
+<div class="flex items-center justify-between py-2 px-1">
+<button aria-label="Decrease Yield" class="touch-target w-14 h-14 rounded-full bg-surface-container-lowest text-primary hover:bg-surface-container-low active:scale-90 transition-transform flex items-center justify-center shadow-sm" id="decreaseBtn">
+<span class="material-symbols-outlined text-[28px] font-bold">remove</span>
+</button>
+<div class="flex flex-col items-center text-center select-none">
+<span class="font-label-md text-label-md text-secondary font-semibold uppercase tracking-wider">Target Yield</span>
+<div class="flex items-baseline gap-1.5 mt-0.5">
+<span class="font-display-sm text-display-sm font-extrabold text-on-surface tracking-tight" id="loavesDisplay">4 Loaves</span>
+</div>
+<span class="mt-1 px-2.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm font-bold" id="multiplierBadge">2.0x Multiplier</span>
+</div>
+<button aria-label="Increase Yield" class="touch-target w-14 h-14 rounded-full bg-primary text-on-primary hover:bg-primary-container active:scale-90 transition-transform flex items-center justify-center shadow-sm" id="increaseBtn">
+<span class="material-symbols-outlined text-[28px] font-bold">add</span>
+</button>
+</div>
+<!-- Quick Preset Chips for Rapid Scaling -->
+<div class="mt-5 pt-3 border-t border-outline-variant/40">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-semibold block mb-2">Quick Scale Presets</span>
+<div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+<button class="preset-btn px-3.5 py-1.5 rounded-full border border-outline-variant text-on-surface-variant font-label-md text-label-md font-semibold whitespace-nowrap active:scale-95 transition-all hover:bg-surface-container-high" data-factor="0.5">0.5x</button>
+<button class="preset-btn px-3.5 py-1.5 rounded-full border border-outline-variant text-on-surface-variant font-label-md text-label-md font-semibold whitespace-nowrap active:scale-95 transition-all hover:bg-surface-container-high" data-factor="1">1x (Original)</button>
+<button class="preset-btn px-3.5 py-1.5 rounded-full border border-outline-variant text-on-surface-variant font-label-md text-label-md font-semibold whitespace-nowrap active:scale-95 transition-all hover:bg-surface-container-high" data-factor="1.5">1.5x</button>
+<button class="preset-btn px-3.5 py-1.5 rounded-full bg-secondary-container text-on-secondary-container border border-secondary font-label-md text-label-md font-bold whitespace-nowrap active:scale-95 transition-all" data-factor="2">2x</button>
+<button class="preset-btn px-3.5 py-1.5 rounded-full border border-outline-variant text-on-surface-variant font-label-md text-label-md font-semibold whitespace-nowrap active:scale-95 transition-all hover:bg-surface-container-high" data-factor="3">3x</button>
+<button class="px-3.5 py-1.5 rounded-full border border-dashed border-outline text-secondary font-label-md text-label-md font-semibold whitespace-nowrap flex items-center gap-1 active:scale-95 transition-all hover:bg-surface-container-lowest" id="customPanBtn">
+<span class="material-symbols-outlined text-[16px]">straighten</span>
+<span>Custom Pan / Tin Size</span>
+</button>
+</div>
+</div>
+</section>
+<!-- LIVE SCALED INGREDIENTS CHECKLIST (Kitchen Execution Mode) -->
+<section class="flex flex-col gap-2.5">
+<div class="flex items-center justify-between px-1">
+<div>
+<h2 class="font-title-md text-title-md text-on-surface font-bold tracking-tight" id="totalYieldHeader">Scaled Ingredients (Total Yield: 1,940g)</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Tap ingredient line to mark as added to the bowl</p>
+</div>
+<button class="text-primary hover:text-primary-container text-label-sm font-label-sm font-semibold touch-target flex items-center justify-center" id="resetChecksBtn">
+          Reset all
+        </button>
+</div>
+<!-- Ingredient 1: Bread Flour -->
+<article class="ingredient-card bg-surface-container-low rounded-2xl p-3.5 transition-all duration-200 cursor-pointer active:scale-[0.99] hover:bg-surface-container select-none flex items-center justify-between gap-3" data-base="500" data-pct="100%" data-unit="g">
+<div class="flex items-center gap-3.5 flex-1">
+<input class="w-5 h-5 rounded text-primary focus:ring-primary border-outline accent-primary transition-transform cursor-pointer" type="checkbox"/>
+<div class="flex flex-col">
+<span class="ing-name font-title-sm text-title-sm text-on-surface font-semibold">Bread Flour (12.7% Protein)</span>
+<span class="ing-meta font-body-sm text-body-sm text-on-surface-variant">Base: 500 g • 100% (Baker's Reference)</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="ing-scaled font-title-md text-title-md font-extrabold text-primary">1,000 g</span>
+<span class="font-label-sm text-label-sm text-secondary font-medium">Flour Base</span>
+</div>
+</article>
+<!-- Ingredient 2: Water -->
+<article class="ingredient-card bg-surface-container-low rounded-2xl p-3.5 transition-all duration-200 cursor-pointer active:scale-[0.99] hover:bg-surface-container select-none flex items-center justify-between gap-3" data-base="360" data-pct="72%" data-unit="g">
+<div class="flex items-center gap-3.5 flex-1">
+<input class="w-5 h-5 rounded text-primary focus:ring-primary border-outline accent-primary transition-transform cursor-pointer" type="checkbox"/>
+<div class="flex flex-col">
+<span class="ing-name font-title-sm text-title-sm text-on-surface font-semibold">Water (Filtered, 80°F)</span>
+<span class="ing-meta font-body-sm text-body-sm text-on-surface-variant">Base: 360 g • 72% Hydration</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="ing-scaled font-title-md text-title-md font-extrabold text-primary">720 g</span>
+<span class="font-label-sm text-label-sm text-secondary font-medium">Target 78°F DDT</span>
+</div>
+</article>
+<!-- Ingredient 3: Starter -->
+<article class="ingredient-card bg-surface-container-low rounded-2xl p-3.5 transition-all duration-200 cursor-pointer active:scale-[0.99] hover:bg-surface-container select-none flex items-center justify-between gap-3" data-base="100" data-pct="20%" data-unit="g">
+<div class="flex items-center gap-3.5 flex-1">
+<input class="w-5 h-5 rounded text-primary focus:ring-primary border-outline accent-primary transition-transform cursor-pointer" type="checkbox"/>
+<div class="flex flex-col">
+<span class="ing-name font-title-sm text-title-sm text-on-surface font-semibold">Active Sourdough Starter</span>
+<span class="ing-meta font-body-sm text-body-sm text-on-surface-variant">Base: 100 g • 20% Inoculation</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="ing-scaled font-title-md text-title-md font-extrabold text-primary">200 g</span>
+<span class="font-label-sm text-label-sm text-tertiary font-semibold">Peak Float</span>
+</div>
+</article>
+<!-- Ingredient 4: Fine Sea Salt -->
+<article class="ingredient-card bg-surface-container-low rounded-2xl p-3.5 transition-all duration-200 cursor-pointer active:scale-[0.99] hover:bg-surface-container select-none flex items-center justify-between gap-3" data-base="10" data-pct="2%" data-unit="g">
+<div class="flex items-center gap-3.5 flex-1">
+<input class="w-5 h-5 rounded text-primary focus:ring-primary border-outline accent-primary transition-transform cursor-pointer" type="checkbox"/>
+<div class="flex flex-col">
+<span class="ing-name font-title-sm text-title-sm text-on-surface font-semibold">Fine Sea Salt</span>
+<span class="ing-meta font-body-sm text-body-sm text-on-surface-variant">Base: 10 g • 2% Salinity</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="ing-scaled font-title-md text-title-md font-extrabold text-primary">20 g</span>
+<span class="font-label-sm text-label-sm text-secondary font-medium">Gluten Tightener</span>
+</div>
+</article>
+<!-- Ingredient 5: Optional Inclusions -->
+<article class="ingredient-card bg-surface-container-low rounded-2xl p-3.5 transition-all duration-200 cursor-pointer active:scale-[0.99] hover:bg-surface-container select-none flex items-center justify-between gap-3 border border-dashed border-outline-variant" data-base="30" data-pct="6%" data-unit="g">
+<div class="flex items-center gap-3.5 flex-1">
+<input class="w-5 h-5 rounded text-primary focus:ring-primary border-outline accent-primary transition-transform cursor-pointer" type="checkbox"/>
+<div class="flex flex-col">
+<span class="ing-name font-title-sm text-title-sm text-on-surface font-semibold">Optional: Roasted Garlic cloves</span>
+<span class="ing-meta font-body-sm text-body-sm text-on-surface-variant">Base: 30 g • Fold during 2nd stretch</span>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<span class="ing-scaled font-title-md text-title-md font-extrabold text-primary">60 g</span>
+<span class="font-label-sm text-label-sm text-secondary font-medium">Inclusion</span>
+</div>
+</article>
+</section>
+<!-- SCALE NOTES & BAKER'S MATH CALLOUT CARD -->
+<section class="bg-surface-container-highest rounded-2xl p-4.5 my-1 flex gap-3.5 items-start">
+<div class="w-9 h-9 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[20px]">calculate</span>
+</div>
+<div class="flex flex-col gap-1">
+<h3 class="font-title-sm text-title-sm font-bold text-on-surface">Baker’s Formula Insight</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+          Flour weights represent the absolute 100% foundation. With <span class="font-semibold text-on-surface">4 loaves (1,000g total flour)</span>, we suggest proofing in two pairs of 8-inch oval bannetons or a multi-tier Pullman tin setup.
+        </p>
+<div class="flex items-center gap-2 mt-1">
+<span class="font-label-sm text-label-sm text-primary font-semibold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]">info</span>
+            DDT: 78°F (Desired Dough Temp)
+          </span>
+</div>
+</div>
+</section>
+</main>
+<!-- PERSISTENT BOTTOM ACTION BAR (Kitchen Floating Controls) -->
+<aside class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-surface/95 backdrop-blur-md px-4 py-3 z-50 flex flex-col gap-2">
+<div class="flex items-center gap-2.5">
+<!-- Secondary Tonal Button -->
+<button class="touch-target px-4 py-2.5 rounded-full bg-secondary-container text-on-secondary-container hover:bg-secondary-fixed transition-colors active:scale-95 flex items-center justify-center gap-1.5 font-label-lg text-label-lg font-semibold shadow-sm shrink-0" id="exportPdfBtn">
+<span class="material-symbols-outlined text-[18px]">share</span>
+<span>Export</span>
+</button>
+<!-- Primary Filled Extended Action Button (Start Cook Mode) -->
+<button class="touch-target flex-1 py-3 px-5 rounded-full bg-primary-container text-on-primary-container hover:bg-primary transition-all active:scale-98 flex items-center justify-center gap-2 font-label-lg text-label-lg font-bold shadow-md" id="startCookModeBtn">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">outdoor_grill</span>
+<span>Start Cook Mode</span>
+<span class="w-1.5 h-1.5 rounded-full bg-on-primary-container/70"></span>
+<span class="font-label-sm text-label-sm text-on-primary-container/90">Step 1 of 6</span>
+</button>
+</div>
+<!-- Android 3-Button or Gesture Pill Navigation bar -->
+<div class="w-full flex items-center justify-center pt-1 pb-0.5">
+<div class="w-32 h-1 rounded-full bg-on-surface-variant/40"></div>
+</div>
+</aside>
+<!-- JAVASCRIPT FOR INTERACTIVITY & BAKER'S SCALING LOGIC -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      let multiplier = 2.0;
+      let unitMode = 'grams'; // 'grams' or 'bakers'
+      const baseLoaves = 2; // 1x = 2 loaves
+
+      const loavesDisplay = document.getElementById('loavesDisplay');
+      const multiplierBadge = document.getElementById('multiplierBadge');
+      const totalYieldHeader = document.getElementById('totalYieldHeader');
+      const unitModeLabel = document.getElementById('unitModeLabel');
+      const decreaseBtn = document.getElementById('decreaseBtn');
+      const increaseBtn = document.getElementById('increaseBtn');
+      const presetButtons = document.querySelectorAll('.preset-btn');
+      const ingredientCards = document.querySelectorAll('.ingredient-card');
+      const resetChecksBtn = document.getElementById('resetChecksBtn');
+      const unitSwitchChip = document.getElementById('unitSwitchChip');
+      const unitToggleBtn = document.getElementById('unitToggleBtn');
+      const favoriteBtn = document.getElementById('favoriteBtn');
+      const startCookModeBtn = document.getElementById('startCookModeBtn');
+
+      function updateScaling() {
+        const currentLoaves = Math.max(1, Math.round(baseLoaves * multiplier));
+        loavesDisplay.textContent = `${currentLoaves} ${currentLoaves === 1 ? 'Loaf' : 'Loaves'}`;
+        multiplierBadge.textContent = `${multiplier.toFixed(1)}x Multiplier`;
+
+        let totalGrams = 0;
+
+        ingredientCards.forEach(card => {
+          const baseWeight = parseFloat(card.getAttribute('data-base'));
+          const pct = card.getAttribute('data-pct');
+          const scaledWeight = Math.round(baseWeight * multiplier);
+          totalGrams += scaledWeight;
+
+          const scaledValueEl = card.querySelector('.ing-scaled');
+          const metaEl = card.querySelector('.ing-meta');
+
+          if (unitMode === 'grams') {
+            scaledValueEl.textContent = `${scaledWeight.toLocaleString()} g`;
+            metaEl.textContent = `Base: ${baseWeight} g • ${pct}`;
+          } else {
+            // Baker's percentage mode display
+            scaledValueEl.textContent = `${pct}`;
+            metaEl.textContent = `Scaled: ${scaledWeight} g (${(scaledWeight * 0.035274).toFixed(1)} oz)`;
+          }
+        });
+
+        totalYieldHeader.textContent = unitMode === 'grams' 
+          ? `Scaled Ingredients (Total Yield: ${totalGrams.toLocaleString()}g)` 
+          : `Scaled Ingredients (Baker's % Formula)`;
+
+        // Highlight matching preset
+        presetButtons.forEach(btn => {
+          const factor = parseFloat(btn.getAttribute('data-factor'));
+          if (Math.abs(factor - multiplier) < 0.05) {
+            btn.className = 'preset-btn px-3.5 py-1.5 rounded-full bg-secondary-container text-on-secondary-container border border-secondary font-label-md text-label-md font-bold whitespace-nowrap active:scale-95 transition-all';
+          } else {
+            btn.className = 'preset-btn px-3.5 py-1.5 rounded-full border border-outline-variant text-on-surface-variant font-label-md text-label-md font-semibold whitespace-nowrap active:scale-95 transition-all hover:bg-surface-container-high';
+          }
+        });
+      }
+
+      // Stepper adjustments
+      decreaseBtn.addEventListener('click', () => {
+        if (multiplier > 0.5) {
+          multiplier = Math.max(0.5, Number((multiplier - 0.5).toFixed(1)));
+          updateScaling();
+        }
+      });
+
+      increaseBtn.addEventListener('click', () => {
+        if (multiplier < 6.0) {
+          multiplier = Number((multiplier + 0.5).toFixed(1));
+          updateScaling();
+        }
+      });
+
+      // Preset buttons
+      presetButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          multiplier = parseFloat(btn.getAttribute('data-factor'));
+          updateScaling();
+        });
+      });
+
+      // Unit toggle handler
+      function toggleUnits() {
+        unitMode = unitMode === 'grams' ? 'bakers' : 'grams';
+        unitModeLabel.textContent = unitMode === 'grams' ? 'Grams (g)' : 'Baker\'s %';
+        updateScaling();
+      }
+
+      unitSwitchChip.addEventListener('click', toggleUnits);
+      unitToggleBtn.addEventListener('click', toggleUnits);
+
+      // Interactive Checklist - strike through and dim checked rows
+      ingredientCards.forEach(card => {
+        const checkbox = card.querySelector('input[type="checkbox"]');
+        const nameEl = card.querySelector('.ing-name');
+        const scaledEl = card.querySelector('.ing-scaled');
+
+        card.addEventListener('click', (e) => {
+          if (e.target !== checkbox) {
+            checkbox.checked = !checkbox.checked;
+          }
+          applyCheckState();
+        });
+
+        function applyCheckState() {
+          if (checkbox.checked) {
+            nameEl.classList.add('line-through', 'text-outline');
+            nameEl.classList.remove('text-on-surface');
+            scaledEl.classList.add('opacity-40');
+            card.classList.add('bg-surface-container-lowest/60', 'border-surface-dim');
+            card.classList.remove('bg-surface-container-low');
+          } else {
+            nameEl.classList.remove('line-through', 'text-outline');
+            nameEl.classList.add('text-on-surface');
+            scaledEl.classList.remove('opacity-40');
+            card.classList.remove('bg-surface-container-lowest/60', 'border-surface-dim');
+            card.classList.add('bg-surface-container-low');
+          }
+        }
+      });
+
+      // Reset checkboxes
+      resetChecksBtn.addEventListener('click', () => {
+        ingredientCards.forEach(card => {
+          const checkbox = card.querySelector('input[type="checkbox"]');
+          checkbox.checked = false;
+          const nameEl = card.querySelector('.ing-name');
+          const scaledEl = card.querySelector('.ing-scaled');
+          nameEl.classList.remove('line-through', 'text-outline');
+          nameEl.classList.add('text-on-surface');
+          scaledEl.classList.remove('opacity-40');
+          card.classList.remove('bg-surface-container-lowest/60', 'border-surface-dim');
+          card.classList.add('bg-surface-container-low');
+        });
+      });
+
+      // Micro-interactions
+      favoriteBtn.addEventListener('click', () => {
+        const icon = favoriteBtn.querySelector('span');
+        const isFilled = icon.style.fontVariationSettings.includes("'FILL' 1");
+        icon.style.fontVariationSettings = isFilled ? "'FILL' 0" : "'FILL' 1";
+      });
+
+      startCookModeBtn.addEventListener('click', () => {
+        const originalText = startCookModeBtn.innerHTML;
+        startCookModeBtn.innerHTML = `
+          <span class="material-symbols-outlined text-[20px] animate-spin">refresh</span>
+          <span>Preparing Workstation...</span>
+        `;
+        setTimeout(() => {
+          startCookModeBtn.innerHTML = originalText;
+        }, 1200);
+      });
+
+      // Initialize initial state
+      updateScaling();
+    });
+  </script>
+</body></html>

@@ -185,9 +185,26 @@
     <string name="cd_promote_unit">Promote to a larger unit</string>
     <string name="promote_auto">Auto</string>
     <string name="promote_option">%1$s — %2$s</string>
+    <string name="v2_target_yield">TARGET YIELD</string>
+    <string name="v2_scaled_from">From %1$s %2$s</string>
+    <string name="v2_multiplier">%1$s× multiplier</string>
+    <string name="v2_scaled_ingredients">Scaled ingredients</string>
+    <string name="v2_cook_progress">%1$d of %2$d</string>
+    <string name="v2_import_card_title">Smart recipe extraction</string>
+    <string name="v2_import_card_subtitle">Scan a recipe card or paste the text in.</string>
+    <string name="v2_add_item">Add item</string>
+    <string name="v2_nav_scaler">Scaler</string>
     <string name="promote_unit_quarts">Quarts</string>
     <string name="promote_unit_gallons">Gallons</string>
     <string name="promote_unit_litres">Litres</string>
+
+    <!-- Scaler home (v2) -->
+    <string name="v2_scaler_empty_title">Ready to scale</string>
+    <string name="v2_scaler_empty_body">Select a saved recipe or scan an index card to start scaling.</string>
+    <string name="v2_scaler_browse">Browse saved recipes</string>
+    <string name="v2_scaler_scan">Scan &amp; import</string>
+    <string name="v2_scaler_ocr_badge">OCR</string>
+    <string name="v2_scale_dial_zero">0.0 g</string>
 
     <!-- Recipe list -->
     <string name="action_new_recipe">New recipe</string>
@@ -217,6 +234,7 @@
     <string name="settings_theme_light">Light</string>
     <string name="settings_theme_dark">Dark</string>
     <string name="settings_dynamic_color">Dynamic color</string>
+    <string name="settings_scale_warning">Scaling warning</string>
     <string name="settings_ui_v2">New look (experimental)</string>
     <string name="settings_section_about">About</string>
     <string name="settings_privacy">Privacy policy</string>

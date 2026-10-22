@@ -53,6 +53,7 @@ class DataStoreSettingsRepositoryTest {
         repo.setThemeMode(ThemeMode.DARK)
         repo.setDynamicColor(false)
         repo.setUiV2(true)
+        repo.setShowScaleWarning(true)
 
         val s = repo.settings.first()
         assertEquals(MeasurementSystem.METRIC, s.display.system)
@@ -60,6 +61,7 @@ class DataStoreSettingsRepositoryTest {
         assertEquals(ThemeMode.DARK, s.themeMode)
         assertEquals(false, s.dynamicColor)
         assertEquals(true, s.uiV2)
+        assertEquals(true, s.showScaleWarning)
     }
 
     @Test

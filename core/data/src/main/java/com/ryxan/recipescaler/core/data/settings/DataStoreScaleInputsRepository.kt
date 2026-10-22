@@ -36,8 +36,12 @@ class DataStoreScaleInputsRepository @Inject constructor(
     }
 
     private fun servesKey(recipeId: Long) =
-        stringPreferencesKey("scale_inputs_serves_$recipeId")
+        stringPreferencesKey("$SERVES_PREFIX$recipeId")
 
     private fun scaleToKey(recipeId: Long) =
         stringPreferencesKey("scale_inputs_to_$recipeId")
+
+    private companion object {
+        const val SERVES_PREFIX = "scale_inputs_serves_"
+    }
 }

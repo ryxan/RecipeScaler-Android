@@ -33,4 +33,8 @@ class FakeSettingsRepository : SettingsRepository {
     override suspend fun setUiV2(v: Boolean) {
         _settings.update { it.copy(uiV2 = v) }
     }
+
+    override suspend fun setShowScaleWarning(v: Boolean) {
+        _settings.update { it.copy(showScaleWarning = v) }
+    }
 }

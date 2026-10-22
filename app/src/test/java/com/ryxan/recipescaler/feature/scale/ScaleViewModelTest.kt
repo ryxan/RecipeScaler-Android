@@ -186,15 +186,19 @@ class ScaleViewModelTest {
     }
 
     @Test
-    fun `warning shows when factor is above 4 or below 0-25`() = runTest {
+    fun `warning is off by default and shows when enabled`() = runTest {
         val repo = FakeRecipeRepository()
         val id = seeded(repo)
-        val vm = vm(repo, FakeSettingsRepository(), id)
+        val settings = FakeSettingsRepository()
+        val vm = vm(repo, settings, id)
 
         vm.uiState.filter { !it.isLoading }.first()
         vm.setScaleTo("20")
         var s = vm.uiState.filter { !it.isLoading && it.factor == 5.0 }.first()
-        assertTrue(s.showScaleWarning)
+        assertFalse(s.showScaleWarning)
+
+        settings.setShowScaleWarning(true)
+        s = vm.uiState.filter { it.showScaleWarning }.first()
 
         vm.setScaleTo("0.4")
         s = vm.uiState.filter { it.factor == 0.1 }.first()
