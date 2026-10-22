@@ -2,16 +2,14 @@ package com.ryxan.recipescaler.core.designsystem
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 /**
- * "Culinary Material" (v2) type scale from DESIGN.md. Spec'd for
- * Plus Jakarta Sans; rendered on the device default until the font is
- * bundled — swap [V2FontFamily] and everything inherits it.
+ * "Culinary Material" (v2) type scale from DESIGN.md in [RescaleFontFamily]
+ * (Plus Jakarta Sans, bundled).
  */
-private val V2FontFamily = FontFamily.Default
+private val V2FontFamily = RescaleFontFamily
 
 val TypographyV2 = Typography(
     displayLarge = TextStyle(
