@@ -149,6 +149,33 @@ class RecipeListContentTest {
     }
 
     @Test
+    fun `bottom nav fires tab callbacks`() {
+        var scaler = false
+        var settings = false
+        composeRule.setContent {
+            RescaleTheme(dynamicColor = false) {
+                RecipeListContent(
+                    state = RecipeListUiState(isLoading = false),
+                    onQueryChange = {},
+                    onOpenRecipe = {},
+                    onNewRecipe = {},
+                    onQuickScale = {},
+                    onDelete = {},
+                    onUndo = {},
+                    onDismissUndo = {},
+                    onNavigateToSettings = { settings = true },
+                    onScalerClick = { scaler = true },
+                )
+            }
+        }
+        composeRule.onNode(hasText("My Recipes") and hasClickAction()).assertIsDisplayed()
+        composeRule.onNodeWithText("Scaler").performClick()
+        composeRule.onNode(hasText("Settings") and hasClickAction()).performClick()
+        assertTrue(scaler)
+        assertTrue(settings)
+    }
+
+    @Test
     fun `top bar quick scale icon calls onQuickScale`() {
         var clicked = false
         content(

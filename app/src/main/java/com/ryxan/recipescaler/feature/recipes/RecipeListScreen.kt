@@ -39,6 +39,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,6 +63,9 @@ import com.ryxan.recipescaler.core.designsystem.RescaleTheme
 import com.ryxan.recipescaler.core.designsystem.Spacing
 import com.ryxan.recipescaler.core.domain.model.RecipeSummary
 import com.ryxan.recipescaler.core.domain.model.formatYield
+import com.ryxan.recipescaler.navigation.RescaleBottomNav
+import com.ryxan.recipescaler.navigation.RescaleTab
+import kotlinx.coroutines.launch
 
 @Composable
 fun RecipeListScreen(
@@ -99,6 +103,7 @@ fun RecipeListScreen(
         onUndo = viewModel::undoDelete,
         onDismissUndo = viewModel::dismissUndo,
         onNavigateToSettings = onNavigateToSettings,
+        onScalerClick = onScalerClick,
     )
 }
 
@@ -114,9 +119,11 @@ fun RecipeListContent(
     onUndo: () -> Unit,
     onDismissUndo: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onScalerClick: () -> Unit = {},
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
     val fabExpanded by remember {
         derivedStateOf { listState.firstVisibleItemIndex == 0 }
     }
@@ -149,6 +156,16 @@ fun RecipeListContent(
                 expanded = fabExpanded,
                 icon = { Icon(Icons.Filled.Add, contentDescription = null) },
                 text = { Text(stringResource(R.string.action_new_recipe)) },
+            )
+        },
+        bottomBar = {
+            RescaleBottomNav(
+                selected = RescaleTab.RECIPES,
+                onRecipesClick = {
+                    scope.launch { listState.animateScrollToItem(0) }
+                },
+                onScalerClick = onScalerClick,
+                onSettingsClick = onNavigateToSettings,
             )
         },
     ) { innerPadding ->

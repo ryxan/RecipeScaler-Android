@@ -1,5 +1,6 @@
 package com.ryxan.recipescaler.feature.scale
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertCountEquals
@@ -7,6 +8,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import com.ryxan.recipescaler.core.designsystem.RescaleTheme
@@ -166,7 +169,11 @@ class ScaleContentTest {
             "split across pans",
             substring = true,
         ).assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("Dismiss").performClick()
+        // Semantic click: the expanded Edit FAB can cover this on the small
+        // Robolectric display now that the bottom bar lifts it.
+        composeRule.onNodeWithContentDescription("Dismiss")
+            .performScrollTo()
+            .performSemanticsAction(SemanticsActions.OnClick)
         composeRule.onAllNodesWithText(
             "×5 is a big jump",
             substring = true,
@@ -394,17 +401,24 @@ class ScaleContentTest {
             promotedState(),
             ScaleCallbacks(onPromote = { id, unit -> picked = id to unit }),
         )
-        composeRule.onNodeWithContentDescription("Promote to a larger unit").performClick()
-        composeRule.onNodeWithText("Quarts — 11 qt").assertIsDisplayed()
-        composeRule.onNodeWithText("Gallons — 2 gal 3 qt").assertIsDisplayed()
-        composeRule.onNodeWithText("Litres — 10 L 410 mL").performClick()
+        composeRule.onNodeWithContentDescription("Promote to a larger unit")
+            .performScrollTo()
+            .performSemanticsAction(SemanticsActions.OnClick)
+        // Not assertIsDisplayed: the dropdown can overflow the small
+        // Robolectric display now that the bottom bar lifts the FAB.
+        composeRule.onAllNodesWithText("Quarts — 11 qt").assertCountEquals(1)
+        composeRule.onAllNodesWithText("Gallons — 2 gal 3 qt").assertCountEquals(1)
+        composeRule.onNodeWithText("Litres — 10 L 410 mL")
+            .performSemanticsAction(SemanticsActions.OnClick)
         assertEquals("1" to KitchenUnit.L, picked)
     }
 
     @Test
     fun `the promote menu hides auto without an override`() {
         content(promotedState())
-        composeRule.onNodeWithContentDescription("Promote to a larger unit").performClick()
+        composeRule.onNodeWithContentDescription("Promote to a larger unit")
+            .performScrollTo()
+            .performSemanticsAction(SemanticsActions.OnClick)
         composeRule.onAllNodesWithText("Auto").assertCountEquals(0)
     }
 
@@ -415,8 +429,11 @@ class ScaleContentTest {
             promotedState(promotedUnit = KitchenUnit.QUART),
             ScaleCallbacks(onPromote = { id, unit -> reset = id to unit }),
         )
-        composeRule.onNodeWithContentDescription("Promote to a larger unit").performClick()
-        composeRule.onNodeWithText("Auto").performClick()
+        composeRule.onNodeWithContentDescription("Promote to a larger unit")
+            .performScrollTo()
+            .performSemanticsAction(SemanticsActions.OnClick)
+        composeRule.onNodeWithText("Auto")
+            .performSemanticsAction(SemanticsActions.OnClick)
         assertEquals("1" to null, reset)
     }
 

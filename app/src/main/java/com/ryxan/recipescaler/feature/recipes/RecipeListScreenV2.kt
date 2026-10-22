@@ -58,8 +58,8 @@ import com.ryxan.recipescaler.core.designsystem.V2SwipeToDelete
 import com.ryxan.recipescaler.core.designsystem.V2TopAppBar
 import com.ryxan.recipescaler.core.domain.model.RecipeSummary
 import com.ryxan.recipescaler.core.domain.model.formatYield
-import com.ryxan.recipescaler.navigation.V2BottomNav
-import com.ryxan.recipescaler.navigation.V2Tab
+import com.ryxan.recipescaler.navigation.RescaleBottomNav
+import com.ryxan.recipescaler.navigation.RescaleTab
 import kotlinx.coroutines.launch
 
 /**
@@ -129,8 +129,8 @@ fun RecipeListV2Content(
             )
         },
         bottomBar = {
-            V2BottomNav(
-                selected = V2Tab.RECIPES,
+            RescaleBottomNav(
+                selected = RescaleTab.RECIPES,
                 onRecipesClick = {
                     scope.launch { listState.animateScrollToItem(0) }
                 },

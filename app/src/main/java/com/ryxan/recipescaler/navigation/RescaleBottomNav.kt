@@ -17,17 +17,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.ryxan.recipescaler.R
 
-/** The three top-level destinations reachable from the v2 bottom bar. */
-internal enum class V2Tab { RECIPES, SCALER, SETTINGS }
+/** The three top-level destinations reachable from the bottom bar. */
+internal enum class RescaleTab { RECIPES, SCALER, SETTINGS }
 
 /**
- * Shared v2 bottom nav. Shown on the Recipes, Scaler (scale screen) and
- * Settings destinations — per the Stitch mocks the bar persists across tabs
- * rather than living only on the list screen.
+ * Shared bottom nav. Shown on the Recipes, Scaler (scale screen) and Settings
+ * destinations — the bar persists across tabs rather than living only on the
+ * list screen.
  */
 @Composable
-internal fun V2BottomNav(
-    selected: V2Tab,
+internal fun RescaleBottomNav(
+    selected: RescaleTab,
     onRecipesClick: () -> Unit,
     onScalerClick: () -> Unit,
     onSettingsClick: () -> Unit,
@@ -37,11 +37,11 @@ internal fun V2BottomNav(
         tonalElevation = 3.dp,
     ) {
         NavigationBarItem(
-            selected = selected == V2Tab.RECIPES,
+            selected = selected == RescaleTab.RECIPES,
             onClick = onRecipesClick,
             icon = {
                 Icon(
-                    if (selected == V2Tab.RECIPES) {
+                    if (selected == RescaleTab.RECIPES) {
                         Icons.AutoMirrored.Filled.MenuBook
                     } else {
                         Icons.AutoMirrored.Outlined.MenuBook
@@ -52,11 +52,11 @@ internal fun V2BottomNav(
             label = { Text(stringResource(R.string.title_recipes)) },
         )
         NavigationBarItem(
-            selected = selected == V2Tab.SCALER,
+            selected = selected == RescaleTab.SCALER,
             onClick = onScalerClick,
             icon = {
                 Icon(
-                    if (selected == V2Tab.SCALER) {
+                    if (selected == RescaleTab.SCALER) {
                         Icons.Filled.Calculate
                     } else {
                         Icons.Outlined.Calculate
@@ -64,14 +64,14 @@ internal fun V2BottomNav(
                     contentDescription = null,
                 )
             },
-            label = { Text(stringResource(R.string.v2_nav_scaler)) },
+            label = { Text(stringResource(R.string.nav_scaler)) },
         )
         NavigationBarItem(
-            selected = selected == V2Tab.SETTINGS,
+            selected = selected == RescaleTab.SETTINGS,
             onClick = onSettingsClick,
             icon = {
                 Icon(
-                    if (selected == V2Tab.SETTINGS) {
+                    if (selected == RescaleTab.SETTINGS) {
                         Icons.Filled.Settings
                     } else {
                         Icons.Outlined.Settings

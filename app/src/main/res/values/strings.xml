@@ -3,6 +3,7 @@
     <string name="app_name">Rescale</string>
     <string name="title_recipes">My Recipes</string>
     <string name="title_settings">Settings</string>
+    <string name="nav_scaler">Scaler</string>
     <string name="title_edit_recipe">Edit recipe</string>
     <string name="title_new_recipe">New recipe</string>
     <string name="action_back">Back</string>
@@ -193,7 +194,6 @@
     <string name="v2_import_card_title">Smart recipe extraction</string>
     <string name="v2_import_card_subtitle">Scan a recipe card or paste the text in.</string>
     <string name="v2_add_item">Add item</string>
-    <string name="v2_nav_scaler">Scaler</string>
     <string name="promote_unit_quarts">Quarts</string>
     <string name="promote_unit_gallons">Gallons</string>
     <string name="promote_unit_litres">Litres</string>

@@ -102,8 +102,8 @@ import com.ryxan.recipescaler.core.domain.model.ScaledIngredient
 import com.ryxan.recipescaler.core.domain.model.formatYield
 import com.ryxan.recipescaler.core.domain.parsing.QuantityParser
 import com.ryxan.recipescaler.core.domain.scaling.CopyFormat
-import com.ryxan.recipescaler.navigation.V2BottomNav
-import com.ryxan.recipescaler.navigation.V2Tab
+import com.ryxan.recipescaler.navigation.RescaleBottomNav
+import com.ryxan.recipescaler.navigation.RescaleTab
 import kotlin.math.abs
 
 /**
@@ -293,8 +293,8 @@ fun ScaleV2Content(
                             }
                         }
                     }
-                    V2BottomNav(
-                        selected = V2Tab.SCALER,
+                    RescaleBottomNav(
+                        selected = RescaleTab.SCALER,
                         onRecipesClick = callbacks.onRecipes,
                         onScalerClick = callbacks.onScaler,
                         onSettingsClick = callbacks.onSettings,

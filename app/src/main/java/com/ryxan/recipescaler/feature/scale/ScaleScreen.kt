@@ -120,6 +120,8 @@ import com.ryxan.recipescaler.core.domain.model.ScaledIngredient
 import com.ryxan.recipescaler.core.domain.model.formatYield
 import com.ryxan.recipescaler.core.domain.parsing.QuantityParser
 import com.ryxan.recipescaler.core.domain.scaling.CopyFormat
+import com.ryxan.recipescaler.navigation.RescaleBottomNav
+import com.ryxan.recipescaler.navigation.RescaleTab
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
@@ -203,9 +205,9 @@ data class ScaleCallbacks(
     val onCopy: (CopyFormat) -> Unit = {},
     val onShare: () -> Unit = {},
     val onMeasurementSystem: (MeasurementSystem) -> Unit = {},
-    /** v2 bottom nav: Recipes tab → pop back to the recipe list root. */
+    /** Bottom nav: Recipes tab → pop back to the recipe list root. */
     val onRecipes: () -> Unit = {},
-    /** v2 bottom nav: Scaler tab → back to the scaler home (tab root). */
+    /** Bottom nav: Scaler tab → back to the scaler home (tab root). */
     val onScaler: () -> Unit = {},
 )
 
@@ -390,6 +392,14 @@ fun ScaleContent(
                     text = { Text(stringResource(R.string.action_edit)) },
                 )
             }
+        },
+        bottomBar = {
+            RescaleBottomNav(
+                selected = RescaleTab.SCALER,
+                onRecipesClick = callbacks.onRecipes,
+                onScalerClick = callbacks.onScaler,
+                onSettingsClick = callbacks.onSettings,
+            )
         },
     ) { innerPadding ->
         LazyColumn(

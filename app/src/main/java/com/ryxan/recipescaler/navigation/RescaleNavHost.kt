@@ -21,7 +21,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.ryxan.recipescaler.core.designsystem.LocalUiV2
 import com.ryxan.recipescaler.core.designsystem.RescaleMotion
 import com.ryxan.recipescaler.feature.editor.EditorScreen
 import com.ryxan.recipescaler.feature.pro.ProScreen
@@ -44,7 +43,7 @@ data class Editor(val recipeId: Long = 0L, val initialTitle: String? = null)
 @Serializable
 data class Scale(val recipeId: Long)
 
-/** v2 Scaler tab root — the empty-state hero card. */
+/** Scaler tab root — the empty-state hero card. */
 @Serializable
 object ScalerHome
 
@@ -59,19 +58,17 @@ fun RescaleNavHost() {
     // Recipes tab) doesn't lose it; the tab falls back to the ScalerHome
     // empty state when unset.
     var scalerRecipeId by rememberSaveable { mutableStateOf<Long?>(null) }
-    val uiV2 = LocalUiV2.current
-    // v2 tab destinations share a bottom nav, so lateral slides between them
-    // make the bar look like it's leaving the screen. Cut instantly instead —
-    // returning null falls back to the NavHost defaults for pushes and pops
-    // (and for v1, where every transition keeps the slide).
+    // Tab destinations share a bottom nav, so lateral slides between them make
+    // the bar look like it's leaving the screen. Cut instantly instead —
+    // returning null falls back to the NavHost defaults for pushes and pops.
     val tabEnter: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition? =
-        { if (uiV2 && initialState.destination.isV2Tab()) EnterTransition.None else null }
+        { if (initialState.destination.isTabDestination()) EnterTransition.None else null }
     val tabExit: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition? =
-        { if (uiV2 && targetState.destination.isV2Tab()) ExitTransition.None else null }
+        { if (targetState.destination.isTabDestination()) ExitTransition.None else null }
     val tabPopEnter: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition? =
-        { if (uiV2 && initialState.destination.isV2Tab()) EnterTransition.None else null }
+        { if (initialState.destination.isTabDestination()) EnterTransition.None else null }
     val tabPopExit: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition? =
-        { if (uiV2 && targetState.destination.isV2Tab()) ExitTransition.None else null }
+        { if (targetState.destination.isTabDestination()) ExitTransition.None else null }
     NavHost(
         navController = navController,
         startDestination = RecipeList,
@@ -196,16 +193,16 @@ fun RescaleNavHost() {
 }
 
 /**
- * True when the destination is one of the v2 top-level tab roots — the routes
- * that render the shared [V2BottomNav]: Recipes, the Scaler tab (either the
- * [ScalerHome] empty state or a loaded [Scale] entry) and Settings.
+ * True when the destination is one of the top-level tab roots — the routes
+ * that render the shared [RescaleBottomNav]: Recipes, the Scaler tab (either
+ * the [ScalerHome] empty state or a loaded [Scale] entry) and Settings.
  */
-private fun NavDestination.isV2Tab() =
+private fun NavDestination.isTabDestination() =
     hasRoute<RecipeList>() || hasRoute<ScalerHome>() ||
         hasRoute<Scale>() || hasRoute<Settings>()
 
 /**
- * v2 Scaler tab behaviour: the tab shows the recipe on the scale. When a
+ * Scaler tab behaviour: the tab shows the recipe on the scale. When a
  * [recipeId] is loaded we pop back to its Scale entry if it's still on the
  * stack (a no-op when already there), otherwise we push it above the recipe
  * list so the back stack reads list → scale. With nothing loaded, the tab's
