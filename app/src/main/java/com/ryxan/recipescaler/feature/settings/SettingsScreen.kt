@@ -47,6 +47,8 @@ import com.ryxan.recipescaler.core.domain.importer.AiImportConfig
 import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
 import com.ryxan.recipescaler.core.domain.model.AppSettings
 import com.ryxan.recipescaler.core.domain.model.ThemeMode
+import com.ryxan.recipescaler.navigation.RescaleBottomNav
+import com.ryxan.recipescaler.navigation.RescaleTab
 
 @Composable
 fun SettingsScreen(
@@ -69,6 +71,7 @@ fun SettingsScreen(
             onDynamicColor = viewModel::setDynamicColor,
             onUiV2 = viewModel::setUiV2,
             onShowScaleWarning = viewModel::setShowScaleWarning,
+            showUiV2 = BuildConfig.DEBUG,
             showDynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
             versionName = BuildConfig.VERSION_NAME,
             onNavigateUp = onNavigateUp,
@@ -92,9 +95,12 @@ fun SettingsScreen(
         onDynamicColor = viewModel::setDynamicColor,
         onUiV2 = viewModel::setUiV2,
         onShowScaleWarning = viewModel::setShowScaleWarning,
+        showUiV2 = BuildConfig.DEBUG,
         showDynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
         versionName = BuildConfig.VERSION_NAME,
         onNavigateUp = onNavigateUp,
+        onNavigateToRecipes = onNavigateToRecipes,
+        onScalerClick = onScalerClick,
         isPro = isPro,
         onProClick = onNavigateToPro,
         showDebug = true, // TODO: restore BuildConfig.DEBUG before closed testing / production
@@ -115,9 +121,12 @@ fun SettingsContent(
     onDynamicColor: (Boolean) -> Unit,
     onUiV2: (Boolean) -> Unit = {},
     onShowScaleWarning: (Boolean) -> Unit = {},
+    showUiV2: Boolean = false,
     showDynamicColor: Boolean,
     versionName: String,
     onNavigateUp: () -> Unit = {},
+    onNavigateToRecipes: () -> Unit = {},
+    onScalerClick: () -> Unit = {},
     isPro: Boolean = false,
     onProClick: () -> Unit = {},
     showDebug: Boolean = false,
@@ -138,6 +147,14 @@ fun SettingsContent(
                         )
                     }
                 },
+            )
+        },
+        bottomBar = {
+            RescaleBottomNav(
+                selected = RescaleTab.SETTINGS,
+                onRecipesClick = onNavigateToRecipes,
+                onScalerClick = onScalerClick,
+                onSettingsClick = {},
             )
         },
     ) { innerPadding ->
@@ -292,23 +309,25 @@ fun SettingsContent(
                     }
                 }
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .clickable { onUiV2(!settings.uiV2) }
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = stringResource(R.string.settings_ui_v2),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Switch(
-                        checked = settings.uiV2,
-                        onCheckedChange = onUiV2,
-                    )
+                if (showUiV2) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .clickable { onUiV2(!settings.uiV2) }
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_ui_v2),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Switch(
+                            checked = settings.uiV2,
+                            onCheckedChange = onUiV2,
+                        )
+                    }
                 }
             }
 

@@ -109,6 +109,7 @@ class SettingsContentTest {
                     onThemeMode = {},
                     onDynamicColor = {},
                     onUiV2 = { toggled = it },
+                    showUiV2 = true,
                     showDynamicColor = false,
                     versionName = "1.0-test",
                 )
@@ -119,6 +120,12 @@ class SettingsContentTest {
             .performScrollTo()
             .performClick()
         assertEquals(true, toggled)
+    }
+
+    @Test
+    fun `experimental ui switch hidden by default`() {
+        content()
+        composeRule.onAllNodesWithText("New look (experimental)").assertCountEquals(0)
     }
 
     @Test

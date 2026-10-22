@@ -49,6 +49,7 @@ class SettingsV2ContentTest {
                     onThemeMode = onThemeMode,
                     onDynamicColor = {},
                     onUiV2 = onUiV2,
+                    showUiV2 = true,
                     showDynamicColor = showDynamicColor,
                     versionName = "1.0-test",
                     isPro = isPro,

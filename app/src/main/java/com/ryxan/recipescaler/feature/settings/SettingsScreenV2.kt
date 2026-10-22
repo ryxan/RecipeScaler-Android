@@ -51,8 +51,8 @@ import com.ryxan.recipescaler.core.domain.importer.AiImportConfig
 import com.ryxan.recipescaler.core.domain.formatting.MeasurementSystem
 import com.ryxan.recipescaler.core.domain.model.AppSettings
 import com.ryxan.recipescaler.core.domain.model.ThemeMode
-import com.ryxan.recipescaler.navigation.V2BottomNav
-import com.ryxan.recipescaler.navigation.V2Tab
+import com.ryxan.recipescaler.navigation.RescaleBottomNav
+import com.ryxan.recipescaler.navigation.RescaleTab
 
 /**
  * Culinary Material (v2) settings — same preferences as [SettingsContent],
@@ -70,6 +70,7 @@ fun SettingsV2Content(
     onDynamicColor: (Boolean) -> Unit,
     onUiV2: (Boolean) -> Unit = {},
     onShowScaleWarning: (Boolean) -> Unit = {},
+    showUiV2: Boolean = false,
     showDynamicColor: Boolean,
     versionName: String,
     onNavigateUp: () -> Unit = {},
@@ -107,8 +108,8 @@ fun SettingsV2Content(
             )
         },
         bottomBar = {
-            V2BottomNav(
-                selected = V2Tab.SETTINGS,
+            RescaleBottomNav(
+                selected = RescaleTab.SETTINGS,
                 onRecipesClick = onNavigateToRecipes,
                 onScalerClick = onScalerClick,
                 onSettingsClick = {},
@@ -248,11 +249,13 @@ fun SettingsV2Content(
                         onCheckedChange = onDynamicColor,
                     )
                 }
-                V2SwitchRow(
-                    text = stringResource(R.string.settings_ui_v2),
-                    checked = settings.uiV2,
-                    onCheckedChange = onUiV2,
-                )
+                if (showUiV2) {
+                    V2SwitchRow(
+                        text = stringResource(R.string.settings_ui_v2),
+                        checked = settings.uiV2,
+                        onCheckedChange = onUiV2,
+                    )
+                }
             }
 
             if (showDebug) {
