@@ -1,0 +1,784 @@
+diff --git a/app/src/main/java/com/ryxan/recipescaler/feature/pro/ProScreen.kt b/app/src/main/java/com/ryxan/recipescaler/feature/pro/ProScreen.kt
+index 182773c..b89a610 100644
+--- a/app/src/main/java/com/ryxan/recipescaler/feature/pro/ProScreen.kt
++++ b/app/src/main/java/com/ryxan/recipescaler/feature/pro/ProScreen.kt
+@@ -1,44 +1,67 @@
+ package com.ryxan.recipescaler.feature.pro
+ 
+ import android.app.Activity
++import androidx.compose.foundation.BorderStroke
+ import androidx.compose.foundation.layout.Arrangement
+ import androidx.compose.foundation.layout.Box
+ import androidx.compose.foundation.layout.Column
++import androidx.compose.foundation.layout.Row
+ import androidx.compose.foundation.layout.fillMaxSize
+ import androidx.compose.foundation.layout.fillMaxWidth
++import androidx.compose.foundation.layout.height
++import androidx.compose.foundation.layout.navigationBarsPadding
+ import androidx.compose.foundation.layout.padding
+ import androidx.compose.foundation.layout.size
++import androidx.compose.foundation.rememberScrollState
++import androidx.compose.foundation.selection.selectable
++import androidx.compose.foundation.shape.CircleShape
++import androidx.compose.foundation.verticalScroll
+ import androidx.compose.material.icons.Icons
+ import androidx.compose.material.icons.automirrored.filled.ArrowBack
+-import androidx.compose.material3.CircularProgressIndicator
+-import androidx.compose.material3.FilledTonalButton
++import androidx.compose.material.icons.filled.AutoAwesome
++import androidx.compose.material.icons.filled.CheckCircle
++import androidx.compose.material.icons.filled.Draw
++import androidx.compose.material.icons.filled.WorkspacePremium
+ import androidx.compose.material3.ExperimentalMaterial3Api
++import androidx.compose.material3.HorizontalDivider
+ import androidx.compose.material3.Icon
+ import androidx.compose.material3.IconButton
++import androidx.compose.material3.LinearProgressIndicator
+ import androidx.compose.material3.MaterialTheme
+-import androidx.compose.material3.OutlinedButton
++import androidx.compose.material3.RadioButton
+ import androidx.compose.material3.Scaffold
+ import androidx.compose.material3.SnackbarHost
+ import androidx.compose.material3.SnackbarHostState
++import androidx.compose.material3.Surface
+ import androidx.compose.material3.Text
+ import androidx.compose.material3.TextButton
+ import androidx.compose.runtime.Composable
+ import androidx.compose.runtime.LaunchedEffect
+ import androidx.compose.runtime.getValue
++import androidx.compose.runtime.mutableStateOf
+ import androidx.compose.runtime.remember
++import androidx.compose.runtime.saveable.rememberSaveable
++import androidx.compose.runtime.setValue
+ import androidx.compose.ui.Alignment
+ import androidx.compose.ui.Modifier
++import androidx.compose.ui.graphics.vector.ImageVector
+ import androidx.compose.ui.platform.LocalContext
++import androidx.compose.ui.res.pluralStringResource
+ import androidx.compose.ui.res.stringResource
++import androidx.compose.ui.semantics.Role
++import androidx.compose.ui.text.font.FontWeight
++import androidx.compose.ui.text.style.TextAlign
+ import androidx.compose.ui.unit.dp
+ import androidx.hilt.navigation.compose.hiltViewModel
+ import androidx.lifecycle.compose.collectAsStateWithLifecycle
+ import com.ryxan.recipescaler.R
+ import com.ryxan.recipescaler.core.data.billing.ProProduct
++import com.ryxan.recipescaler.core.data.billing.ProProductIds
+ import com.ryxan.recipescaler.core.designsystem.GradientButton
+ import com.ryxan.recipescaler.core.designsystem.GradientTopAppBar
+ import com.ryxan.recipescaler.core.designsystem.RescaleCard
+ import com.ryxan.recipescaler.core.designsystem.Spacing
++import com.ryxan.recipescaler.core.domain.importer.AiImportConfig
+ 
+ @Composable
+ fun ProScreen(
+@@ -61,6 +84,7 @@ fun ProScreen(
+             (context as? Activity)?.let { viewModel.purchase(it, productId) }
+         },
+         onRestore = viewModel::restore,
++        onRetry = viewModel::retry,
+     )
+ }
+ 
+@@ -70,9 +94,23 @@ fun ProContent(
+     state: ProUiState,
+     onPurchase: (String) -> Unit = {},
+     onRestore: () -> Unit = {},
++    onRetry: () -> Unit = {},
+     onNavigateUp: () -> Unit = {},
+     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+ ) {
++    // Only Rescale's own Pro plans belong on this screen. The AI scan pack is
++    // also an in-app product and ends up in `products`, so filter by id.
++    // Lifetime is listed (and pre-selected) first.
++    val plans = remember(state.products) {
++        listOfNotNull(
++            state.products.firstOrNull { it.id == ProProductIds.LIFETIME },
++            state.products.firstOrNull { it.id == ProProductIds.MONTHLY },
++        )
++    }
++    var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
++    val selected = plans.firstOrNull { it.id == selectedId } ?: plans.firstOrNull()
++    val canBuy = !state.isPro && !state.isPending && !state.loading && selected != null
++
+     Scaffold(
+         snackbarHost = { SnackbarHost(snackbarHostState) },
+         topBar = {
+@@ -88,86 +126,298 @@ fun ProContent(
+                 },
+             )
+         },
++        bottomBar = {
++            if (!state.isPro) {
++                PurchaseBar(
++                    selected = selected.takeIf { canBuy },
++                    onPurchase = onPurchase,
++                    onRestore = onRestore,
++                )
++            }
++        },
+     ) { innerPadding ->
+         Column(
+             modifier = Modifier
+                 .fillMaxSize()
+                 .padding(innerPadding)
+-                .padding(16.dp),
+-            verticalArrangement = Arrangement.spacedBy(12.dp),
++                .verticalScroll(rememberScrollState())
++                .padding(Spacing.l),
++            verticalArrangement = Arrangement.spacedBy(Spacing.l),
+         ) {
+-            RescaleCard(Modifier.fillMaxWidth()) {
+-                Column(
+-                    modifier = Modifier.padding(Spacing.l),
+-                    verticalArrangement = Arrangement.spacedBy(Spacing.s),
+-                ) {
+-                    Text(
+-                        text = stringResource(R.string.pro_benefit_ai),
+-                        style = MaterialTheme.typography.bodyLarge,
+-                    )
+-                    Text(
+-                        text = stringResource(R.string.pro_benefit_handwriting),
+-                        style = MaterialTheme.typography.bodyLarge,
+-                    )
+-                }
++            Hero(isPro = state.isPro)
++
++            if (!state.isPro) {
++                state.freeScansLeft?.let { UsageMeter(scansLeft = it) }
+             }
+ 
++            BenefitsCard(isPro = state.isPro)
++
+             when {
+-                state.isPro -> Text(
+-                    text = stringResource(R.string.pro_active),
+-                    style = MaterialTheme.typography.titleMedium,
+-                    color = MaterialTheme.colorScheme.primary,
++                state.isPro -> Unit
++                state.isPending -> PendingCard()
++                state.loading -> PlanSkeleton()
++                plans.isEmpty() -> Unavailable(onRetry = onRetry)
++                else -> Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
++                    plans.forEach { product ->
++                        PlanCard(
++                            product = product,
++                            selected = product.id == selected?.id,
++                            onSelect = { selectedId = product.id },
++                        )
++                    }
++                }
++            }
++        }
++    }
++}
++
++// ── Sections ────────────────────────────────────────────────────────────────
++
++@Composable
++private fun Hero(isPro: Boolean) {
++    Column(
++        modifier = Modifier.fillMaxWidth(),
++        horizontalAlignment = Alignment.CenterHorizontally,
++        verticalArrangement = Arrangement.spacedBy(Spacing.s),
++    ) {
++        Surface(
++            modifier = Modifier.size(64.dp),
++            shape = CircleShape,
++            color = MaterialTheme.colorScheme.primaryContainer,
++            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
++        ) {
++            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
++                Icon(
++                    imageVector = if (isPro) Icons.Filled.WorkspacePremium else Icons.Filled.AutoAwesome,
++                    contentDescription = null,
++                    modifier = Modifier.size(32.dp),
+                 )
+-                state.isPending -> Text(
+-                    text = stringResource(R.string.pro_pending),
+-                    style = MaterialTheme.typography.bodyLarge,
+-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
++            }
++        }
++        Text(
++            text = stringResource(
++                if (isPro) R.string.pro_hero_title_active else R.string.title_pro,
++            ),
++            style = MaterialTheme.typography.headlineSmall,
++            fontWeight = FontWeight.Bold,
++            textAlign = TextAlign.Center,
++        )
++        Text(
++            text = stringResource(
++                if (isPro) R.string.pro_hero_subtitle_active else R.string.pro_hero_subtitle,
++            ),
++            style = MaterialTheme.typography.bodyMedium,
++            color = MaterialTheme.colorScheme.onSurfaceVariant,
++            textAlign = TextAlign.Center,
++        )
++    }
++}
++
++@Composable
++private fun UsageMeter(scansLeft: Int) {
++    RescaleCard(Modifier.fillMaxWidth()) {
++        Column(
++            modifier = Modifier.padding(Spacing.l),
++            verticalArrangement = Arrangement.spacedBy(Spacing.s),
++        ) {
++            Text(
++                text = if (scansLeft > 0) {
++                    pluralStringResource(R.plurals.pro_scans_left, scansLeft, scansLeft)
++                } else {
++                    stringResource(R.string.pro_scans_none)
++                },
++                style = MaterialTheme.typography.titleSmall,
++            )
++            LinearProgressIndicator(
++                progress = {
++                    (scansLeft.toFloat() / AiImportConfig.FREE_LIFETIME_LIMIT).coerceIn(0f, 1f)
++                },
++                modifier = Modifier.fillMaxWidth(),
++            )
++        }
++    }
++}
++
++@Composable
++private fun BenefitsCard(isPro: Boolean) {
++    RescaleCard(Modifier.fillMaxWidth()) {
++        Column(
++            modifier = Modifier.padding(Spacing.l),
++            verticalArrangement = Arrangement.spacedBy(Spacing.m),
++        ) {
++            BenefitRow(Icons.Filled.AutoAwesome, R.string.pro_benefit_ai, isPro)
++            BenefitRow(Icons.Filled.Draw, R.string.pro_benefit_handwriting, isPro)
++        }
++    }
++}
++
++@Composable
++private fun BenefitRow(icon: ImageVector, textRes: Int, checked: Boolean) {
++    Row(verticalAlignment = Alignment.CenterVertically) {
++        Icon(
++            imageVector = if (checked) Icons.Filled.CheckCircle else icon,
++            contentDescription = null,
++            tint = MaterialTheme.colorScheme.primary,
++        )
++        Text(
++            text = stringResource(textRes),
++            style = MaterialTheme.typography.bodyLarge,
++            modifier = Modifier.padding(start = Spacing.m),
++        )
++    }
++}
++
++@Composable
++private fun PlanCard(
++    product: ProProduct,
++    selected: Boolean,
++    onSelect: () -> Unit,
++) {
++    val scheme = MaterialTheme.colorScheme
++    Surface(
++        modifier = Modifier
++            .fillMaxWidth()
++            .selectable(selected = selected, onClick = onSelect, role = Role.RadioButton),
++        shape = MaterialTheme.shapes.large,
++        color = if (selected) scheme.primaryContainer.copy(alpha = 0.35f) else scheme.surfaceContainerLow,
++        border = BorderStroke(
++            width = if (selected) 2.dp else 1.dp,
++            color = if (selected) scheme.primary else scheme.outlineVariant.copy(alpha = 0.5f),
++        ),
++    ) {
++        Row(
++            modifier = Modifier.padding(Spacing.l),
++            verticalAlignment = Alignment.CenterVertically,
++        ) {
++            RadioButton(selected = selected, onClick = null)
++            Column(
++                modifier = Modifier
++                    .weight(1f)
++                    .padding(start = Spacing.m),
++            ) {
++                Text(
++                    text = stringResource(
++                        if (product.isSubscription) R.string.pro_plan_monthly else R.string.pro_plan_lifetime,
++                    ),
++                    style = MaterialTheme.typography.titleMedium,
+                 )
+-                state.loading -> Box(
+-                    contentAlignment = Alignment.Center,
+-                    modifier = Modifier.fillMaxWidth().padding(24.dp),
+-                ) {
+-                    CircularProgressIndicator(modifier = Modifier.size(32.dp))
+-                }
+-                state.products.isEmpty() -> Text(
+-                    text = stringResource(R.string.pro_unavailable),
+-                    style = MaterialTheme.typography.bodyLarge,
+-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
++                Text(
++                    text = stringResource(
++                        if (product.isSubscription) {
++                            R.string.pro_plan_monthly_detail
++                        } else {
++                            R.string.pro_plan_lifetime_detail
++                        },
++                    ),
++                    style = MaterialTheme.typography.bodySmall,
++                    color = scheme.onSurfaceVariant,
+                 )
+-                else -> state.products.forEach { product: ProProduct ->
+-                    if (product.isSubscription) {
+-                        GradientButton(
+-                            onClick = { onPurchase(product.id) },
+-                            modifier = Modifier.fillMaxWidth(),
+-                        ) {
+-                            Text(
+-                                text = stringResource(
+-                                    R.string.pro_price_monthly,
+-                                    product.price,
+-                                ),
+-                            )
+-                        }
++            }
++            Column(horizontalAlignment = Alignment.End) {
++                Text(
++                    text = if (product.isSubscription) {
++                        stringResource(R.string.pro_price_monthly, product.price)
+                     } else {
+-                        FilledTonalButton(
+-                            onClick = { onPurchase(product.id) },
+-                            modifier = Modifier.fillMaxWidth(),
+-                        ) {
+-                            Text(
+-                                text = stringResource(
+-                                    R.string.pro_price_lifetime,
+-                                    product.price,
+-                                ),
+-                            )
+-                        }
+-                    }
++                        product.price
++                    },
++                    style = MaterialTheme.typography.titleMedium,
++                )
++                if (!product.isSubscription) {
++                    Text(
++                        text = stringResource(R.string.ai_paywall_best_value),
++                        style = MaterialTheme.typography.labelSmall,
++                        color = scheme.primary,
++                    )
+                 }
+             }
++        }
++    }
++}
+ 
+-            if (!state.isPro) {
+-                OutlinedButton(
+-                    onClick = onRestore,
+-                    modifier = Modifier.fillMaxWidth(),
+-                ) {
++@Composable
++private fun PendingCard() {
++    RescaleCard(Modifier.fillMaxWidth()) {
++        Column(
++            modifier = Modifier.padding(Spacing.l),
++            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
++        ) {
++            Text(
++                text = stringResource(R.string.pro_pending),
++                style = MaterialTheme.typography.titleMedium,
++            )
++            Text(
++                text = stringResource(R.string.pro_pending_detail),
++                style = MaterialTheme.typography.bodyMedium,
++                color = MaterialTheme.colorScheme.onSurfaceVariant,
++            )
++        }
++    }
++}
++
++@Composable
++private fun PlanSkeleton() {
++    Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
++        repeat(2) { RescaleCard(Modifier.fillMaxWidth().height(72.dp)) {} }
++    }
++}
++
++@Composable
++private fun Unavailable(onRetry: () -> Unit) {
++    Column(
++        modifier = Modifier.fillMaxWidth(),
++        horizontalAlignment = Alignment.CenterHorizontally,
++    ) {
++        Text(
++            text = stringResource(R.string.pro_unavailable),
++            style = MaterialTheme.typography.bodyLarge,
++            color = MaterialTheme.colorScheme.onSurfaceVariant,
++            textAlign = TextAlign.Center,
++        )
++        TextButton(onClick = onRetry) { Text(stringResource(R.string.action_retry)) }
++    }
++}
++
++/** Pinned bottom bar: one primary action, its terms, and a quiet Restore. */
++@Composable
++private fun PurchaseBar(
++    selected: ProProduct?,
++    onPurchase: (String) -> Unit,
++    onRestore: () -> Unit,
++) {
++    Surface(color = MaterialTheme.colorScheme.surface) {
++        Column {
++            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
++            Column(
++                modifier = Modifier
++                    .fillMaxWidth()
++                    .navigationBarsPadding()
++                    .padding(horizontal = Spacing.l, vertical = Spacing.m),
++                horizontalAlignment = Alignment.CenterHorizontally,
++            ) {
++                if (selected != null) {
++                    GradientButton(
++                        onClick = { onPurchase(selected.id) },
++                        modifier = Modifier.fillMaxWidth(),
++                    ) {
++                        Text(
++                            text = if (selected.isSubscription) {
++                                stringResource(R.string.pro_cta_monthly, selected.price)
++                            } else {
++                                stringResource(R.string.pro_cta_lifetime, selected.price)
++                            },
++                        )
++                    }
++                    Text(
++                        text = stringResource(
++                            if (selected.isSubscription) R.string.pro_fine_monthly else R.string.pro_fine_lifetime,
++                        ),
++                        style = MaterialTheme.typography.bodySmall,
++                        color = MaterialTheme.colorScheme.onSurfaceVariant,
++                        textAlign = TextAlign.Center,
++                        modifier = Modifier.padding(top = Spacing.xs),
++                    )
++                }
++                TextButton(onClick = onRestore) {
+                     Text(stringResource(R.string.action_restore_purchases))
+                 }
+             }
+diff --git a/app/src/main/java/com/ryxan/recipescaler/feature/pro/ProViewModel.kt b/app/src/main/java/com/ryxan/recipescaler/feature/pro/ProViewModel.kt
+index 8adb309..6efac4f 100644
+--- a/app/src/main/java/com/ryxan/recipescaler/feature/pro/ProViewModel.kt
++++ b/app/src/main/java/com/ryxan/recipescaler/feature/pro/ProViewModel.kt
+@@ -6,26 +6,32 @@ import androidx.lifecycle.viewModelScope
+ import com.ryxan.recipescaler.core.data.billing.ProProduct
+ import com.ryxan.recipescaler.core.data.billing.ProRepository
+ import com.ryxan.recipescaler.core.data.billing.PurchaseLaunch
++import com.ryxan.recipescaler.core.data.importer.AiImportQuota
+ import dagger.hilt.android.lifecycle.HiltViewModel
+ import javax.inject.Inject
+ import kotlinx.coroutines.channels.Channel
+ import kotlinx.coroutines.flow.Flow
+ import kotlinx.coroutines.flow.MutableStateFlow
+ import kotlinx.coroutines.flow.StateFlow
++import kotlinx.coroutines.flow.combine
+ import kotlinx.coroutines.flow.receiveAsFlow
++import kotlinx.coroutines.flow.update
+ import kotlinx.coroutines.launch
+ 
+ data class ProUiState(
+     val isPro: Boolean = false,
+     val isPending: Boolean = false,
+     val products: List<ProProduct> = emptyList(),
+-    /** True until the first product refresh completes. */
++    /** True while a product refresh is in flight (initially, and on retry). */
+     val loading: Boolean = true,
++    /** Free + bonus AI scans left. Null until the quota has been read. */
++    val freeScansLeft: Int? = null,
+ )
+ 
+ @HiltViewModel
+ class ProViewModel @Inject constructor(
+     private val proRepository: ProRepository,
++    quota: AiImportQuota,
+ ) : ViewModel() {
+ 
+     private val _uiState = MutableStateFlow(ProUiState())
+@@ -36,12 +42,23 @@ class ProViewModel @Inject constructor(
+     val messages: Flow<String> = _messages.receiveAsFlow()
+ 
+     init {
+-        viewModelScope.launch { proRepository.isPro.collect { p -> _uiState.value = _uiState.value.copy(isPro = p) } }
+-        viewModelScope.launch { proRepository.isPending.collect { p -> _uiState.value = _uiState.value.copy(isPending = p) } }
+-        viewModelScope.launch { proRepository.products.collect { p -> _uiState.value = _uiState.value.copy(products = p) } }
++        viewModelScope.launch { proRepository.isPro.collect { p -> _uiState.update { it.copy(isPro = p) } } }
++        viewModelScope.launch { proRepository.isPending.collect { p -> _uiState.update { it.copy(isPending = p) } } }
++        viewModelScope.launch { proRepository.products.collect { p -> _uiState.update { it.copy(products = p) } } }
+         viewModelScope.launch {
++            combine(quota.remainingFree, quota.bonusCredits) { free, bonus -> free + bonus }
++                .collect { left -> _uiState.update { it.copy(freeScansLeft = left) } }
++        }
++        refresh()
++    }
++
++    fun retry() = refresh()
++
++    private fun refresh() {
++        viewModelScope.launch {
++            _uiState.update { it.copy(loading = true) }
+             proRepository.refreshProducts()
+-            _uiState.value = _uiState.value.copy(loading = false)
++            _uiState.update { it.copy(loading = false) }
+         }
+     }
+ 
+diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
+index fc3dac5..8e4dfb6 100644
+--- a/app/src/main/res/values/strings.xml
++++ b/app/src/main/res/values/strings.xml
+@@ -82,7 +82,7 @@
+     <string name="ai_paywall_pack_subtitle">One-time top-up · never expires</string>
+     <string name="ai_paywall_best_value">Best value</string>
+     <string name="ai_paywall_pro_title">Rescale Pro</string>
+-    <string name="ai_paywall_pro_subtitle">Unlimited AI scans, forever</string>
++    <string name="ai_paywall_pro_subtitle">AI scans every day, forever</string>
+     <string name="ai_paywall_free_option">or earn scans for free</string>
+     <string name="ai_paywall_ad_title">Watch a short ad</string>
+     <string name="ai_paywall_soon">Soon</string>
+@@ -99,14 +99,31 @@
+ 
+     <!-- Pro -->
+     <string name="title_pro">Rescale Pro</string>
+-    <string name="pro_benefit_ai">Unlimited AI recipe import</string>
++    <string name="pro_hero_subtitle">Import any recipe card with AI — handwriting included.</string>
++    <string name="pro_hero_title_active">You\'re Pro</string>
++    <string name="pro_hero_subtitle_active">Thanks for supporting Rescale.</string>
++    <string name="pro_benefit_ai">AI recipe import, every day</string>
+     <string name="pro_benefit_handwriting">Reads handwritten and printed recipe cards</string>
++    <plurals name="pro_scans_left">
++        <item quantity="one">%d AI scan left</item>
++        <item quantity="other">%d AI scans left</item>
++    </plurals>
++    <string name="pro_scans_none">No AI scans left. On-device scanning is always free.</string>
++    <string name="pro_plan_lifetime">Lifetime</string>
++    <string name="pro_plan_lifetime_detail">Pay once, keep it forever</string>
++    <string name="pro_plan_monthly">Monthly</string>
++    <string name="pro_plan_monthly_detail">Billed monthly</string>
+     <string name="pro_price_monthly">%1$s / month</string>
+     <string name="pro_price_lifetime">%1$s · lifetime</string>
++    <string name="pro_cta_lifetime">Unlock for %1$s</string>
++    <string name="pro_cta_monthly">Subscribe for %1$s / month</string>
++    <string name="pro_fine_lifetime">One-time payment. No subscription.</string>
++    <string name="pro_fine_monthly">Renews monthly. Cancel anytime in Google Play.</string>
+     <string name="pro_unavailable">Purchases aren\'t available right now</string>
++    <string name="action_retry">Try again</string>
+     <string name="action_restore_purchases">Restore purchases</string>
+-    <string name="pro_active">You\'re Pro — thank you!</string>
+     <string name="pro_pending">Purchase pending</string>
++    <string name="pro_pending_detail">Pro unlocks as soon as Google Play confirms the payment.</string>
+     <string name="pro_state_active">Active</string>
+     <string name="pro_refresh_failed">Couldn\'t check purchases. Try again later.</string>
+     <string name="settings_section_debug">Debug</string>
+diff --git a/app/src/test/java/com/ryxan/recipescaler/feature/pro/ProContentTest.kt b/app/src/test/java/com/ryxan/recipescaler/feature/pro/ProContentTest.kt
+index 0899eb8..1df2a7b 100644
+--- a/app/src/test/java/com/ryxan/recipescaler/feature/pro/ProContentTest.kt
++++ b/app/src/test/java/com/ryxan/recipescaler/feature/pro/ProContentTest.kt
+@@ -24,10 +24,16 @@ class ProContentTest {
+         state: ProUiState,
+         onPurchase: (String) -> Unit = {},
+         onRestore: () -> Unit = {},
++        onRetry: () -> Unit = {},
+     ) {
+         composeRule.setContent {
+             RescaleTheme(dynamicColor = false) {
+-                ProContent(state = state, onPurchase = onPurchase, onRestore = onRestore)
++                ProContent(
++                    state = state,
++                    onPurchase = onPurchase,
++                    onRestore = onRestore,
++                    onRetry = onRetry,
++                )
+             }
+         }
+     }
+@@ -38,44 +44,93 @@ class ProContentTest {
+     )
+ 
+     @Test
+-    fun `products render with their price buttons`() {
++    fun `plans render with prices, the primary action and restore`() {
+         content(ProUiState(products = products, loading = false))
+ 
+-        composeRule.onNodeWithText("Unlimited AI recipe import").assertIsDisplayed()
++        composeRule.onNodeWithText("AI recipe import, every day").assertIsDisplayed()
++        composeRule.onNodeWithText("$14.99").assertIsDisplayed()
+         composeRule.onNodeWithText("$3.99 / month").assertIsDisplayed()
+-        composeRule.onNodeWithText("$14.99 · lifetime").assertIsDisplayed()
++        composeRule.onNodeWithText("Unlock for $14.99").assertIsDisplayed()
+         composeRule.onNodeWithText("Restore purchases").assertIsDisplayed()
+     }
+ 
+     @Test
+-    fun `tapping a product calls onPurchase with its id`() {
++    fun `lifetime is preselected and the action buys it`() {
+         var purchased: String? = null
+         content(ProUiState(products = products, loading = false), onPurchase = { purchased = it })
+ 
+-        composeRule.onNodeWithText("$14.99 · lifetime").performClick()
++        composeRule.onNodeWithText("Unlock for $14.99").performClick()
+ 
+         assertEquals("rescale_pro_lifetime", purchased)
+     }
+ 
+     @Test
+-    fun `empty products shows the unavailable message`() {
+-        content(ProUiState(products = emptyList(), loading = false))
++    fun `selecting monthly changes the action and buys monthly`() {
++        var purchased: String? = null
++        content(ProUiState(products = products, loading = false), onPurchase = { purchased = it })
++
++        composeRule.onNodeWithText("Monthly").performClick()
++        composeRule.onNodeWithText("Subscribe for $3.99 / month").performClick()
++
++        assertEquals("rescale_pro_monthly", purchased)
++    }
++
++    @Test
++    fun `the AI scan pack is not shown as a Pro plan`() {
++        val withPack = products + ProProduct("rescale_ai_scans_100", "100 scans", "$4.99", isSubscription = false)
++        content(ProUiState(products = withPack, loading = false))
++
++        composeRule.onNodeWithText("$4.99").assertDoesNotExist()
++    }
++
++    @Test
++    fun `empty products shows the unavailable message and retry`() {
++        var retried = false
++        content(ProUiState(products = emptyList(), loading = false), onRetry = { retried = true })
+ 
+         composeRule.onNodeWithText("Purchases aren't available right now").assertIsDisplayed()
++        composeRule.onNodeWithText("Try again").performClick()
++
++        assertEquals(true, retried)
+     }
+ 
+     @Test
+-    fun `pro user sees the thank-you state`() {
++    fun `pro user sees the thank-you state and no purchase UI`() {
+         content(ProUiState(isPro = true, products = products, loading = false))
+ 
+-        composeRule.onNodeWithText("You're Pro — thank you!").assertIsDisplayed()
+-        composeRule.onNodeWithText("$3.99 / month").assertDoesNotExist()
++        composeRule.onNodeWithText("You're Pro").assertIsDisplayed()
++        composeRule.onNodeWithText("Unlock for $14.99").assertDoesNotExist()
++        composeRule.onNodeWithText("Restore purchases").assertDoesNotExist()
+     }
+ 
+     @Test
+-    fun `pending purchase shows the pending state`() {
+-        content(ProUiState(isPending = true, loading = false))
++    fun `pending purchase shows the pending state and hides the action`() {
++        content(ProUiState(isPending = true, products = products, loading = false))
+ 
+         composeRule.onNodeWithText("Purchase pending").assertIsDisplayed()
++        composeRule.onNodeWithText("Unlock for $14.99").assertDoesNotExist()
++        composeRule.onNodeWithText("Restore purchases").assertIsDisplayed()
++    }
++
++    @Test
++    fun `usage meter shows scans left, and the empty message at zero`() {
++        content(ProUiState(products = products, loading = false, freeScansLeft = 7))
++        composeRule.onNodeWithText("7 AI scans left").assertIsDisplayed()
++    }
++
++    @Test
++    fun `usage meter explains the out-of-scans case`() {
++        content(ProUiState(products = products, loading = false, freeScansLeft = 0))
++        composeRule.onNodeWithText("No AI scans left. On-device scanning is always free.").assertIsDisplayed()
++    }
++
++    @Test
++    fun `restore calls onRestore`() {
++        var restored = false
++        content(ProUiState(products = products, loading = false), onRestore = { restored = true })
++
++        composeRule.onNodeWithText("Restore purchases").performClick()
++
++        assertEquals(true, restored)
+     }
+ }
+diff --git a/app/src/test/java/com/ryxan/recipescaler/feature/pro/ProViewModelTest.kt b/app/src/test/java/com/ryxan/recipescaler/feature/pro/ProViewModelTest.kt
+index fc95f9a..2ddee96 100644
+--- a/app/src/test/java/com/ryxan/recipescaler/feature/pro/ProViewModelTest.kt
++++ b/app/src/test/java/com/ryxan/recipescaler/feature/pro/ProViewModelTest.kt
+@@ -2,6 +2,7 @@ package com.ryxan.recipescaler.feature.pro
+ 
+ import android.app.Activity
+ import com.ryxan.recipescaler.core.data.billing.PurchaseLaunch
++import com.ryxan.recipescaler.testing.FakeAiImportQuota
+ import com.ryxan.recipescaler.testing.FakeProRepository
+ import com.ryxan.recipescaler.testing.MainDispatcherRule
+ import kotlinx.coroutines.flow.first
+@@ -26,7 +27,7 @@ class ProViewModelTest {
+     @Test
+     fun `init refreshes products and loading clears`() = runTest {
+         val repo = FakeProRepository()
+-        val vm = ProViewModel(repo)
++        val vm = ProViewModel(repo, FakeAiImportQuota())
+ 
+         assertEquals(1, repo.refreshCalls)
+         assertFalse(vm.uiState.value.loading)
+@@ -45,7 +46,7 @@ class ProViewModelTest {
+                 ),
+             ),
+         )
+-        val vm = ProViewModel(repo)
++        val vm = ProViewModel(repo, FakeAiImportQuota())
+ 
+         assertTrue(vm.uiState.value.isPro)
+         assertEquals(1, vm.uiState.value.products.size)
+@@ -55,7 +56,7 @@ class ProViewModelTest {
+     fun `purchase error surfaces as a one-shot message`() = runTest {
+         val repo = FakeProRepository()
+         repo.launchResult = PurchaseLaunch.Error("Billing is not available on this device")
+-        val vm = ProViewModel(repo)
++        val vm = ProViewModel(repo, FakeAiImportQuota())
+         val activity = Robolectric.buildActivity(Activity::class.java).get()
+ 
+         vm.purchase(activity, "rescale_pro_monthly")
+@@ -68,11 +69,32 @@ class ProViewModelTest {
+     fun `restore failure surfaces a message`() = runTest {
+         val repo = FakeProRepository()
+         repo.restoreResult = false
+-        val vm = ProViewModel(repo)
++        val vm = ProViewModel(repo, FakeAiImportQuota())
+ 
+         vm.restore()
+ 
+         assertEquals(1, repo.restoreCalls)
+         assertTrue(vm.messages.first().isNotBlank())
+     }
++
++    @Test
++    fun `free scans left flows into state`() = runTest {
++        val vm = ProViewModel(FakeProRepository(), FakeAiImportQuota())
++
++        assertEquals(
++            com.ryxan.recipescaler.core.domain.importer.AiImportConfig.FREE_LIFETIME_LIMIT,
++            vm.uiState.value.freeScansLeft,
++        )
++    }
++
++    @Test
++    fun `retry refreshes products again and loading clears`() = runTest {
++        val repo = FakeProRepository()
++        val vm = ProViewModel(repo, FakeAiImportQuota())
++
++        vm.retry()
++
++        assertEquals(2, repo.refreshCalls)
++        assertFalse(vm.uiState.value.loading)
++    }
+ }
